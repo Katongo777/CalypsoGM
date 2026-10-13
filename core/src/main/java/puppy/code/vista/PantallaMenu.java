@@ -1,4 +1,4 @@
-package puppy.code;
+package puppy.code.vista;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -6,13 +6,15 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import puppy.code.SpaceNavigation;
 
-public class PantallaGameOver implements Screen {
+
+public class PantallaMenu implements Screen {
 
 	private SpaceNavigation game;
 	private OrthographicCamera camera;
 
-	public PantallaGameOver(SpaceNavigation game) {
+	public PantallaMenu(SpaceNavigation game) {
 		this.game = game;
         
 		camera = new OrthographicCamera();
@@ -27,8 +29,8 @@ public class PantallaGameOver implements Screen {
 		game.getBatch().setProjectionMatrix(camera.combined);
 
 		game.getBatch().begin();
-		game.getFont().draw(game.getBatch(), "Game Over !!! ", 120, 400,400,1,true);
-		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado para reiniciar ...", 100, 300);
+		game.getFont().draw(game.getBatch(), "Bienvenido a Space Navigation !", 140, 400);
+		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado o presiona cualquier tecla para comenzar ...", 100, 300);
 	
 		game.getBatch().end();
 
@@ -39,7 +41,7 @@ public class PantallaGameOver implements Screen {
 			dispose();
 		}
 	}
- 
+	
 	
 	@Override
 	public void show() {

@@ -1,4 +1,4 @@
-package puppy.code;
+package puppy.code.modelo;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
