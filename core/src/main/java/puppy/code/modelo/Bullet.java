@@ -6,25 +6,20 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 
-public class Bullet
+public class Bullet extends Entidad
 {
-	private int xSpeed;
-	private int ySpeed;
 	private boolean destroyed = false;
-	private Sprite spr;
 	    
-	public Bullet(float x, float y, int xSpeed, int ySpeed, Texture tx)
+	public Bullet(float x, float y, float xVel, float yVel, Texture tx)
 	{
-		spr = new Sprite(tx);
-		spr.setPosition(x, y);
-		this.xSpeed = xSpeed;
-		this.ySpeed = ySpeed;
+		super(x, y, xVel, yVel, tx);
 	}
 	    
 	// Solo actualiza la posición de la bala
+	@Override
 	public void actualizar()
 	{
-		spr.setPosition(spr.getX() + xSpeed, spr.getY() + ySpeed);
+		spr.setPosition(spr.getX() + xVel, spr.getY() + yVel);
 		comprobarLimitesPantalla();
 	}
 	    
@@ -40,12 +35,6 @@ public class Bullet
 			destruir();
 		}
 	}
-	
-	// Método para renderizar Bullet
-    public void dibujar(SpriteBatch batch)
-    {
-        spr.draw(batch);
-    }
     
     // El retorno booleano indica a la pantalla si hubo impacto
     public boolean revisarColisionAsteroide(Ball2 b2)

@@ -12,12 +12,10 @@ import puppy.code.vista.PantallaJuego;
 
 
 
-public class Nave4
+public class Nave4 extends Entidad
 {
 	private boolean destruida = false;
     private int vidas = 3;
-    private float xVel = 0;
-    private float yVel = 0;
     private Sprite spr;
     private Sound sonidoHerido;
     private Sound soundBala;
@@ -28,29 +26,33 @@ public class Nave4
     
     public Nave4(int x, int y, Texture tx, Sound soundChoque, Texture txBala, Sound soundBala)
     {
-    	sonidoHerido = soundChoque;
-    	this.soundBala = soundBala;
-    	this.txBala = txBala;
-    	spr = new Sprite(tx);
-    	spr.setPosition(x, y);
-    	//spr.setOriginCenter();
-    	spr.setBounds(x, y, 45, 45);
-
+        super(x, y, 0, 0, tx); // La nave inicia con velocidad 0
+        this.sonidoHerido = soundChoque;
+        this.soundBala = soundBala;
+        this.txBala = txBala;
+        this.spr.setBounds(x, y, 45, 45);
     }
     
     // Este método solo procesa datos y estado
+    @Override
+    public void actualizar()
+    {
+        actualizarPosicion();
+    }
+    
     public void actualizar(PantallaJuego juego)
     {
         if (!herido)
         {
             manejarInputTeclado(juego);
-            actualizarPosicion();
+            actualizar();
         }
         else
         {
             actualizarEstadoHerido();
         }
     }
+    
     // Método privado para ocultar el funcionamiento de la nave
     private void manejarInputTeclado(PantallaJuego juego)
     {
@@ -127,26 +129,24 @@ public class Nave4
     }
       
     // Método para renderizar Nave
+    @Override
     public void dibujar(SpriteBatch batch)
     {
         if (herido)
         {
             float xOriginal = spr.getX();
             spr.setX(spr.getX() + MathUtils.random(-2, 2));
-            spr.draw(batch); 
-            spr.setX(xOriginal);
+            super.dibujar(batch);
+            spr.setX(xOriginal); 
         }
         else
         {
-            spr.draw(batch);
+            super.dibujar(batch);
         }
     }
     
-    // Getters y Setters
     public boolean estaDestruido() { return !herido && destruida; }
     public boolean estaHerido() { return herido; }
     public int getVidas() { return vidas; }
     public void setVidas(int vidas) { this.vidas = vidas; }
-    public int getX() { return (int) spr.getX(); }
-    public int getY() { return (int) spr.getY(); }
 }
