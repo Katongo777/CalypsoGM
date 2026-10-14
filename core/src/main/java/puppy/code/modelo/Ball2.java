@@ -17,7 +17,6 @@ public class Ball2
     public Ball2(int x, int y, int size, int xSpeed, int ySpeed, Texture tx)
     {
     	spr = new Sprite(tx);
-    	 
  	
         // Validar que borde de la esfera no quede fuera
     	this.x = x;
@@ -60,6 +59,7 @@ public class Ball2
         }
     }
 
+    // Método para renderizar Ball
     public void dibujar(SpriteBatch batch)
     {
         spr.draw(batch);

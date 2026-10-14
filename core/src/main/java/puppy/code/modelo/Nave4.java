@@ -14,7 +14,6 @@ import puppy.code.vista.PantallaJuego;
 
 public class Nave4
 {
-	
 	private boolean destruida = false;
     private int vidas = 3;
     private float xVel = 0;
@@ -127,7 +126,7 @@ public class Nave4
         }
     }
       
-    // Este método renderiza la nave en pantalla
+    // Método para renderizar Nave
     public void dibujar(SpriteBatch batch)
     {
         if (herido)

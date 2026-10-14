@@ -6,44 +6,65 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 
-public class Bullet {
-
+public class Bullet
+{
 	private int xSpeed;
 	private int ySpeed;
 	private boolean destroyed = false;
 	private Sprite spr;
 	    
-	    public Bullet(float x, float y, int xSpeed, int ySpeed, Texture tx) {
-	    	spr = new Sprite(tx);
-	    	spr.setPosition(x, y);
-	        this.xSpeed = xSpeed;
-	        this.ySpeed = ySpeed;
-	    }
-	    public void update() {
-	        spr.setPosition(spr.getX()+xSpeed, spr.getY()+ySpeed);
-	        if (spr.getX() < 0 || spr.getX()+spr.getWidth() > Gdx.graphics.getWidth()) {
-	            destroyed = true;
-	        }
-	        if (spr.getY() < 0 || spr.getY()+spr.getHeight() > Gdx.graphics.getHeight()) {
-	        	destroyed = true;
-	        }
-	        
-	    }
+	public Bullet(float x, float y, int xSpeed, int ySpeed, Texture tx)
+	{
+		spr = new Sprite(tx);
+		spr.setPosition(x, y);
+		this.xSpeed = xSpeed;
+		this.ySpeed = ySpeed;
+	}
 	    
-	    public void draw(SpriteBatch batch) {
-	    	spr.draw(batch);
-	    }
+	// Solo actualiza la posición de la bala
+	public void actualizar()
+	{
+		spr.setPosition(spr.getX() + xSpeed, spr.getY() + ySpeed);
+		comprobarLimitesPantalla();
+	}
 	    
-	    public boolean checkCollision(Ball2 b2) {
-	        if(spr.getBoundingRectangle().overlaps(b2.getArea())){
-	        	// Se destruyen ambos
-	            this.destroyed = true;
-	            return true;
+	// Método privado para ocultar la validación de los bordes de la pantalla
+	private void comprobarLimitesPantalla()
+	{
+		if (spr.getX() < 0 || spr.getX() + spr.getWidth() > Gdx.graphics.getWidth())
+		{
+			destruir();
+		}
+		if (spr.getY() < 0 || spr.getY() + spr.getHeight() > Gdx.graphics.getHeight())
+		{
+			destruir();
+		}
+	}
 	
-	        }
-	        return false;
-	    }
-	    
-	    public boolean isDestroyed() {return destroyed;}
-	
+	// Método para renderizar Bullet
+    public void dibujar(SpriteBatch batch)
+    {
+        spr.draw(batch);
+    }
+    
+    // El retorno booleano indica a la pantalla si hubo impacto
+    public boolean revisarColisionAsteroide(Ball2 b2)
+    {
+        if (spr.getBoundingRectangle().overlaps(b2.getArea()))
+        {
+            destruir();
+            return true;
+        }
+        return false;
+    }
+
+    private void destruir()
+    {
+        this.destroyed = true;
+    }
+    
+    public boolean isDestroyed()
+    { 
+        return destroyed; 
+    }
 }
