@@ -128,7 +128,7 @@ public class Nave4 extends Entidad
         }
     }
       
-    // Método para renderizar Nave
+    // Método para renderizar Nave. El Override es para el temblor al recibir daño
     @Override
     public void dibujar(SpriteBatch batch)
     {
