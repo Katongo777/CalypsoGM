@@ -2,17 +2,9 @@ package puppy.code.modelo;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Rectangle;
 
 public class Ball2 extends Entidad
 {
-	private int x;
-    private int y;
-    private int xSpeed;
-    private int ySpeed;
-    private Sprite spr;
 
     public Ball2(int x, int y, int size, float xVel, float yVel, Texture tx)
     {
@@ -41,19 +33,19 @@ public class Ball2 extends Entidad
     // Método privado para ocultar la lógica de rebote contra los bordes
     private void comprobarLimitesPantalla()
     {
-        if (x + xSpeed < 0 || x + xSpeed + spr.getWidth() > Gdx.graphics.getWidth())
+        if (spr.getX() + xVel < 0 || spr.getX() + xVel + spr.getWidth() > Gdx.graphics.getWidth())
         {
-            xSpeed = xSpeed * -1;
+            xVel = xVel * -1;
         }
-        if (y + ySpeed < 0 || y + ySpeed + spr.getHeight() > Gdx.graphics.getHeight())
+        if (spr.getY() + yVel < 0 || spr.getY() + yVel + spr.getHeight() > Gdx.graphics.getHeight())
         {
-            ySpeed = ySpeed * -1;
+            yVel = yVel * -1;
         }
     }
      
     // Cuando choca con otro asteroide no manipula sus variables, solo avisa del choque
     public void revisarColisionAsteroide(Ball2 otroAsteroide) {
-        if(spr.getBoundingRectangle().overlaps(otroAsteroide.getArea()))
+        if(this.chocaCon(otroAsteroide))
         {
             float miXVel = this.xVel;
             float miYVel = this.yVel;

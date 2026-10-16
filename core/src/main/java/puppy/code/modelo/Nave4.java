@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 
@@ -16,7 +15,6 @@ public class Nave4 extends Entidad
 {
 	private boolean destruida = false;
     private int vidas = 3;
-    private Sprite spr;
     private Sound sonidoHerido;
     private Sound soundBala;
     private Texture txBala;
@@ -102,7 +100,8 @@ public class Nave4 extends Entidad
     // Delegamos la responsabilidad a Ball
     public boolean revisarColision(Ball2 b)
     {
-        if (!herido && b.getArea().overlaps(spr.getBoundingRectangle())) {
+        if (!herido && this.chocaCon(b))
+        {
             
             xVel = -xVel;
             yVel = -yVel;

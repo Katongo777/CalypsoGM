@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-public abstract class Entidad
+public abstract class Entidad implements Colisionable
 {    
     protected Sprite spr;
     protected float xVel;
@@ -27,9 +27,19 @@ public abstract class Entidad
         spr.draw(batch);
     }
 
+    // Método de la interfaz Colisionable
+    @Override
     public Rectangle getArea()
     {
         return spr.getBoundingRectangle();
+    }
+    
+    // Método de la interfaz Colisionable
+    @Override
+    public boolean chocaCon(Colisionable otro)
+    {
+    	// Si el rectangulo (hitbox) se superpone sobre el otro, hay colision/choque
+    	return this.getArea().overlaps(otro.getArea());
     }
 
     // Getters y Setters
