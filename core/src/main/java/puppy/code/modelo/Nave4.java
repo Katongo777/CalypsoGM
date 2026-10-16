@@ -54,10 +54,15 @@ public class Nave4 extends Entidad
     // Método privado para ocultar el funcionamiento de la nave
     private void manejarInputTeclado(PantallaJuego juego)
     {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) xVel--;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) xVel++;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) yVel--;     
-        if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) yVel++;
+    	xVel = 0;
+    	yVel = 0;
+    	
+    	float velFija = 5f;
+    	
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) xVel = -velFija;
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xVel = velFija;
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) yVel = -velFija;     
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) yVel = velFija;
         
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
         {
@@ -77,15 +82,17 @@ public class Nave4 extends Entidad
         float x = spr.getX();
         float y = spr.getY();
         
-        if (x + xVel < 0 || x + xVel + spr.getWidth() > Gdx.graphics.getWidth())
-        {
-            xVel *= -1;
-        }
-        if (y + yVel < 0 || y + yVel + spr.getHeight() > Gdx.graphics.getHeight())
-        {
-            yVel *= -1;
-        }
-        spr.setPosition(x + xVel, y + yVel);   
+        float nuevaX = x + xVel;
+        float nuevaY = y + yVel;
+        
+        // Limita la posición para que no salga de la ventana
+        if (nuevaX < 0) nuevaX = 0;
+        if (nuevaX + spr.getWidth() > Gdx.graphics.getWidth()) nuevaX = Gdx.graphics.getWidth() - spr.getWidth();
+        
+        if (nuevaY < 0) nuevaY = 0;
+        if (nuevaY + spr.getHeight() > Gdx.graphics.getHeight()) nuevaY = Gdx.graphics.getHeight() - spr.getHeight();
+        
+        spr.setPosition(nuevaX, nuevaY);  
     }
     
     private void actualizarEstadoHerido()
