@@ -3,6 +3,8 @@ package puppy.code.modelo;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 
+import puppy.code.modelo.enemigos.Enemigo;
+
 public class Bullet extends Entidad
 {
     private boolean destroyed = false;
@@ -33,10 +35,10 @@ public class Bullet extends Entidad
         }
     }
 
-    // El retorno booleano indica a la pantalla si hubo impacto
-    public boolean revisarColisionAsteroide(Ball2 b2)
+    // Funciona con cualquier tipo de Enemigo (polimorfismo)
+    public boolean revisarColision(Enemigo enemigo)
     {
-        if (this.chocaCon(b2))
+        if (this.chocaCon(enemigo))
         {
             destruir();
             return true;

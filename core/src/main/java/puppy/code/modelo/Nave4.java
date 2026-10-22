@@ -7,13 +7,15 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 
+import puppy.code.modelo.enemigos.Enemigo;
+
 /*
     La nave del jugador.
 
-    ENCAPSULAMIENTO (GM-5): antes esta clase conocia a PantallaJuego (una clase de
+    ENCAPSULAMIENTO (GM-5): antes esta clase conocía a PantallaJuego (una clase de
     la vista) y le entregaba las balas con juego.agregarBala(...). Eso es una mala
     dependencia: el modelo no debe saber que existe la vista. Ahora disparar()
-    simplemente DEVUELVE la bala y la pantalla decide que hacer con ella.
+    simplemente DEVUELVE la bala y la pantalla decide qué hacer con ella.
 */
 public class Nave4 extends Entidad
 {
@@ -64,7 +66,7 @@ public class Nave4 extends Entidad
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) setYVel(velFija);
     }
 
-    // Crea la bala y la devuelve; quien la reciba decide donde guardarla
+    // Crea la bala y la devuelve; quien la reciba decide dónde guardarla
     public Bullet disparar()
     {
         Bullet bala = new Bullet(getX() + getAncho() / 2 - 5, getY() + getAlto() - 5, 0, 3, txBala);
@@ -96,15 +98,15 @@ public class Nave4 extends Entidad
         }
     }
 
-    // Delegamos la responsabilidad a Ball
-    public boolean revisarColision(Ball2 b)
+    // Funciona con cualquier tipo de Enemigo; el enemigo decide cómo rebotar
+    public boolean revisarColision(Enemigo enemigo)
     {
-        if (!herido && this.chocaCon(b))
+        if (!herido && this.chocaCon(enemigo))
         {
             setXVel(-getXVel());
             setYVel(-getYVel());
 
-            b.reaccionarChoqueNave(getXVel(), getYVel());
+            enemigo.reaccionarChoque(getXVel(), getYVel());
 
             recibirDano();
             return true;
