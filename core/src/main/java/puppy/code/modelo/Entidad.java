@@ -5,11 +5,22 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
+/*
+    CLASE ABSTRACTA (GM-4) y ENCAPSULAMIENTO (GM-5)
+
+    Entidad es el "padre" de todo lo que se mueve y se dibuja en el juego
+    (la nave, las balas, los enemigos...). Guarda lo que tienen en comun:
+    una imagen (sprite), una posicion y una velocidad.
+
+    Encapsulamiento: los atributos son PRIVADOS. Los hijos no los tocan
+    directamente, usan los metodos de abajo. Asi, si algun dia cambiamos
+    como se guarda la posicion, solo se modifica esta clase.
+*/
 public abstract class Entidad implements Colisionable
-{    
-    protected Sprite spr;
-    protected float xVel;
-    protected float yVel;
+{
+    private Sprite spr;
+    private float xVel;
+    private float yVel;
 
     public Entidad(float x, float y, float xVel, float yVel, Texture tx)
     {
@@ -33,20 +44,32 @@ public abstract class Entidad implements Colisionable
     {
         return spr.getBoundingRectangle();
     }
-    
-    // Método de la interfaz Colisionable
+
+    // Método de la interfaz Colisionable: hay choque si las hitbox se superponen
     @Override
     public boolean chocaCon(Colisionable otro)
     {
-    	// Si el rectangulo (hitbox) se superpone sobre el otro, hay colision/choque
-    	return this.getArea().overlaps(otro.getArea());
+        return this.getArea().overlaps(otro.getArea());
     }
 
-    // Getters y Setters
+    // ---- Métodos públicos de lectura y escritura (getters y setters) ----
     public float getX() { return spr.getX(); }
     public float getY() { return spr.getY(); }
+    public float getAncho() { return spr.getWidth(); }
+    public float getAlto() { return spr.getHeight(); }
     public float getXVel() { return xVel; }
     public float getYVel() { return yVel; }
     public void setXVel(float xVel) { this.xVel = xVel; }
     public void setYVel(float yVel) { this.yVel = yVel; }
+
+    // ---- Métodos protegidos: solo los pueden usar las clases hijas ----
+    protected void setPosicion(float x, float y)
+    {
+        spr.setPosition(x, y);
+    }
+
+    protected void setTamano(float ancho, float alto)
+    {
+        spr.setSize(ancho, alto);
+    }
 }

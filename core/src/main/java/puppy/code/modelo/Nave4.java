@@ -7,94 +7,86 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 
-import puppy.code.vista.PantallaJuego;
+/*
+    La nave del jugador.
 
-
-
+    ENCAPSULAMIENTO (GM-5): antes esta clase conocia a PantallaJuego (una clase de
+    la vista) y le entregaba las balas con juego.agregarBala(...). Eso es una mala
+    dependencia: el modelo no debe saber que existe la vista. Ahora disparar()
+    simplemente DEVUELVE la bala y la pantalla decide que hacer con ella.
+*/
 public class Nave4 extends Entidad
 {
-	private boolean destruida = false;
+    private boolean destruida = false;
     private int vidas = 3;
     private Sound sonidoHerido;
     private Sound soundBala;
     private Texture txBala;
     private boolean herido = false;
-    private int tiempoHeridoMax=50;
+    private int tiempoHeridoMax = 50;
     private int tiempoHerido;
-    
+
     public Nave4(int x, int y, Texture tx, Sound soundChoque, Texture txBala, Sound soundBala)
     {
         super(x, y, 0, 0, tx); // La nave inicia con velocidad 0
         this.sonidoHerido = soundChoque;
         this.soundBala = soundBala;
         this.txBala = txBala;
-        this.spr.setBounds(x, y, 45, 45);
+        setTamano(45, 45);
     }
-    
-    // Este método solo procesa datos y estado
+
+    // Este método solo procesa datos y estado (ya no recibe la pantalla)
     @Override
     public void actualizar()
     {
-        actualizarPosicion();
-    }
-    
-    public void actualizar(PantallaJuego juego)
-    {
         if (!herido)
         {
-            manejarInputTeclado(juego);
-            actualizar();
+            manejarInputTeclado();
+            actualizarPosicion();
         }
         else
         {
             actualizarEstadoHerido();
         }
     }
-    
+
     // Método privado para ocultar el funcionamiento de la nave
-    private void manejarInputTeclado(PantallaJuego juego)
+    private void manejarInputTeclado()
     {
-    	xVel = 0;
-    	yVel = 0;
-    	
-    	float velFija = 5f;
-    	
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) xVel = -velFija;
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xVel = velFija;
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) yVel = -velFija;     
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) yVel = velFija;
-        
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
-        {
-            disparar(juego);
-        }
+        setXVel(0);
+        setYVel(0);
+
+        float velFija = 5f;
+
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) setXVel(-velFija);
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) setXVel(velFija);
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) setYVel(-velFija);
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) setYVel(velFija);
     }
-    
-    private void disparar(PantallaJuego juego)
+
+    // Crea la bala y la devuelve; quien la reciba decide donde guardarla
+    public Bullet disparar()
     {
-        Bullet bala = new Bullet(spr.getX() + spr.getWidth() / 2 - 5, spr.getY() + spr.getHeight() - 5, 0, 3, txBala);
-        juego.agregarBala(bala);
+        Bullet bala = new Bullet(getX() + getAncho() / 2 - 5, getY() + getAlto() - 5, 0, 3, txBala);
         soundBala.play();
+        return bala;
     }
-    
+
     private void actualizarPosicion()
     {
-        float x = spr.getX();
-        float y = spr.getY();
-        
-        float nuevaX = x + xVel;
-        float nuevaY = y + yVel;
-        
+        float nuevaX = getX() + getXVel();
+        float nuevaY = getY() + getYVel();
+
         // Limita la posición para que no salga de la ventana
         if (nuevaX < 0) nuevaX = 0;
-        if (nuevaX + spr.getWidth() > Gdx.graphics.getWidth()) nuevaX = Gdx.graphics.getWidth() - spr.getWidth();
-        
+        if (nuevaX + getAncho() > Gdx.graphics.getWidth()) nuevaX = Gdx.graphics.getWidth() - getAncho();
+
         if (nuevaY < 0) nuevaY = 0;
-        if (nuevaY + spr.getHeight() > Gdx.graphics.getHeight()) nuevaY = Gdx.graphics.getHeight() - spr.getHeight();
-        
-        spr.setPosition(nuevaX, nuevaY);  
+        if (nuevaY + getAlto() > Gdx.graphics.getHeight()) nuevaY = Gdx.graphics.getHeight() - getAlto();
+
+        setPosicion(nuevaX, nuevaY);
     }
-    
+
     private void actualizarEstadoHerido()
     {
         tiempoHerido--;
@@ -102,25 +94,24 @@ public class Nave4 extends Entidad
         {
             herido = false;
         }
-    } 
-    
+    }
+
     // Delegamos la responsabilidad a Ball
     public boolean revisarColision(Ball2 b)
     {
         if (!herido && this.chocaCon(b))
         {
-            
-            xVel = -xVel;
-            yVel = -yVel;
-            
-            b.reaccionarChoqueNave(xVel, yVel); 
-            
+            setXVel(-getXVel());
+            setYVel(-getYVel());
+
+            b.reaccionarChoqueNave(getXVel(), getYVel());
+
             recibirDano();
             return true;
         }
         return false;
     }
-    
+
     // Agrupa toda la lógica de recibir daño
     private void recibirDano()
     {
@@ -133,24 +124,24 @@ public class Nave4 extends Entidad
             destruida = true;
         }
     }
-      
-    // Método para renderizar Nave. El Override es para el temblor al recibir daño
+
+    // Método para renderizar la nave. El Override es para el temblor al recibir daño
     @Override
     public void dibujar(SpriteBatch batch)
     {
         if (herido)
         {
-            float xOriginal = spr.getX();
-            spr.setX(spr.getX() + MathUtils.random(-2, 2));
+            float xOriginal = getX();
+            setPosicion(xOriginal + MathUtils.random(-2, 2), getY());
             super.dibujar(batch);
-            spr.setX(xOriginal); 
+            setPosicion(xOriginal, getY());
         }
         else
         {
             super.dibujar(batch);
         }
     }
-    
+
     public boolean estaDestruido() { return !herido && destruida; }
     public boolean estaHerido() { return herido; }
     public int getVidas() { return vidas; }

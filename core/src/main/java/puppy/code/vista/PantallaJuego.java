@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -119,7 +120,7 @@ public class PantallaJuego implements Screen
 		        }
 	    	}
 	    	  
-	    	//actualizar movimiento de asteroides dentro del area
+	    	//actualizar movimiento de asteroides dentro del área
 	    	for (Ball2 ball : balls1)
 	    	{
 	    		ball.actualizar();
@@ -146,10 +147,16 @@ public class PantallaJuego implements Screen
 	    	b.dibujar(batch);
 	    }
 	     
-	    nave.actualizar(this);
+	    nave.actualizar();
+
+	    // La nave crea la bala y la pantalla decide donde guardarla (el modelo ya no conoce la vista)
+	    if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && !nave.estaHerido())
+	    {
+	    	balas.add(nave.disparar());
+	    }
 	    nave.dibujar(batch);
 	     
-	    //dibujar asteroides y manejar colision con nave
+	    //dibujar asteroides y manejar colisión con nave
 	    for (int i = 0; i < balls1.size(); i++)
 	    {
 	    	Ball2 b=balls1.get(i);
@@ -190,11 +197,6 @@ public class PantallaJuego implements Screen
 			dispose();
 		  }
 	}
-    
-    public boolean agregarBala(Bullet bb)
-    {
-    	return balas.add(bb);
-    }
 	
 	@Override
 	public void show()

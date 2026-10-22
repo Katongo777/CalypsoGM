@@ -9,7 +9,7 @@ public class Ball2 extends Entidad
     public Ball2(int x, int y, int size, float xVel, float yVel, Texture tx)
     {
         super(x, y, xVel, yVel, tx);
-        
+
         // Validar que el borde de la esfera no quede fuera al inicio
         float nuevoX = x;
         float nuevoY = y;
@@ -17,61 +17,61 @@ public class Ball2 extends Entidad
         if (x + size > Gdx.graphics.getWidth()) nuevoX = x - size;
         if (y - size < 0) nuevoY = y + size;
         if (y + size > Gdx.graphics.getHeight()) nuevoY = y - size;
-        
-        this.spr.setPosition(nuevoX, nuevoY);
+
+        setPosicion(nuevoX, nuevoY);
     }
-    
+
     // El método solo se encarga de procesar la lógica de movimiento
     @Override
     public void actualizar()
     {
-        spr.setX(spr.getX() + xVel);
-        spr.setY(spr.getY() + yVel);
+        setPosicion(getX() + getXVel(), getY() + getYVel());
         comprobarLimitesPantalla();
     }
-    
+
     // Método privado para ocultar la lógica de rebote contra los bordes
     private void comprobarLimitesPantalla()
     {
-        if (spr.getX() + xVel < 0 || spr.getX() + xVel + spr.getWidth() > Gdx.graphics.getWidth())
+        if (getX() + getXVel() < 0 || getX() + getXVel() + getAncho() > Gdx.graphics.getWidth())
         {
-            xVel = xVel * -1;
+            setXVel(getXVel() * -1);
         }
-        if (spr.getY() + yVel < 0 || spr.getY() + yVel + spr.getHeight() > Gdx.graphics.getHeight())
+        if (getY() + getYVel() < 0 || getY() + getYVel() + getAlto() > Gdx.graphics.getHeight())
         {
-            yVel = yVel * -1;
+            setYVel(getYVel() * -1);
         }
     }
-     
+
     // Cuando choca con otro asteroide no manipula sus variables, solo avisa del choque
-    public void revisarColisionAsteroide(Ball2 otroAsteroide) {
-        if(this.chocaCon(otroAsteroide))
+    public void revisarColisionAsteroide(Ball2 otroAsteroide)
+    {
+        if (this.chocaCon(otroAsteroide))
         {
-            float miXVel = this.xVel;
-            float miYVel = this.yVel;
-            
+            float miXVel = getXVel();
+            float miYVel = getYVel();
+
             this.reaccionarChoqueAsteroide(otroAsteroide.getXVel(), otroAsteroide.getYVel());
             otroAsteroide.reaccionarChoqueAsteroide(miXVel, miYVel);
         }
     }
-    
+
     // El asteroide es responsable de cambiar su propia velocidad
     public void reaccionarChoqueAsteroide(float xVelOtro, float yVelOtro)
     {
-        if (this.xVel == 0) this.xVel += xVelOtro / 2;
-        this.xVel = -this.xVel;
-        
-        if (this.yVel == 0) this.yVel += yVelOtro / 2;
-        this.yVel = -this.yVel;
+        if (getXVel() == 0) setXVel(getXVel() + xVelOtro / 2);
+        setXVel(-getXVel());
+
+        if (getYVel() == 0) setYVel(getYVel() + yVelOtro / 2);
+        setYVel(-getYVel());
     }
-    
-    // El asteroide decide cómo rebotar al recibir daño.
+
+    // El asteroide decide como rebotar al recibir daño.
     public void reaccionarChoqueNave(float xVelNave, float yVelNave)
     {
-        if (this.xVel == 0) this.xVel += xVelNave / 2;
-        this.xVel = -this.xVel;
-        
-        if (this.yVel == 0) this.yVel += yVelNave / 2;
-        this.yVel = -this.yVel;
+        if (getXVel() == 0) setXVel(getXVel() + xVelNave / 2);
+        setXVel(-getXVel());
+
+        if (getYVel() == 0) setYVel(getYVel() + yVelNave / 2);
+        setYVel(-getYVel());
     }
 }
