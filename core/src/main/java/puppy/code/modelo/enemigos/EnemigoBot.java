@@ -1,7 +1,8 @@
 package puppy.code.modelo.enemigos;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+
+import puppy.code.Constantes;
 
 /*
     El enemigo básico: un "bot" que rebota por la pantalla.
@@ -18,9 +19,9 @@ public class EnemigoBot extends Enemigo
         float nuevoX = x;
         float nuevoY = y;
         if (x - size < 0) nuevoX = x + size;
-        if (x + size > Gdx.graphics.getWidth()) nuevoX = x - size;
+        if (x + size > Constantes.ANCHO) nuevoX = x - size;
         if (y - size < 0) nuevoY = y + size;
-        if (y + size > Gdx.graphics.getHeight()) nuevoY = y - size;
+        if (y + size > Constantes.ALTO) nuevoY = y - size;
 
         setPosicion(nuevoX, nuevoY);
     }

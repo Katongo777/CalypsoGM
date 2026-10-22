@@ -1,8 +1,8 @@
 package puppy.code.modelo;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 
+import puppy.code.Constantes;
 import puppy.code.modelo.enemigos.Enemigo;
 
 public class Bullet extends Entidad
@@ -25,11 +25,11 @@ public class Bullet extends Entidad
     // Método privado para ocultar la validación de los bordes de la pantalla
     private void comprobarLimitesPantalla()
     {
-        if (getX() < 0 || getX() + getAncho() > Gdx.graphics.getWidth())
+        if (getX() < 0 || getX() + getAncho() > Constantes.ANCHO)
         {
             destruir();
         }
-        if (getY() < 0 || getY() + getAlto() > Gdx.graphics.getHeight())
+        if (getY() < 0 || getY() + getAlto() > Constantes.ALTO)
         {
             destruir();
         }

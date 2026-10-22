@@ -3,9 +3,9 @@ package puppy.code.modelo.enemigos;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 
+import puppy.code.Constantes;
 import puppy.code.modelo.Entidad;
 
 /*
@@ -70,9 +70,9 @@ public abstract class Enemigo extends Entidad
             setPosicion(0, getY());
             setXVel(Math.abs(getXVel()));
         }
-        else if (getX() + getAncho() > Gdx.graphics.getWidth())
+        else if (getX() + getAncho() > Constantes.ANCHO)
         {
-            setPosicion(Gdx.graphics.getWidth() - getAncho(), getY());
+            setPosicion(Constantes.ANCHO - getAncho(), getY());
             setXVel(-Math.abs(getXVel()));
         }
         if (getY() < 0)
@@ -80,9 +80,9 @@ public abstract class Enemigo extends Entidad
             setPosicion(getX(), 0);
             setYVel(Math.abs(getYVel()));
         }
-        else if (getY() + getAlto() > Gdx.graphics.getHeight())
+        else if (getY() + getAlto() > Constantes.ALTO)
         {
-            setPosicion(getX(), Gdx.graphics.getHeight() - getAlto());
+            setPosicion(getX(), Constantes.ALTO - getAlto());
             setYVel(-Math.abs(getYVel()));
         }
     }

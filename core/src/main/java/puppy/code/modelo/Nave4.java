@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 
+import puppy.code.Constantes;
 import puppy.code.modelo.enemigos.Enemigo;
 
 /*
@@ -81,10 +82,10 @@ public class Nave4 extends Entidad
 
         // Limita la posición para que no salga de la ventana
         if (nuevaX < 0) nuevaX = 0;
-        if (nuevaX + getAncho() > Gdx.graphics.getWidth()) nuevaX = Gdx.graphics.getWidth() - getAncho();
+        if (nuevaX + getAncho() > Constantes.ANCHO) nuevaX = Constantes.ANCHO - getAncho();
 
         if (nuevaY < 0) nuevaY = 0;
-        if (nuevaY + getAlto() > Gdx.graphics.getHeight()) nuevaY = Gdx.graphics.getHeight() - getAlto();
+        if (nuevaY + getAlto() > Constantes.ALTO) nuevaY = Constantes.ALTO - getAlto();
 
         setPosicion(nuevaX, nuevaY);
     }
