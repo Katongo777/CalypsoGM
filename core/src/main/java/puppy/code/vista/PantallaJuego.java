@@ -9,13 +9,13 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.SpaceNavigation;
 import puppy.code.modelo.Ball2;
 import puppy.code.modelo.Bullet;
 import puppy.code.modelo.Nave4;
+import puppy.code.util.GestorRecursos;
 
 
 public class PantallaJuego implements Screen
@@ -52,20 +52,16 @@ public class PantallaJuego implements Screen
 		camera = new OrthographicCamera();	
 		camera.setToOrtho(false, 800, 640);
 		
-		//inicializar assets; musica de fondo y efectos de sonido
-		explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
-		explosionSound.setVolume(1,0.5f);
-		gameMusic = Gdx.audio.newMusic(Gdx.files.internal("piano-loops.wav")); //
-		
-		gameMusic.setLooping(true);
-		gameMusic.setVolume(0.5f);
+		// Los recursos vienen del Singleton: se cargan una sola vez y se reutilizan
+		GestorRecursos recursos = GestorRecursos.getInstance();
+		explosionSound = recursos.getSonido("explosion.ogg");
+		gameMusic = recursos.getMusica();
 		gameMusic.play();
 		
-	    // cargar imagen de la nave, 64x64   
-	    nave = new Nave4(Gdx.graphics.getWidth()/2-50,30,new Texture(Gdx.files.internal("MainShip3.png")),
-	    				Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")), 
-	    				new Texture(Gdx.files.internal("Rocket2.png")), 
-	    				Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"))); 
+	    nave = new Nave4(Gdx.graphics.getWidth()/2-50, 30, recursos.getTextura("MainShip3.png"),
+	    				recursos.getSonido("hurt.ogg"),
+	    				recursos.getTextura("Rocket2.png"),
+	    				recursos.getSonido("pop-sound.mp3"));
         nave.setVidas(vidas);
         
         // crear asteroides
@@ -75,7 +71,7 @@ public class PantallaJuego implements Screen
 	        Ball2 bb = new Ball2(r.nextInt((int)Gdx.graphics.getWidth()),
 	  	            50+r.nextInt((int)Gdx.graphics.getHeight()-50),
 	  	            20+r.nextInt(10), velXAsteroides+r.nextInt(4), velYAsteroides+r.nextInt(4), 
-	  	            new Texture(Gdx.files.internal("aGreyMedium4.png")));	   
+	  	            recursos.getTextura("aGreyMedium4.png"));	   
 	  	    balls1.add(bb);
 	  	    balls2.add(bb);
 	  	}
@@ -238,8 +234,6 @@ public class PantallaJuego implements Screen
 	@Override
 	public void dispose()
 	{
-		// TODO Auto-generated method stub
-		this.explosionSound.dispose();
-		this.gameMusic.dispose();
+		// Los recursos son compartidos (Singleton): se liberan al cerrar el juego
 	}
 }

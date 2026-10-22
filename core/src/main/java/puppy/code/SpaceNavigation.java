@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import puppy.code.util.GestorRecursos;
 import puppy.code.vista.PantallaMenu;
 
 
@@ -32,6 +33,8 @@ public class SpaceNavigation extends Game {
 	public void dispose() {
 		batch.dispose();
 		font.dispose();
+		// Los recursos compartidos se liberan una sola vez, al cerrar el juego
+		GestorRecursos.getInstance().liberar();
 	}
 
 	public SpriteBatch getBatch() {
