@@ -34,6 +34,11 @@ public class EnemigoLag extends Enemigo
         moverConRebote();
         rotar(-8); // el spinner de carga gira
 
+        if (isEntrando())
+        {
+            return; // todavía está entrando: no hace lag spikes
+        }
+
         framesParaSalto--;
         if (framesParaSalto <= 0)
         {

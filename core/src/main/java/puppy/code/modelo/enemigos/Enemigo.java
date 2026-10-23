@@ -26,12 +26,30 @@ public abstract class Enemigo extends Entidad
 {
     private int vida;
     private int puntos;
+    private boolean entrando = false; // true mientras baja desde arriba al empezar la oleada
 
     protected Enemigo(float x, float y, float xVel, float yVel, Texture tx, int vida, int puntos)
     {
         super(x, y, xVel, yVel, tx);
         this.vida = vida;
         this.puntos = puntos;
+    }
+
+    private static final float VELOCIDAD_ENTRADA = 4f;
+
+    /*
+        Hace que el enemigo aparezca por arriba de la pantalla en la posición x y baje hasta
+        entrar. Mientras entra no choca con nada (así la entrada no es injusta).
+    */
+    public void iniciarEntrada(float x)
+    {
+        setPosicion(Math.max(0, Math.min(x, Constantes.ANCHO - getAncho())), Constantes.ALTO + 20);
+        entrando = true;
+    }
+
+    public boolean isEntrando()
+    {
+        return entrando;
     }
 
     // Cada tipo de enemigo define su propio nombre
@@ -68,6 +86,17 @@ public abstract class Enemigo extends Entidad
     // Mueve al enemigo y lo hace rebotar contra los bordes de la ventana
     protected void moverConRebote()
     {
+        // Entrando: baja en línea recta hasta quedar dentro de la pantalla
+        if (entrando)
+        {
+            setPosicion(getX(), getY() - VELOCIDAD_ENTRADA);
+            if (getY() + getAlto() <= Constantes.ALTO - 10)
+            {
+                entrando = false;
+            }
+            return;
+        }
+
         setPosicion(getX() + getXVel(), getY() + getYVel());
 
         // Al tocar un borde se corrige la posición y se manda la velocidad HACIA ADENTRO.
