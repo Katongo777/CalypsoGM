@@ -71,5 +71,12 @@ public abstract class Entidad implements Colisionable
     protected void setTamano(float ancho, float alto)
     {
         spr.setSize(ancho, alto);
+        spr.setOriginCenter(); // para que al rotar gire sobre su centro
+    }
+
+    // Gira la imagen (en grados) sobre su centro; solo cambia el dibujo, no la hitbox
+    protected void rotar(float grados)
+    {
+        spr.rotate(grados);
     }
 }

@@ -57,6 +57,14 @@ public abstract class Enemigo extends Entidad
         return new ArrayList<>();
     }
 
+    // Si el enemigo quedó (parcialmente) fuera de la ventana, lo vuelve a meter
+    protected void ubicarDentroDePantalla()
+    {
+        float x = Math.max(0, Math.min(getX(), Constantes.ANCHO - getAncho()));
+        float y = Math.max(0, Math.min(getY(), Constantes.ALTO - getAlto()));
+        setPosicion(x, y);
+    }
+
     // Mueve al enemigo y lo hace rebotar contra los bordes de la ventana
     protected void moverConRebote()
     {

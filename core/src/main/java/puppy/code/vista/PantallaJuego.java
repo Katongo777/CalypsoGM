@@ -14,6 +14,8 @@ import puppy.code.modelo.Bullet;
 import puppy.code.modelo.Nave4;
 import puppy.code.modelo.enemigos.Enemigo;
 import puppy.code.modelo.enemigos.EnemigoBot;
+import puppy.code.modelo.enemigos.EnemigoCheater;
+import puppy.code.modelo.enemigos.EnemigoLag;
 import puppy.code.util.GestorRecursos;
 
 /*
@@ -56,16 +58,33 @@ public class PantallaJuego extends PantallaBase
 	    				recursos.getSonido("hurt.ogg"));
         nave.setVidas(vidas);
 
-        // crear enemigos
-        Random r = new Random();
-	    for (int i = 0; i < cantAsteroides; i++)
-	    {
-	        EnemigoBot bot = new EnemigoBot(r.nextInt(Constantes.ANCHO),
-	  	            150 + r.nextInt(Constantes.ALTO - 150),
-	  	            20 + r.nextInt(10), velXAsteroides + r.nextInt(4), velYAsteroides + r.nextInt(4),
-	  	            recursos.getTextura("aGreyMedium4.png"));
-	  	    enemigos.add(bot);
-	  	}
+        // Mezcla provisoria de enemigos (cuando exista el Builder esto lo define un Nivel)
+        crearEnemigos(recursos);
+	}
+
+	// Crea una mezcla de bots, lags y cheaters según la cantidad pedida
+	private void crearEnemigos(GestorRecursos recursos)
+	{
+		Random r = new Random();
+		int cantBots = cantAsteroides / 2;
+		int cantLags = cantAsteroides / 4;
+		int cantCheaters = Math.max(1, cantAsteroides / 10);
+
+		for (int i = 0; i < cantBots; i++)
+		{
+			enemigos.add(new EnemigoBot(r.nextInt(Constantes.ANCHO), 250 + r.nextInt(Constantes.ALTO - 250),
+					velXAsteroides + r.nextInt(4), velYAsteroides + r.nextInt(4), recursos.getTextura("bot.png")));
+		}
+		for (int i = 0; i < cantLags; i++)
+		{
+			enemigos.add(new EnemigoLag(r.nextInt(Constantes.ANCHO), 250 + r.nextInt(Constantes.ALTO - 250),
+					velXAsteroides + 2 + r.nextInt(4), velYAsteroides + 2 + r.nextInt(4), recursos.getTextura("lag.png")));
+		}
+		for (int i = 0; i < cantCheaters; i++)
+		{
+			enemigos.add(new EnemigoCheater(r.nextInt(Constantes.ANCHO), 250 + r.nextInt(Constantes.ALTO - 250),
+					velXAsteroides, velYAsteroides, recursos.getTextura("cheater.png")));
+		}
 	}
 
 	// ---------- PASO 1 del template: actualizar la lógica ----------
@@ -97,6 +116,7 @@ public class PantallaJuego extends PantallaBase
 	        			explosionSound.play();
 	        			score += enemigo.getPuntos();
 	        			enemigos.remove(j);
+	        			enemigos.addAll(enemigo.alMorir()); // por ejemplo, el Cheater suelta 2 Lags
 	        		}
 	        		break; // una bala solo golpea a un enemigo
 	        	}

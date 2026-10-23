@@ -2,28 +2,18 @@ package puppy.code.modelo.enemigos;
 
 import com.badlogic.gdx.graphics.Texture;
 
-import puppy.code.Constantes;
-
 /*
-    El enemigo básico: un "bot" que rebota por la pantalla.
+    El enemigo básico: un "bot" que rebota por la pantalla en línea recta.
     Antes esta clase se llamaba Ball2 y era la única; ahora es una más de la
     jerarquía de enemigos (hereda de Enemigo).
 */
 public class EnemigoBot extends Enemigo
 {
-    public EnemigoBot(int x, int y, int size, float xVel, float yVel, Texture tx)
+    public EnemigoBot(int x, int y, float xVel, float yVel, Texture tx)
     {
         super(x, y, xVel, yVel, tx, 1, 10); // 1 de vida, da 10 puntos
-
-        // Validar que el borde no quede fuera de la ventana al inicio
-        float nuevoX = x;
-        float nuevoY = y;
-        if (x - size < 0) nuevoX = x + size;
-        if (x + size > Constantes.ANCHO) nuevoX = x - size;
-        if (y - size < 0) nuevoY = y + size;
-        if (y + size > Constantes.ALTO) nuevoY = y - size;
-
-        setPosicion(nuevoX, nuevoY);
+        setTamano(64, 64);
+        ubicarDentroDePantalla();
     }
 
     @Override
