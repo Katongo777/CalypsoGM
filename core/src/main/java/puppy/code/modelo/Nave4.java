@@ -11,8 +11,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.Constantes;
 import puppy.code.modelo.armas.EstrategiaDisparo;
-import puppy.code.modelo.armas.Pistola;
 import puppy.code.modelo.enemigos.Enemigo;
+import puppy.code.util.GestorRecursos;
 
 /*
     La nave del jugador.
@@ -26,33 +26,80 @@ import puppy.code.modelo.enemigos.Enemigo;
 public class Nave4 extends Entidad
 {
     private boolean destruida = false;
-    private int vidas = 3;
+    private int vidas;
+    private float velocidad;
+    private Personaje personaje;
     private Sound sonidoHerido;
     private boolean herido = false;
+    private boolean apareciendo = false; // animación de entrada al empezar cada oleada
     private int tiempoHeridoMax = 90;
     private int tiempoHerido;
 
     // Strategy: el arma actual y el tiempo de espera entre disparos
     private EstrategiaDisparo estrategia;
+    private EstrategiaDisparo armaOriginal;   // el arma del personaje, a la que se vuelve
+    private int armaTemporalRestante = 0;      // fotogramas que quedan de un arma temporal
     private int cooldownRestante = 0;
 
-    public Nave4(int x, int y, Texture tx, Sound soundChoque)
+    // Efectos de power-ups: cuántos fotogramas les quedan (0 = inactivo)
+    private int escudoRestante = 0;
+    private int turboRestante = 0;
+
+    /*
+        La nave se crea a partir del personaje elegido: de él salen la imagen,
+        las vidas, la velocidad y el arma inicial.
+    */
+    public Nave4(Personaje personaje)
     {
-        super(x, y, 0, 0, tx); // La nave inicia con velocidad 0
-        this.sonidoHerido = soundChoque;
-        this.estrategia = new Pistola();
+        super(Constantes.ANCHO / 2 - 32, 30, 0, 0,
+                GestorRecursos.getInstance().getTextura(personaje.getArchivoNave()));
+        this.personaje = personaje;
+        this.sonidoHerido = GestorRecursos.getInstance().getSonido("hurt.ogg");
+        this.vidas = personaje.getVidas();
+        this.velocidad = personaje.getVelocidad();
+        this.estrategia = personaje.crearArma();
+        this.armaOriginal = estrategia;
         setTamano(64, 64);
     }
 
     @Override
     public void actualizar()
     {
-        manejarInputTeclado();
-        actualizarPosicion();
+        if (apareciendo)
+        {
+            // Animación de entrada: la nave sube desde abajo y todavía no se puede controlar
+            setPosicion(getX(), getY() + 4);
+            if (getY() >= 30)
+            {
+                setPosicion(getX(), 30);
+                apareciendo = false;
+            }
+        }
+        else
+        {
+            manejarInputTeclado();
+            actualizarPosicion();
+        }
 
         if (cooldownRestante > 0)
         {
             cooldownRestante--;
+        }
+        if (armaTemporalRestante > 0)
+        {
+            armaTemporalRestante--;
+            if (armaTemporalRestante == 0)
+            {
+                estrategia = armaOriginal; // se acabó el arma temporal: vuelve la del personaje
+            }
+        }
+        if (escudoRestante > 0)
+        {
+            escudoRestante--;
+        }
+        if (turboRestante > 0)
+        {
+            turboRestante--;
         }
         if (herido)
         {
@@ -66,12 +113,10 @@ public class Nave4 extends Entidad
         setXVel(0);
         setYVel(0);
 
-        float velFija = 6f;
-
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) setXVel(-velFija);
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) setXVel(velFija);
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) setYVel(-velFija);
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) setYVel(velFija);
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) setXVel(-velocidad);
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) setXVel(velocidad);
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) setYVel(-velocidad);
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) setYVel(velocidad);
     }
 
     /*
@@ -80,11 +125,12 @@ public class Nave4 extends Entidad
     */
     public List<Bullet> disparar()
     {
-        if (cooldownRestante > 0)
+        if (cooldownRestante > 0 || apareciendo)
         {
             return new ArrayList<>();
         }
-        cooldownRestante = estrategia.getCooldown();
+        // Con el turbo (RGB) la nave dispara al doble de velocidad
+        cooldownRestante = turboRestante > 0 ? estrategia.getCooldown() / 2 : estrategia.getCooldown();
         return estrategia.disparar(getX() + getAncho() / 2, getY() + getAlto() - 8);
     }
 
@@ -117,6 +163,11 @@ public class Nave4 extends Entidad
     {
         if (!herido && this.chocaCon(enemigo))
         {
+            // Con el escudo activo el enemigo se destruye y la nave no recibe daño
+            if (escudoRestante > 0)
+            {
+                return true;
+            }
             recibirDano();
             return true;
         }
@@ -145,17 +196,73 @@ public class Nave4 extends Entidad
             return;
         }
         super.dibujar(batch);
+
+        // Halo del escudo: parpadea en el último segundo para avisar que se acaba
+        if (escudoRestante > 0 && (escudoRestante > 60 || (escudoRestante / 6) % 2 == 0))
+        {
+            Texture halo = GestorRecursos.getInstance().getTextura("escudo.png");
+            batch.draw(halo, getX() - 16, getY() - 16, getAncho() + 32, getAlto() + 32);
+        }
     }
 
     public boolean estaDestruido() { return destruida; }
     public boolean estaHerido() { return herido; }
+    public Personaje getPersonaje() { return personaje; }
     public int getVidas() { return vidas; }
     public void setVidas(int vidas) { this.vidas = vidas; }
+
+    // ---- Efectos que aplican los power-ups ----
+    public void curar(int cantidad)
+    {
+        vidas = Math.min(vidas + cantidad, 8);
+    }
+
+    public void activarEscudo(int fotogramas)
+    {
+        escudoRestante = fotogramas;
+    }
+
+    public void activarTurbo(int fotogramas)
+    {
+        turboRestante = fotogramas;
+    }
+
+    public boolean tieneEscudo() { return escudoRestante > 0; }
+    public boolean tieneTurbo() { return turboRestante > 0; }
+
+    /*
+        Animación de entrada al empezar cada oleada: la nave parte debajo de la pantalla,
+        sube hasta su lugar y mientras tanto parpadea y es invulnerable.
+    */
+    public void aparecer()
+    {
+        setPosicion(Constantes.ANCHO / 2f - getAncho() / 2, -getAlto() - 20);
+        setXVel(0);
+        setYVel(0);
+        apareciendo = true;
+        herido = true;       // reutiliza el parpadeo y la invulnerabilidad del estado "herido"
+        tiempoHerido = 200;
+    }
+
+    public boolean estaApareciendo() { return apareciendo; }
 
     // Strategy: se puede cambiar de arma en cualquier momento
     public EstrategiaDisparo getEstrategia() { return estrategia; }
 
     // Ley de Demeter: quien necesita el nombre del arma se lo pide a la nave, no a su estrategia
     public String getNombreArma() { return estrategia.getNombre(); }
-    public void setEstrategia(EstrategiaDisparo estrategia) { this.estrategia = estrategia; }
+    // Cambio permanente de arma
+    public void setEstrategia(EstrategiaDisparo estrategia)
+    {
+        this.estrategia = estrategia;
+        this.armaOriginal = estrategia;
+        this.armaTemporalRestante = 0;
+    }
+
+    // Cambio temporal: usa la nueva arma unos segundos y después vuelve a la original
+    public void equiparArmaTemporal(EstrategiaDisparo arma, int fotogramas)
+    {
+        this.estrategia = arma;
+        this.armaTemporalRestante = fotogramas;
+    }
 }
