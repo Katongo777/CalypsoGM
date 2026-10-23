@@ -1,53 +1,60 @@
 package puppy.code.modelo;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 
 import puppy.code.Constantes;
+import puppy.code.modelo.armas.EstrategiaDisparo;
+import puppy.code.modelo.armas.Pistola;
 import puppy.code.modelo.enemigos.Enemigo;
 
 /*
     La nave del jugador.
 
-    ENCAPSULAMIENTO (GM-5): antes esta clase conocía a PantallaJuego (una clase de
-    la vista) y le entregaba las balas con juego.agregarBala(...). Eso es una mala
-    dependencia: el modelo no debe saber que existe la vista. Ahora disparar()
-    simplemente DEVUELVE la bala y la pantalla decide qué hacer con ella.
+    Es el CONTEXTO del patrón Strategy: guarda una EstrategiaDisparo y la usa al
+    disparar, sin saber qué arma es. Se puede cambiar con setEstrategia().
+
+    ENCAPSULAMIENTO (GM-5): disparar() DEVUELVE las balas y la pantalla decide qué
+    hacer con ellas; la nave no conoce a la vista.
 */
 public class Nave4 extends Entidad
 {
     private boolean destruida = false;
     private int vidas = 3;
     private Sound sonidoHerido;
-    private Sound soundBala;
-    private Texture txBala;
     private boolean herido = false;
-    private int tiempoHeridoMax = 50;
+    private int tiempoHeridoMax = 90;
     private int tiempoHerido;
 
-    public Nave4(int x, int y, Texture tx, Sound soundChoque, Texture txBala, Sound soundBala)
+    // Strategy: el arma actual y el tiempo de espera entre disparos
+    private EstrategiaDisparo estrategia;
+    private int cooldownRestante = 0;
+
+    public Nave4(int x, int y, Texture tx, Sound soundChoque)
     {
         super(x, y, 0, 0, tx); // La nave inicia con velocidad 0
         this.sonidoHerido = soundChoque;
-        this.soundBala = soundBala;
-        this.txBala = txBala;
-        setTamano(45, 45);
+        this.estrategia = new Pistola();
+        setTamano(64, 64);
     }
 
-    // Este método solo procesa datos y estado (ya no recibe la pantalla)
     @Override
     public void actualizar()
     {
-        if (!herido)
+        manejarInputTeclado();
+        actualizarPosicion();
+
+        if (cooldownRestante > 0)
         {
-            manejarInputTeclado();
-            actualizarPosicion();
+            cooldownRestante--;
         }
-        else
+        if (herido)
         {
             actualizarEstadoHerido();
         }
@@ -59,7 +66,7 @@ public class Nave4 extends Entidad
         setXVel(0);
         setYVel(0);
 
-        float velFija = 5f;
+        float velFija = 6f;
 
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) setXVel(-velFija);
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) setXVel(velFija);
@@ -67,12 +74,18 @@ public class Nave4 extends Entidad
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) setYVel(velFija);
     }
 
-    // Crea la bala y la devuelve; quien la reciba decide dónde guardarla
-    public Bullet disparar()
+    /*
+        Dispara con el arma actual. Si todavía está "recargando" (cooldown) devuelve
+        una lista vacía. Quien reciba las balas decide dónde guardarlas.
+    */
+    public List<Bullet> disparar()
     {
-        Bullet bala = new Bullet(getX() + getAncho() / 2 - 5, getY() + getAlto() - 5, 0, 3, txBala);
-        soundBala.play();
-        return bala;
+        if (cooldownRestante > 0)
+        {
+            return new ArrayList<>();
+        }
+        cooldownRestante = estrategia.getCooldown();
+        return estrategia.disparar(getX() + getAncho() / 2, getY() + getAlto() - 8);
     }
 
     private void actualizarPosicion()
@@ -99,16 +112,11 @@ public class Nave4 extends Entidad
         }
     }
 
-    // Funciona con cualquier tipo de Enemigo; el enemigo decide cómo rebotar
+    // Funciona con cualquier tipo de Enemigo. Mientras está herido es invulnerable.
     public boolean revisarColision(Enemigo enemigo)
     {
         if (!herido && this.chocaCon(enemigo))
         {
-            setXVel(-getXVel());
-            setYVel(-getYVel());
-
-            enemigo.reaccionarChoque(getXVel(), getYVel());
-
             recibirDano();
             return true;
         }
@@ -128,25 +136,26 @@ public class Nave4 extends Entidad
         }
     }
 
-    // Método para renderizar la nave. El Override es para el temblor al recibir daño
+    // Mientras es invulnerable la nave parpadea (se salta el dibujo cada cierto tiempo)
     @Override
     public void dibujar(SpriteBatch batch)
     {
-        if (herido)
+        if (herido && (tiempoHerido / 6) % 2 == 0)
         {
-            float xOriginal = getX();
-            setPosicion(xOriginal + MathUtils.random(-2, 2), getY());
-            super.dibujar(batch);
-            setPosicion(xOriginal, getY());
+            return;
         }
-        else
-        {
-            super.dibujar(batch);
-        }
+        super.dibujar(batch);
     }
 
-    public boolean estaDestruido() { return !herido && destruida; }
+    public boolean estaDestruido() { return destruida; }
     public boolean estaHerido() { return herido; }
     public int getVidas() { return vidas; }
     public void setVidas(int vidas) { this.vidas = vidas; }
+
+    // Strategy: se puede cambiar de arma en cualquier momento
+    public EstrategiaDisparo getEstrategia() { return estrategia; }
+
+    // Ley de Demeter: quien necesita el nombre del arma se lo pide a la nave, no a su estrategia
+    public String getNombreArma() { return estrategia.getNombre(); }
+    public void setEstrategia(EstrategiaDisparo estrategia) { this.estrategia = estrategia; }
 }

@@ -52,10 +52,8 @@ public class PantallaJuego extends PantallaBase
 		gameMusic = recursos.getMusica();
 		gameMusic.play();
 
-	    nave = new Nave4(Constantes.ANCHO / 2 - 50, 30, recursos.getTextura("MainShip3.png"),
-	    				recursos.getSonido("hurt.ogg"),
-	    				recursos.getTextura("Rocket2.png"),
-	    				recursos.getSonido("pop-sound.mp3"));
+	    nave = new Nave4(Constantes.ANCHO / 2 - 32, 30, recursos.getTextura("MainShip3.png"),
+	    				recursos.getSonido("hurt.ogg"));
         nave.setVidas(vidas);
 
         // crear enemigos
@@ -63,7 +61,7 @@ public class PantallaJuego extends PantallaBase
 	    for (int i = 0; i < cantAsteroides; i++)
 	    {
 	        EnemigoBot bot = new EnemigoBot(r.nextInt(Constantes.ANCHO),
-	  	            50 + r.nextInt(Constantes.ALTO - 50),
+	  	            150 + r.nextInt(Constantes.ALTO - 150),
 	  	            20 + r.nextInt(10), velXAsteroides + r.nextInt(4), velYAsteroides + r.nextInt(4),
 	  	            recursos.getTextura("aGreyMedium4.png"));
 	  	    enemigos.add(bot);
@@ -74,60 +72,57 @@ public class PantallaJuego extends PantallaBase
 	@Override
 	protected void actualizar(float delta)
 	{
-	    if (!nave.estaHerido())
-	    {
-	    	// colisiones entre balas y enemigos y su destrucción
-	    	for (int i = 0; i < balas.size(); i++)
-	    	{
-	    		Bullet b = balas.get(i);
-		        b.actualizar();
-		        for (int j = 0; j < enemigos.size(); j++)
-		        {
-		        	Enemigo enemigo = enemigos.get(j);
-		        	if (b.revisarColision(enemigo))
-		        	{
-		        		// El enemigo pierde vida; solo muere cuando se le acaba
-		        		enemigo.recibirDano(1);
-		        		if (enemigo.estaMuerto())
-		        		{
-		        			explosionSound.play();
-		        			score += enemigo.getPuntos();
-		        			enemigos.remove(j);
-		        		}
-		        		break; // una bala solo golpea a un enemigo
-		        	}
-		        }
-
-		        if (b.isDestroyed())
-		        {
-		        	balas.remove(b);
-		        	i--; //para no saltarse 1 tras eliminar del arraylist
-		        }
-	    	}
-
-	    	//actualizar movimiento de enemigos dentro del área
-	    	for (Enemigo enemigo : enemigos)
-	    	{
-	    		enemigo.actualizar();
-	    	}
-
-	    	//colisiones entre enemigos y sus rebotes (cada pareja se revisa una sola vez)
-	    	for (int i = 0; i < enemigos.size(); i++)
-	    	{
-	    		for (int j = i + 1; j < enemigos.size(); j++)
-	    		{
-	    			enemigos.get(i).revisarColisionEnemigo(enemigos.get(j));
-	    		}
-	    	}
-	    }
-
 	    nave.actualizar();
 
-	    // La nave crea la bala y la pantalla decide dónde guardarla (el modelo ya no conoce la vista)
-	    if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && !nave.estaHerido())
+	    // Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
+	    if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
 	    {
-	    	balas.add(nave.disparar());
+	    	balas.addAll(nave.disparar());
 	    }
+
+    	// colisiones entre balas y enemigos y su destrucción
+    	for (int i = 0; i < balas.size(); i++)
+    	{
+    		Bullet b = balas.get(i);
+	        b.actualizar();
+	        for (int j = 0; j < enemigos.size(); j++)
+	        {
+	        	Enemigo enemigo = enemigos.get(j);
+	        	if (b.revisarColision(enemigo))
+	        	{
+	        		// El enemigo pierde vida; solo muere cuando se le acaba
+	        		enemigo.recibirDano(b.getDanio());
+	        		if (enemigo.estaMuerto())
+	        		{
+	        			explosionSound.play();
+	        			score += enemigo.getPuntos();
+	        			enemigos.remove(j);
+	        		}
+	        		break; // una bala solo golpea a un enemigo
+	        	}
+	        }
+
+	        if (b.isDestroyed())
+	        {
+	        	balas.remove(b);
+	        	i--; //para no saltarse 1 tras eliminar del arraylist
+	        }
+    	}
+
+    	//actualizar movimiento de enemigos dentro del área
+    	for (Enemigo enemigo : enemigos)
+    	{
+    		enemigo.actualizar();
+    	}
+
+    	//colisiones entre enemigos y sus rebotes (cada pareja se revisa una sola vez)
+    	for (int i = 0; i < enemigos.size(); i++)
+    	{
+    		for (int j = i + 1; j < enemigos.size(); j++)
+    		{
+    			enemigos.get(i).revisarColisionEnemigo(enemigos.get(j));
+    		}
+    	}
 
 	    //colisión de los enemigos con la nave
 	    for (int i = 0; i < enemigos.size(); i++)
@@ -163,7 +158,7 @@ public class PantallaJuego extends PantallaBase
 
 	public void dibujaEncabezado()
 	{
-		CharSequence str = "Vidas: "+nave.getVidas()+" Ronda: "+ronda;
+		CharSequence str = "Vidas: "+nave.getVidas()+" Ronda: "+ronda+"  Arma: "+nave.getNombreArma();
 		game.getFont().getData().setScale(2f);
 		game.getFont().draw(game.getBatch(), str, 10, 30);
 		game.getFont().draw(game.getBatch(), "Score:"+this.score, Constantes.ANCHO - 150, 30);
