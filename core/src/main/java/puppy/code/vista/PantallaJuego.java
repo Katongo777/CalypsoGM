@@ -182,7 +182,7 @@ public class PantallaJuego extends PantallaBase
 		game.getFont().getData().setScale(2f);
 		game.getFont().draw(game.getBatch(), str, 10, 30);
 		game.getFont().draw(game.getBatch(), "Score:"+this.score, Constantes.ANCHO - 150, 30);
-		game.getFont().draw(game.getBatch(), "HighScore:"+game.getHighScore(), Constantes.ANCHO / 2 - 100, 30);
+		game.getFont().draw(game.getBatch(), "Récord:"+game.getHighScore(), Constantes.ANCHO / 2 - 60, 30);
 	}
 
 	// ---------- PASO 3 del template (gancho): ¿hay que cambiar de pantalla? ----------
@@ -191,11 +191,9 @@ public class PantallaJuego extends PantallaBase
 	{
 	    if (nave.estaDestruido())
 	    {
-	    	if (score > game.getHighScore())
-	    	{
-	    		game.setHighScore(score);
-	    	}
-	    	game.setScreen(new PantallaGameOver(game));
+	    	// Se guarda el récord (si corresponde) y se muestra la pantalla de fin
+	    	boolean nuevoRecord = GestorRecursos.getInstance().registrarPuntaje(score);
+	    	game.setScreen(new PantallaGameOver(game, score, nuevoRecord));
 	    }
 	    else if (enemigos.size() == 0)
 	    {

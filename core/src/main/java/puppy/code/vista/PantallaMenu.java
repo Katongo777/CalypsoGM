@@ -26,6 +26,7 @@ public class PantallaMenu extends PantallaBase
 	protected void dibujar()
 	{
 		game.getFont().draw(game.getBatch(), "Bienvenido a Space Navigation !", 140, 400);
+		game.getFont().draw(game.getBatch(), "Récord actual: " + game.getHighScore(), 140, 350);
 		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado o presiona cualquier tecla para comenzar ...", 100, 300);
 	}
 
