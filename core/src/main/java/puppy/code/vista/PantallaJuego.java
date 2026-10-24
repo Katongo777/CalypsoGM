@@ -12,6 +12,9 @@ import puppy.code.Constantes;
 import puppy.code.SpaceNavigation;
 import puppy.code.modelo.Bullet;
 import puppy.code.modelo.Nave4;
+import puppy.code.modelo.armas.Escopeta;
+import puppy.code.modelo.armas.Pistola;
+import puppy.code.modelo.armas.Railgun;
 import puppy.code.modelo.enemigos.Enemigo;
 import puppy.code.modelo.enemigos.EnemigoBot;
 import puppy.code.modelo.enemigos.EnemigoCheater;
@@ -93,6 +96,11 @@ public class PantallaJuego extends PantallaBase
 	{
 	    nave.actualizar();
 
+	    // Teclas provisorias para probar las armas (Strategy): 1 = Pistola, 2 = Escopeta, 3 = Railgun
+	    if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) nave.setEstrategia(new Pistola());
+	    if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) nave.setEstrategia(new Escopeta());
+	    if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) nave.setEstrategia(new Railgun());
+
 	    // Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
 	    if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
 	    {
@@ -116,9 +124,13 @@ public class PantallaJuego extends PantallaBase
 	        			explosionSound.play();
 	        			score += enemigo.getPuntos();
 	        			enemigos.remove(j);
+	        			j--;
 	        			enemigos.addAll(enemigo.alMorir()); // por ejemplo, el Cheater suelta 2 Lags
 	        		}
-	        		break; // una bala solo golpea a un enemigo
+	        		if (b.isDestroyed())
+	        		{
+	        			break; // una bala normal solo golpea a un enemigo (la Railgun atraviesa)
+	        		}
 	        	}
 	        }
 
