@@ -13,7 +13,8 @@ import puppy.code.vista.PantallaMenu;
 
 
 public class SpaceNavigation extends Game {
-	private String nombreJuego = "Space Navigation";
+	private String nombreJuego = "Calypso: Skill Issue Edition";
+	private boolean modoDios = false; // se activa con el código Konami en el menú
 	private SpriteBatch batch;
 	private BitmapFont font;
 	private FondoEstrellado fondo;
@@ -48,6 +49,14 @@ public class SpaceNavigation extends Game {
 
 	public FondoEstrellado getFondo() {
 		return fondo;
+	}
+
+	public boolean isModoDios() {
+		return modoDios;
+	}
+
+	public void setModoDios(boolean modoDios) {
+		this.modoDios = modoDios;
 	}
 
 	// El récord ahora lo guarda el Singleton GestorRecursos (y queda en un archivo)

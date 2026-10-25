@@ -8,6 +8,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Align;
 
 import puppy.code.Constantes;
@@ -22,6 +23,10 @@ import puppy.code.modelo.enemigos.EnemigoLag;
 import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
 import puppy.code.modelo.niveles.NivelPartidaBuilder;
+import puppy.code.modelo.powerups.Pizza;
+import puppy.code.modelo.powerups.PowerUp;
+import puppy.code.modelo.powerups.RGB;
+import puppy.code.modelo.powerups.SillaGamer;
 import puppy.code.util.GestorRecursos;
 
 /*
@@ -45,11 +50,16 @@ public class PantallaJuego extends PantallaBase
 	// Una sola lista para todos los enemigos
 	private ArrayList<Enemigo> enemigos = new ArrayList<>();
 	private ArrayList<Bullet> balas = new ArrayList<>();
+	private ArrayList<PowerUp> powerUps = new ArrayList<>();
 
 	// Arma una partida nueva: oleada 1, la nave del personaje elegido y puntaje 0
 	public static PantallaJuego nuevaPartida(SpaceNavigation game, Personaje personaje)
 	{
 		Nave4 nave = new Nave4(personaje);
+		if (game.isModoDios())
+		{
+			nave.setVidas(30); // easter egg del código Konami
+		}
 
 		// El Director usa el Builder para construir la primera oleada
 		DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
@@ -155,6 +165,7 @@ public class PantallaJuego extends PantallaBase
 						enemigos.remove(j);
 						j--;
 						enemigos.addAll(enemigo.alMorir()); // por ejemplo, el Cheater suelta 2 Lags
+						soltarPowerUp(enemigo);
 					}
 					if (b.isDestroyed())
 					{
@@ -197,6 +208,47 @@ public class PantallaJuego extends PantallaBase
 				i--;
 			}
 		}
+
+		// power-ups: caen, y si la nave los toca se aplica su efecto
+		for (int i = 0; i < powerUps.size(); i++)
+		{
+			PowerUp p = powerUps.get(i);
+			p.actualizar();
+			if (nave.chocaCon(p))
+			{
+				p.aplicar(nave);
+				locutor.anunciar(p.getMensaje());
+				powerUps.remove(i);
+				i--;
+			}
+			else if (p.salioDePantalla())
+			{
+				powerUps.remove(i);
+				i--;
+			}
+		}
+	}
+
+	// Con cierta probabilidad (la define el Nivel) el enemigo muerto suelta un power-up al azar
+	private void soltarPowerUp(Enemigo muerto)
+	{
+		if (MathUtils.random() < nivel.getProbPowerUp())
+		{
+			float x = muerto.getX() + muerto.getAncho() / 2 - 24;
+			float y = muerto.getY();
+			switch (MathUtils.random(2))
+			{
+				case 0:
+					powerUps.add(new Pizza(x, y));
+					break;
+				case 1:
+					powerUps.add(new SillaGamer(x, y));
+					break;
+				default:
+					powerUps.add(new RGB(x, y));
+					break;
+			}
+		}
 	}
 
 	// ---------- PASO 2 del template: dibujar ----------
@@ -208,6 +260,11 @@ public class PantallaJuego extends PantallaBase
 		for (Bullet b : balas)
 		{
 			b.dibujar(game.getBatch());
+		}
+
+		for (PowerUp p : powerUps)
+		{
+			p.dibujar(game.getBatch());
 		}
 
 		nave.dibujar(game.getBatch());

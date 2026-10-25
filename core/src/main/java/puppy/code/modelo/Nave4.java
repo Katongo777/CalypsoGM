@@ -6,6 +6,7 @@ import java.util.List;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.Constantes;
@@ -37,6 +38,10 @@ public class Nave4 extends Entidad
     private EstrategiaDisparo estrategia;
     private int cooldownRestante = 0;
 
+    // Efectos de power-ups: cuántos fotogramas les quedan (0 = inactivo)
+    private int escudoRestante = 0;
+    private int turboRestante = 0;
+
     /*
         La nave se crea a partir del personaje elegido: de él salen la imagen,
         las vidas, la velocidad y el arma inicial.
@@ -62,6 +67,14 @@ public class Nave4 extends Entidad
         if (cooldownRestante > 0)
         {
             cooldownRestante--;
+        }
+        if (escudoRestante > 0)
+        {
+            escudoRestante--;
+        }
+        if (turboRestante > 0)
+        {
+            turboRestante--;
         }
         if (herido)
         {
@@ -91,7 +104,8 @@ public class Nave4 extends Entidad
         {
             return new ArrayList<>();
         }
-        cooldownRestante = estrategia.getCooldown();
+        // Con el turbo (RGB) la nave dispara al doble de velocidad
+        cooldownRestante = turboRestante > 0 ? estrategia.getCooldown() / 2 : estrategia.getCooldown();
         return estrategia.disparar(getX() + getAncho() / 2, getY() + getAlto() - 8);
     }
 
@@ -124,6 +138,11 @@ public class Nave4 extends Entidad
     {
         if (!herido && this.chocaCon(enemigo))
         {
+            // Con el escudo activo el enemigo se destruye y la nave no recibe daño
+            if (escudoRestante > 0)
+            {
+                return true;
+            }
             recibirDano();
             return true;
         }
@@ -152,6 +171,13 @@ public class Nave4 extends Entidad
             return;
         }
         super.dibujar(batch);
+
+        // Halo del escudo: parpadea en el último segundo para avisar que se acaba
+        if (escudoRestante > 0 && (escudoRestante > 60 || (escudoRestante / 6) % 2 == 0))
+        {
+            Texture halo = GestorRecursos.getInstance().getTextura("escudo.png");
+            batch.draw(halo, getX() - 16, getY() - 16, getAncho() + 32, getAlto() + 32);
+        }
     }
 
     public boolean estaDestruido() { return destruida; }
@@ -159,6 +185,25 @@ public class Nave4 extends Entidad
     public Personaje getPersonaje() { return personaje; }
     public int getVidas() { return vidas; }
     public void setVidas(int vidas) { this.vidas = vidas; }
+
+    // ---- Efectos que aplican los power-ups ----
+    public void curar(int cantidad)
+    {
+        vidas = Math.min(vidas + cantidad, 8);
+    }
+
+    public void activarEscudo(int fotogramas)
+    {
+        escudoRestante = fotogramas;
+    }
+
+    public void activarTurbo(int fotogramas)
+    {
+        turboRestante = fotogramas;
+    }
+
+    public boolean tieneEscudo() { return escudoRestante > 0; }
+    public boolean tieneTurbo() { return turboRestante > 0; }
 
     // Vuelve a poner la nave abajo y al centro (se usa al empezar cada oleada)
     public void reubicar()
