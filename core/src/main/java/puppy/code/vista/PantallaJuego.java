@@ -16,6 +16,7 @@ import puppy.code.SpaceNavigation;
 import puppy.code.modelo.Bullet;
 import puppy.code.modelo.Nave4;
 import puppy.code.modelo.Personaje;
+import puppy.code.modelo.armas.BFG;
 import puppy.code.modelo.enemigos.Enemigo;
 import puppy.code.modelo.enemigos.EnemigoBot;
 import puppy.code.modelo.enemigos.EnemigoCheater;
@@ -58,7 +59,8 @@ public class PantallaJuego extends PantallaBase
 		Nave4 nave = new Nave4(personaje);
 		if (game.isModoDios())
 		{
-			nave.setVidas(30); // easter egg del código Konami
+			nave.setVidas(30); // easter egg del código Konami: 30 vidas y el BFG 9000
+			nave.setEstrategia(new BFG());
 		}
 
 		// El Director usa el Builder para construir la primera oleada

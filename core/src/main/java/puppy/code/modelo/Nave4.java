@@ -36,6 +36,8 @@ public class Nave4 extends Entidad
 
     // Strategy: el arma actual y el tiempo de espera entre disparos
     private EstrategiaDisparo estrategia;
+    private EstrategiaDisparo armaOriginal;   // el arma del personaje, a la que se vuelve
+    private int armaTemporalRestante = 0;      // fotogramas que quedan de un arma temporal
     private int cooldownRestante = 0;
 
     // Efectos de power-ups: cuántos fotogramas les quedan (0 = inactivo)
@@ -55,6 +57,7 @@ public class Nave4 extends Entidad
         this.vidas = personaje.getVidas();
         this.velocidad = personaje.getVelocidad();
         this.estrategia = personaje.crearArma();
+        this.armaOriginal = estrategia;
         setTamano(64, 64);
     }
 
@@ -67,6 +70,14 @@ public class Nave4 extends Entidad
         if (cooldownRestante > 0)
         {
             cooldownRestante--;
+        }
+        if (armaTemporalRestante > 0)
+        {
+            armaTemporalRestante--;
+            if (armaTemporalRestante == 0)
+            {
+                estrategia = armaOriginal; // se acabó el arma temporal: vuelve la del personaje
+            }
         }
         if (escudoRestante > 0)
         {
@@ -218,5 +229,18 @@ public class Nave4 extends Entidad
 
     // Ley de Demeter: quien necesita el nombre del arma se lo pide a la nave, no a su estrategia
     public String getNombreArma() { return estrategia.getNombre(); }
-    public void setEstrategia(EstrategiaDisparo estrategia) { this.estrategia = estrategia; }
+    // Cambio permanente de arma
+    public void setEstrategia(EstrategiaDisparo estrategia)
+    {
+        this.estrategia = estrategia;
+        this.armaOriginal = estrategia;
+        this.armaTemporalRestante = 0;
+    }
+
+    // Cambio temporal: usa la nueva arma unos segundos y después vuelve a la original
+    public void equiparArmaTemporal(EstrategiaDisparo arma, int fotogramas)
+    {
+        this.estrategia = arma;
+        this.armaTemporalRestante = fotogramas;
+    }
 }
