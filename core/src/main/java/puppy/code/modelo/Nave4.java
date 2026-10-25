@@ -152,6 +152,14 @@ public class Nave4 extends Entidad
     public int getVidas() { return vidas; }
     public void setVidas(int vidas) { this.vidas = vidas; }
 
+    // Vuelve a poner la nave abajo y al centro (se usa al empezar cada oleada)
+    public void reubicar()
+    {
+        setPosicion(Constantes.ANCHO / 2f - getAncho() / 2, 30);
+        setXVel(0);
+        setYVel(0);
+    }
+
     // Strategy: se puede cambiar de arma en cualquier momento
     public EstrategiaDisparo getEstrategia() { return estrategia; }
 

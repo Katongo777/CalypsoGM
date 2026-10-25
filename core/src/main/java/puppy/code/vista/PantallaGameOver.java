@@ -49,7 +49,7 @@ public class PantallaGameOver extends PantallaBase
 	{
 		if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY))
 		{
-			game.setScreen(new PantallaJuego(game, 1, 3, 0, 1, 1, 10));
+			game.setScreen(PantallaJuego.nuevaPartida(game));
 		}
 	}
 }
