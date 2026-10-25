@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.Constantes;
 import puppy.code.modelo.Nave4;
+import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
 import puppy.code.util.GestorRecursos;
 
@@ -23,7 +24,7 @@ public class Hud
         corazon = GestorRecursos.getInstance().getTextura("corazon.png");
     }
 
-    public void dibujar(SpriteBatch batch, BitmapFont font, Nave4 nave, Nivel nivel, int score, int record)
+    public void dibujar(SpriteBatch batch, BitmapFont font, Nave4 nave, Nivel nivel, int score, int record, int enemigosRestantes)
     {
         font.getData().setScale(1.5f);
 
@@ -38,7 +39,9 @@ public class Hud
             font.draw(batch, "x" + vidas, 10 + 8 * 34, 44);
         }
 
-        font.draw(batch, "Oleada " + nivel.getNumero() + "  |  " + nave.getNombreArma(), 350, 44);
+        font.draw(batch, "Oleada " + nivel.getNumero() + "/" + DirectorNiveles.TOTAL_OLEADAS + "  |  "
+                + nave.getNombreArma(), 365, 44);
+        font.draw(batch, "Enemigos: " + enemigosRestantes, 10, Constantes.ALTO - 8);
         font.draw(batch, "Récord: " + record, Constantes.ANCHO / 2 + 190, 44);
         font.draw(batch, "Score: " + score, Constantes.ANCHO - 190, 44);
     }

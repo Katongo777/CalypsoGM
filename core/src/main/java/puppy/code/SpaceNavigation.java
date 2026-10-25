@@ -15,6 +15,7 @@ import puppy.code.vista.PantallaMenu;
 public class SpaceNavigation extends Game {
 	private String nombreJuego = "Calypso: Skill Issue Edition";
 	private boolean modoDios = false; // se activa con el código Konami en el menú
+	private boolean guiaVista = false; // la guía "Cómo sobrevivir" se muestra sola una vez por sesión
 	private SpriteBatch batch;
 	private BitmapFont font;
 	private FondoEstrellado fondo;
@@ -48,6 +49,14 @@ public class SpaceNavigation extends Game {
 
 	public FondoEstrellado getFondo() {
 		return fondo;
+	}
+
+	public boolean isGuiaVista() {
+		return guiaVista;
+	}
+
+	public void setGuiaVista(boolean guiaVista) {
+		this.guiaVista = guiaVista;
 	}
 
 	public boolean isModoDios() {

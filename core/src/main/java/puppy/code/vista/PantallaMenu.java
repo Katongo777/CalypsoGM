@@ -81,6 +81,11 @@ public class PantallaMenu extends PantallaBase
 			font.setColor(Color.WHITE);
 		}
 
+		font.getData().setScale(1.5f);
+		font.setColor(0.4f, 0.9f, 1f, 1f);
+		font.draw(batch, "Presiona H para ver la guía de cómo sobrevivir", 0, 190, Constantes.ANCHO, Align.center, false);
+		font.setColor(Color.WHITE);
+
 		font.getData().setScale(1f);
 		font.draw(batch, "Controles: flechas = moverte  |  ESPACIO = disparar  |  P = pausa", 0, 110,
 				Constantes.ANCHO, Align.center, false);
@@ -92,9 +97,21 @@ public class PantallaMenu extends PantallaBase
 	@Override
 	protected void revisarTransicion()
 	{
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isTouched())
+		if (Gdx.input.isKeyJustPressed(Input.Keys.H))
 		{
-			game.setScreen(new PantallaSeleccion(game));
+			game.setScreen(new PantallaGuia(game));
+		}
+		else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isTouched())
+		{
+			// La primera vez se muestra la guía; después se va directo a elegir personaje
+			if (game.isGuiaVista())
+			{
+				game.setScreen(new PantallaSeleccion(game));
+			}
+			else
+			{
+				game.setScreen(new PantallaGuia(game));
+			}
 		}
 	}
 }

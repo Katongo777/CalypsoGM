@@ -23,6 +23,7 @@ import puppy.code.modelo.enemigos.EnemigoBot;
 import puppy.code.modelo.enemigos.EnemigoCheater;
 import puppy.code.modelo.enemigos.EnemigoJefe;
 import puppy.code.modelo.enemigos.EnemigoLag;
+import puppy.code.modelo.enemigos.TipoJefe;
 import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
 import puppy.code.modelo.niveles.NivelPartidaBuilder;
@@ -48,7 +49,7 @@ public class PantallaJuego extends PantallaBase
 	private enum Fase { INTRO, JUGANDO, COMPLETADA }
 
 	// Tiempos en fotogramas (a 60 por segundo)
-	private static final int DURACION_INTRO = 170;
+	private static final int DURACION_INTRO = 210;
 	private static final int RETRASO_ENTRADA = 110;    // cuándo entra el primer enemigo
 	private static final int INTERVALO_ENTRADA = 16;   // tiempo entre un enemigo y el siguiente
 	private static final int DURACION_COMPLETADA = 130;
@@ -128,10 +129,11 @@ public class PantallaJuego extends PantallaBase
 		// Se mezclan para que no salgan todos los bots primero y después los demás
 		java.util.Collections.shuffle(pendientes, azar);
 
-		// Provisorio: la oleada 5 trae al jefe Toxic (después lo decidirá el Nivel)
-		if (nivel.getNumero() == 5)
+		// Si la oleada trae un jefe, es el primero en entrar
+		if (nivel.tieneJefe())
 		{
-			pendientes.add(0, new EnemigoJefe("EL TOXIC", recursos.getTextura("jefe_toxic.png"), 40, 500, 2f));
+			TipoJefe tipo = nivel.getTipoJefe();
+			pendientes.add(0, new EnemigoJefe(tipo, recursos.getTextura(tipo.getArchivoImagen())));
 		}
 	}
 
@@ -341,7 +343,8 @@ public class PantallaJuego extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		hud.dibujar(game.getBatch(), game.getFont(), nave, nivel, score, game.getHighScore());
+		hud.dibujar(game.getBatch(), game.getFont(), nave, nivel, score, game.getHighScore(),
+				pendientes.size() + enemigos.size());
 
 		for (Bullet b : balas)
 		{
@@ -385,18 +388,23 @@ public class PantallaJuego extends PantallaBase
 
 		font.getData().setScale(3.5f);
 		font.setColor(1f, 0.85f, 0.2f, transparencia);
-		font.draw(game.getBatch(), "OLEADA " + nivel.getNumero(), 0, Constantes.ALTO / 2 + 140,
+		font.draw(game.getBatch(), "OLEADA " + nivel.getNumero() + "/" + DirectorNiveles.TOTAL_OLEADAS, 0, Constantes.ALTO / 2 + 140,
 				Constantes.ANCHO, Align.center, false);
 
 		font.getData().setScale(2f);
 		font.setColor(0.4f, 0.9f, 1f, transparencia);
 		font.draw(game.getBatch(), nivel.getNombre(), 0, Constantes.ALTO / 2 + 50, Constantes.ANCHO, Align.center, false);
 
+		// Aviso de la oleada (enemigo nuevo, jefe, etc.)
+		font.getData().setScale(1.5f);
+		font.setColor(1f, 0.6f, 0.2f, transparencia);
+		font.draw(game.getBatch(), nivel.getAviso(), 0, Constantes.ALTO / 2 - 10, Constantes.ANCHO, Align.center, false);
+
 		// Antes de que entre el primer enemigo: "preparate"; después: "¡a pelear!"
 		font.getData().setScale(2f);
 		font.setColor(1f, 1f, 1f, transparencia);
 		String mensaje = tiempoOleada < RETRASO_ENTRADA ? "¡PREPÁRATE!" : "¡ELIMINA A TODOS!";
-		font.draw(game.getBatch(), mensaje, 0, Constantes.ALTO / 2 - 30, Constantes.ANCHO, Align.center, false);
+		font.draw(game.getBatch(), mensaje, 0, Constantes.ALTO / 2 - 90, Constantes.ANCHO, Align.center, false);
 
 		font.setColor(Color.WHITE);
 		font.getData().setScale(1.5f);
@@ -423,6 +431,13 @@ public class PantallaJuego extends PantallaBase
 			// Se guarda el récord (si corresponde) y se muestra la pantalla de fin
 			boolean nuevoRecord = GestorRecursos.getInstance().registrarPuntaje(score);
 			game.setScreen(new PantallaGameOver(game, score, nuevoRecord));
+		}
+		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA
+				&& nivel.getNumero() >= DirectorNiveles.TOTAL_OLEADAS)
+		{
+			// Se completó la última oleada: se guarda el récord y se muestra la victoria
+			boolean nuevoRecord = GestorRecursos.getInstance().registrarPuntaje(score);
+			game.setScreen(new PantallaVictoria(game, score, nuevoRecord));
 		}
 		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA)
 		{
