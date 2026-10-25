@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -29,10 +28,9 @@ public class Nave4 extends Entidad
     private int vidas;
     private float velocidad;
     private Personaje personaje;
-    private Sound sonidoHerido;
     private boolean herido = false;
     private boolean apareciendo = false; // animación de entrada al empezar cada oleada
-    private int tiempoHeridoMax = 90;
+    private int tiempoHeridoMax = 180; // 3 segundos de invulnerabilidad después de un golpe
     private int tiempoHerido;
 
     // Strategy: el arma actual y el tiempo de espera entre disparos
@@ -54,12 +52,12 @@ public class Nave4 extends Entidad
         super(Constantes.ANCHO / 2 - 32, 30, 0, 0,
                 GestorRecursos.getInstance().getTextura(personaje.getArchivoNave()));
         this.personaje = personaje;
-        this.sonidoHerido = GestorRecursos.getInstance().getSonido("hurt.ogg");
         this.vidas = personaje.getVidas();
         this.velocidad = personaje.getVelocidad();
         this.estrategia = personaje.crearArma();
         this.armaOriginal = estrategia;
         setTamano(64, 64);
+        setFactorHitbox(0.55f); // solo el cuerpo de la nave cuenta para los choques
     }
 
     @Override
@@ -131,7 +129,18 @@ public class Nave4 extends Entidad
         }
         // Con el turbo (RGB) la nave dispara al doble de velocidad
         cooldownRestante = turboRestante > 0 ? estrategia.getCooldown() / 2 : estrategia.getCooldown();
-        return estrategia.disparar(getX() + getAncho() / 2, getY() + getAlto() - 8);
+        List<Bullet> balas = estrategia.disparar(getX() + getAncho() / 2, getY() + getAlto() - 8);
+
+        // Para que la invulnerabilidad no sea una herramienta "chetada": mientras dura, las balas
+        // hacen la mitad de daño
+        if (herido)
+        {
+            for (Bullet b : balas)
+            {
+                b.escalarDanio(0.5f);
+            }
+        }
+        return balas;
     }
 
     private void actualizarPosicion()
@@ -158,10 +167,20 @@ public class Nave4 extends Entidad
         }
     }
 
-    // Funciona con cualquier tipo de Enemigo. Mientras está herido es invulnerable.
+    // Choque con un enemigo (el parámetro es un Enemigo para que quede claro el uso)
     public boolean revisarColision(Enemigo enemigo)
     {
-        if (!herido && this.chocaCon(enemigo))
+        return revisarGolpe(enemigo);
+    }
+
+    /*
+        Sirve para cualquier cosa que le pueda hacer daño a la nave (enemigos, balas enemigas...):
+        basta que sea Colisionable. Mientras está herido es invulnerable. Devuelve true si la
+        nave fue tocada (aunque el escudo haya evitado el daño).
+    */
+    public boolean revisarGolpe(Colisionable fuente)
+    {
+        if (!herido && this.chocaCon(fuente))
         {
             // Con el escudo activo el enemigo se destruye y la nave no recibe daño
             if (escudoRestante > 0)
@@ -180,7 +199,7 @@ public class Nave4 extends Entidad
         vidas--;
         herido = true;
         tiempoHerido = tiempoHeridoMax;
-        sonidoHerido.play();
+        GestorRecursos.getInstance().reproducirSonido("hurt.ogg");
         if (vidas <= 0)
         {
             destruida = true;

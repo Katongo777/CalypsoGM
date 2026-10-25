@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Rectangle;
 
 import puppy.code.Constantes;
+import puppy.code.modelo.ContextoCombate;
 import puppy.code.modelo.Entidad;
 
 /*
@@ -24,7 +26,7 @@ import puppy.code.modelo.Entidad;
 */
 public abstract class Enemigo extends Entidad
 {
-    private int vida;
+    private float vida;
     private int puntos;
     private boolean entrando = false; // true mientras baja desde arriba al empezar la oleada
 
@@ -33,6 +35,24 @@ public abstract class Enemigo extends Entidad
         super(x, y, xVel, yVel, tx);
         this.vida = vida;
         this.puntos = puntos;
+        setFactorHitbox(0.8f);
+    }
+
+    private static final float VELOCIDAD_ENTRADA = 4f;
+
+    /*
+        Hace que el enemigo aparezca por arriba de la pantalla en la posición x y baje hasta
+        entrar. Mientras entra no choca con nada (así la entrada no es injusta).
+    */
+    public void iniciarEntrada(float x)
+    {
+        setPosicion(Math.max(0, Math.min(x, Constantes.ANCHO - getAncho())), Constantes.ALTO + 20);
+        entrando = true;
+    }
+
+    public boolean isEntrando()
+    {
+        return entrando;
     }
 
     private static final float VELOCIDAD_ENTRADA = 4f;
@@ -55,7 +75,7 @@ public abstract class Enemigo extends Entidad
     // Cada tipo de enemigo define su propio nombre
     public abstract String getNombre();
 
-    public void recibirDano(int danio)
+    public void recibirDano(float danio)
     {
         vida = vida - danio;
     }
@@ -75,11 +95,37 @@ public abstract class Enemigo extends Entidad
         return new ArrayList<>();
     }
 
+    /*
+        Más métodos gancho, con comportamiento normal por defecto. Los hijos (como el
+        jefe) los sobrescriben para cambiarlo sin que PantallaJuego tenga que saber de qué tipo es.
+    */
+
+    /*
+        El ataque del enemigo: se llama en cada fotograma mientras la oleada está en juego.
+        Por defecto no hace nada; los hijos lo sobrescriben para disparar o invocar enemigos
+        usando el ContextoCombate (ahí dejan sus balas y sus enemigos nuevos).
+    */
+    public void atacar(ContextoCombate contexto)
+    {
+    }
+
+    // ¿Desaparece cuando choca con la nave? Los normales sí; el jefe no
+    public boolean seDestruyeAlChocar()
+    {
+        return true;
+    }
+
+    // ¿Siempre deja un power-up al morir (sin depender de la suerte)?
+    public boolean sueltaPowerUpSeguro()
+    {
+        return false;
+    }
+
     // Si el enemigo quedó (parcialmente) fuera de la ventana, lo vuelve a meter
     protected void ubicarDentroDePantalla()
     {
         float x = Math.max(0, Math.min(getX(), Constantes.ANCHO - getAncho()));
-        float y = Math.max(0, Math.min(getY(), Constantes.ALTO - getAlto()));
+        float y = Math.max(Constantes.ZONA_ENEMIGOS_MIN_Y, Math.min(getY(), Constantes.ALTO - getAlto()));
         setPosicion(x, y);
     }
 
@@ -112,9 +158,9 @@ public abstract class Enemigo extends Entidad
             setPosicion(Constantes.ANCHO - getAncho(), getY());
             setXVel(-Math.abs(getXVel()));
         }
-        if (getY() < 0)
+        if (getY() < Constantes.ZONA_ENEMIGOS_MIN_Y)
         {
-            setPosicion(getX(), 0);
+            setPosicion(getX(), Constantes.ZONA_ENEMIGOS_MIN_Y);
             setYVel(Math.abs(getYVel()));
         }
         else if (getY() + getAlto() > Constantes.ALTO)
@@ -124,29 +170,55 @@ public abstract class Enemigo extends Entidad
         }
     }
 
-    // Cuando choca con otro enemigo no manipula sus variables, solo le avisa del choque
+    // ¿Se lo puede empujar? Los enemigos normales sí; el jefe es "pesado" y no se mueve por choques
+    public boolean empujable()
+    {
+        return true;
+    }
+
+    /*
+        Choque entre enemigos. Antes solo se invertía la velocidad de los dos, pero seguían
+        superpuestos en el fotograma siguiente, se volvían a invertir y quedaban pegados
+        vibrando. Ahora primero se SEPARAN (cada uno se corre la mitad de lo que se pisan)
+        y después cada uno sale rebotando en dirección contraria al otro.
+    */
     public void revisarColisionEnemigo(Enemigo otro)
     {
-        if (this.chocaCon(otro))
+        if (!empujable() || !otro.empujable())
         {
-            float miXVel = getXVel();
-            float miYVel = getYVel();
+            return;
+        }
+        Rectangle a = getArea();
+        Rectangle b = otro.getArea();
+        if (!a.overlaps(b))
+        {
+            return;
+        }
 
-            this.reaccionarChoque(otro.getXVel(), otro.getYVel());
-            otro.reaccionarChoque(miXVel, miYVel);
+        // cuánto se pisan en cada eje
+        float pisaX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+        float pisaY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+
+        if (pisaX < pisaY)
+        {
+            float empuje = pisaX / 2 + 1;
+            float signo = a.x < b.x ? -1 : 1; // -1: yo me voy a la izquierda
+            setPosicion(getX() + signo * empuje, getY());
+            otro.setPosicion(otro.getX() - signo * empuje, otro.getY());
+            setXVel(signo * Math.max(Math.abs(getXVel()), 1f));
+            otro.setXVel(-signo * Math.max(Math.abs(otro.getXVel()), 1f));
+        }
+        else
+        {
+            float empuje = pisaY / 2 + 1;
+            float signo = a.y < b.y ? -1 : 1; // -1: yo me voy hacia abajo
+            setPosicion(getX(), getY() + signo * empuje);
+            otro.setPosicion(otro.getX(), otro.getY() - signo * empuje);
+            setYVel(signo * Math.max(Math.abs(getYVel()), 1f));
+            otro.setYVel(-signo * Math.max(Math.abs(otro.getYVel()), 1f));
         }
     }
 
-    // El enemigo es responsable de cambiar su propia velocidad al chocar
-    public void reaccionarChoque(float xVelOtro, float yVelOtro)
-    {
-        if (getXVel() == 0) setXVel(getXVel() + xVelOtro / 2);
-        setXVel(-getXVel());
-
-        if (getYVel() == 0) setYVel(getYVel() + yVelOtro / 2);
-        setYVel(-getYVel());
-    }
-
-    public int getVida() { return vida; }
+    public float getVida() { return vida; }
     public int getPuntos() { return puntos; }
 }
