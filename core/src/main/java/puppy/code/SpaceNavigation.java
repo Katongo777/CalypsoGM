@@ -6,22 +6,24 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.util.GestorRecursos;
+import puppy.code.vista.FondoEstrellado;
 import puppy.code.vista.PantallaMenu;
 
 
 
 
 public class SpaceNavigation extends Game {
-	private String nombreJuego = "Space Navigation";
+	private String nombreJuego = "Calypso: Skill Issue Edition";
+	private boolean modoDios = false; // se activa con el código Konami en el menú
 	private SpriteBatch batch;
 	private BitmapFont font;
-	private int highScore;	
+	private FondoEstrellado fondo;
 
 	public void create() {
-		highScore = 0;
 		batch = new SpriteBatch();
-		font = new BitmapFont(); // usa Arial font x defecto
-		font.getData().setScale(2f);
+		font = GestorRecursos.getInstance().getFuente(); // fuente pixel-art propia
+		font.getData().setScale(1.5f);
+		fondo = new FondoEstrellado(); // un solo fondo para todas las pantallas
 		Screen ss = new PantallaMenu(this);
 		this.setScreen(ss);
 	}
@@ -32,7 +34,6 @@ public class SpaceNavigation extends Game {
 
 	public void dispose() {
 		batch.dispose();
-		font.dispose();
 		// Los recursos compartidos se liberan una sola vez, al cerrar el juego
 		GestorRecursos.getInstance().liberar();
 	}
@@ -45,12 +46,21 @@ public class SpaceNavigation extends Game {
 		return font;
 	}
 
-	public int getHighScore() {
-		return highScore;
+	public FondoEstrellado getFondo() {
+		return fondo;
 	}
 
-	public void setHighScore(int highScore) {
-		this.highScore = highScore;
+	public boolean isModoDios() {
+		return modoDios;
+	}
+
+	public void setModoDios(boolean modoDios) {
+		this.modoDios = modoDios;
+	}
+
+	// El récord ahora lo guarda el Singleton GestorRecursos (y queda en un archivo)
+	public int getHighScore() {
+		return GestorRecursos.getInstance().getRecord();
 	}
 	
 	
