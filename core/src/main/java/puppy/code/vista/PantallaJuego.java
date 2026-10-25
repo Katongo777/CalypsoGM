@@ -14,9 +14,7 @@ import puppy.code.Constantes;
 import puppy.code.SpaceNavigation;
 import puppy.code.modelo.Bullet;
 import puppy.code.modelo.Nave4;
-import puppy.code.modelo.armas.Escopeta;
-import puppy.code.modelo.armas.Pistola;
-import puppy.code.modelo.armas.Railgun;
+import puppy.code.modelo.Personaje;
 import puppy.code.modelo.enemigos.Enemigo;
 import puppy.code.modelo.enemigos.EnemigoBot;
 import puppy.code.modelo.enemigos.EnemigoCheater;
@@ -48,12 +46,10 @@ public class PantallaJuego extends PantallaBase
 	private ArrayList<Enemigo> enemigos = new ArrayList<>();
 	private ArrayList<Bullet> balas = new ArrayList<>();
 
-	// Arma una partida nueva: oleada 1, una nave nueva y puntaje 0
-	public static PantallaJuego nuevaPartida(SpaceNavigation game)
+	// Arma una partida nueva: oleada 1, la nave del personaje elegido y puntaje 0
+	public static PantallaJuego nuevaPartida(SpaceNavigation game, Personaje personaje)
 	{
-		GestorRecursos recursos = GestorRecursos.getInstance();
-		Nave4 nave = new Nave4(Constantes.ANCHO / 2 - 32, 30, recursos.getTextura("MainShip3.png"),
-				recursos.getSonido("hurt.ogg"));
+		Nave4 nave = new Nave4(personaje);
 
 		// El Director usa el Builder para construir la primera oleada
 		DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
@@ -132,11 +128,6 @@ public class PantallaJuego extends PantallaBase
 
 		locutor.actualizar();
 		nave.actualizar();
-
-		// Teclas provisorias para probar las armas (Strategy): 1 = Pistola, 2 = Escopeta, 3 = Railgun
-		if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) nave.setEstrategia(new Pistola());
-		if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) nave.setEstrategia(new Escopeta());
-		if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) nave.setEstrategia(new Railgun());
 
 		// Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
 		if (Gdx.input.isKeyPressed(Input.Keys.SPACE))

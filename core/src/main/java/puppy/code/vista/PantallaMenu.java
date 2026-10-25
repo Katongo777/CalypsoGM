@@ -35,7 +35,7 @@ public class PantallaMenu extends PantallaBase
 	{
 		if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY))
 		{
-			game.setScreen(PantallaJuego.nuevaPartida(game));
+			game.setScreen(new PantallaSeleccion(game));
 		}
 	}
 }

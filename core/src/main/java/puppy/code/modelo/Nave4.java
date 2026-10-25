@@ -6,13 +6,12 @@ import java.util.List;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.Constantes;
 import puppy.code.modelo.armas.EstrategiaDisparo;
-import puppy.code.modelo.armas.Pistola;
 import puppy.code.modelo.enemigos.Enemigo;
+import puppy.code.util.GestorRecursos;
 
 /*
     La nave del jugador.
@@ -26,7 +25,9 @@ import puppy.code.modelo.enemigos.Enemigo;
 public class Nave4 extends Entidad
 {
     private boolean destruida = false;
-    private int vidas = 3;
+    private int vidas;
+    private float velocidad;
+    private Personaje personaje;
     private Sound sonidoHerido;
     private boolean herido = false;
     private int tiempoHeridoMax = 90;
@@ -36,11 +37,19 @@ public class Nave4 extends Entidad
     private EstrategiaDisparo estrategia;
     private int cooldownRestante = 0;
 
-    public Nave4(int x, int y, Texture tx, Sound soundChoque)
+    /*
+        La nave se crea a partir del personaje elegido: de él salen la imagen,
+        las vidas, la velocidad y el arma inicial.
+    */
+    public Nave4(Personaje personaje)
     {
-        super(x, y, 0, 0, tx); // La nave inicia con velocidad 0
-        this.sonidoHerido = soundChoque;
-        this.estrategia = new Pistola();
+        super(Constantes.ANCHO / 2 - 32, 30, 0, 0,
+                GestorRecursos.getInstance().getTextura(personaje.getArchivoNave()));
+        this.personaje = personaje;
+        this.sonidoHerido = GestorRecursos.getInstance().getSonido("hurt.ogg");
+        this.vidas = personaje.getVidas();
+        this.velocidad = personaje.getVelocidad();
+        this.estrategia = personaje.crearArma();
         setTamano(64, 64);
     }
 
@@ -66,12 +75,10 @@ public class Nave4 extends Entidad
         setXVel(0);
         setYVel(0);
 
-        float velFija = 6f;
-
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) setXVel(-velFija);
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) setXVel(velFija);
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) setYVel(-velFija);
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) setYVel(velFija);
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) setXVel(-velocidad);
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) setXVel(velocidad);
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) setYVel(-velocidad);
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) setYVel(velocidad);
     }
 
     /*
@@ -149,6 +156,7 @@ public class Nave4 extends Entidad
 
     public boolean estaDestruido() { return destruida; }
     public boolean estaHerido() { return herido; }
+    public Personaje getPersonaje() { return personaje; }
     public int getVidas() { return vidas; }
     public void setVidas(int vidas) { this.vidas = vidas; }
 

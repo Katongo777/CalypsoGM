@@ -41,7 +41,7 @@ public class PantallaGameOver extends PantallaBase
 		{
 			game.getFont().draw(game.getBatch(), "Récord: " + GestorRecursos.getInstance().getRecord(), 100, 370);
 		}
-		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado para reiniciar ...", 100, 300);
+		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado para elegir personaje de nuevo ...", 100, 300);
 	}
 
 	@Override
@@ -49,7 +49,7 @@ public class PantallaGameOver extends PantallaBase
 	{
 		if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY))
 		{
-			game.setScreen(PantallaJuego.nuevaPartida(game));
+			game.setScreen(new PantallaSeleccion(game));
 		}
 	}
 }
