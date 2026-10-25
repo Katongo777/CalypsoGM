@@ -21,6 +21,7 @@ public abstract class Entidad implements Colisionable
     private Sprite spr;
     private float xVel;
     private float yVel;
+    private float factorHitbox = 1f; // qué parte del dibujo cuenta para los choques (1 = todo)
 
     public Entidad(float x, float y, float xVel, float yVel, Texture tx)
     {
@@ -39,10 +40,21 @@ public abstract class Entidad implements Colisionable
     }
 
     // Método de la interfaz Colisionable
+    /*
+        La hitbox puede ser más chica que el dibujo: las imágenes tienen bordes transparentes y
+        sin este ajuste los choques se sienten injustos ("me pegó sin tocarme").
+    */
     @Override
     public Rectangle getArea()
     {
-        return spr.getBoundingRectangle();
+        Rectangle r = spr.getBoundingRectangle();
+        if (factorHitbox == 1f)
+        {
+            return r;
+        }
+        float ancho = r.width * factorHitbox;
+        float alto = r.height * factorHitbox;
+        return new Rectangle(r.x + (r.width - ancho) / 2, r.y + (r.height - alto) / 2, ancho, alto);
     }
 
     // Método de la interfaz Colisionable: hay choque si las hitbox se superponen
@@ -66,6 +78,11 @@ public abstract class Entidad implements Colisionable
     protected void setPosicion(float x, float y)
     {
         spr.setPosition(x, y);
+    }
+
+    protected void setFactorHitbox(float factor)
+    {
+        this.factorHitbox = factor;
     }
 
     protected void setTamano(float ancho, float alto)

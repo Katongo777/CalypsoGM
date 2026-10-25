@@ -24,7 +24,7 @@ public class BarraJefe
         Texture pixel = GestorRecursos.getInstance().getPixelBlanco();
         float x = (Constantes.ANCHO - ANCHO_BARRA) / 2;
         float y = Constantes.ALTO - 62;
-        float porcentaje = Math.max(0f, (float) jefe.getVida() / jefe.getVidaMaxima());
+        float porcentaje = Math.max(0f, jefe.getVida() / jefe.getVidaMaxima());
 
         // marco, fondo y relleno (se pone amarilla y roja a medida que le queda menos vida)
         batch.setColor(1f, 1f, 1f, 1f);

@@ -23,6 +23,7 @@ public class EnemigoLag extends Enemigo
     {
         super(x, y, xVel, yVel, tx, 1, 15); // 1 de vida, da 15 puntos
         setTamano(64, 48);
+        setFactorHitbox(0.7f);
         ubicarDentroDePantalla();
         framesParaSalto = MathUtils.random(60, 150);
     }
