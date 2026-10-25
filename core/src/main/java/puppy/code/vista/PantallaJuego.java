@@ -21,6 +21,7 @@ import puppy.code.modelo.armas.BFG;
 import puppy.code.modelo.enemigos.Enemigo;
 import puppy.code.modelo.enemigos.EnemigoBot;
 import puppy.code.modelo.enemigos.EnemigoCheater;
+import puppy.code.modelo.enemigos.EnemigoJefe;
 import puppy.code.modelo.enemigos.EnemigoLag;
 import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
@@ -51,6 +52,7 @@ public class PantallaJuego extends PantallaBase
 	private static final int RETRASO_ENTRADA = 110;    // cuándo entra el primer enemigo
 	private static final int INTERVALO_ENTRADA = 16;   // tiempo entre un enemigo y el siguiente
 	private static final int DURACION_COMPLETADA = 130;
+	private static final int MAX_ENEMIGOS = 14;       // tope para que el jefe no llene la pantalla de Lags
 
 	private Sound explosionSound;
 	private Music gameMusic;
@@ -60,6 +62,7 @@ public class PantallaJuego extends PantallaBase
 	private Nave4 nave;
 	private Locutor locutor;
 	private Hud hud = new Hud();
+	private BarraJefe barraJefe = new BarraJefe();
 	private boolean pausado = false;
 
 	private Fase fase = Fase.INTRO;
@@ -124,6 +127,12 @@ public class PantallaJuego extends PantallaBase
 		}
 		// Se mezclan para que no salgan todos los bots primero y después los demás
 		java.util.Collections.shuffle(pendientes, azar);
+
+		// Provisorio: la oleada 5 trae al jefe Toxic (después lo decidirá el Nivel)
+		if (nivel.getNumero() == 5)
+		{
+			pendientes.add(0, new EnemigoJefe("EL TOXIC", recursos.getTextura("jefe_toxic.png"), 40, 500, 2f));
+		}
 	}
 
 	// Velocidad al azar (entre 1,5 y 3, escalada por la dificultad del nivel) y con dirección al azar
@@ -201,6 +210,10 @@ public class PantallaJuego extends PantallaBase
 						explosionSound.play();
 						score += enemigo.getPuntos();
 						locutor.registrarEliminacion();
+						if (enemigo instanceof EnemigoJefe)
+						{
+							locutor.anunciar("¡JEFE ELIMINADO! GG");
+						}
 						enemigos.remove(j);
 						j--;
 						enemigos.addAll(enemigo.alMorir()); // por ejemplo, el Cheater suelta 2 Lags
@@ -226,6 +239,17 @@ public class PantallaJuego extends PantallaBase
 			enemigo.actualizar();
 		}
 
+		// algunos enemigos (el jefe) crean enemigos nuevos mientras están vivos
+		ArrayList<Enemigo> nuevos = new ArrayList<>();
+		for (Enemigo enemigo : enemigos)
+		{
+			nuevos.addAll(enemigo.generarEnemigos());
+		}
+		if (enemigos.size() < MAX_ENEMIGOS)
+		{
+			enemigos.addAll(nuevos);
+		}
+
 		// colisiones entre enemigos y sus rebotes (cada pareja se revisa una sola vez)
 		for (int i = 0; i < enemigos.size(); i++)
 		{
@@ -249,9 +273,12 @@ public class PantallaJuego extends PantallaBase
 			if (nave.revisarColision(enemigos.get(i)))
 			{
 				locutor.registrarDanio();
-				// el enemigo se destruye con el choque
-				enemigos.remove(i);
-				i--;
+				// el enemigo se destruye con el choque (el jefe no)
+				if (enemigos.get(i).seDestruyeAlChocar())
+				{
+					enemigos.remove(i);
+					i--;
+				}
 			}
 		}
 
@@ -288,7 +315,7 @@ public class PantallaJuego extends PantallaBase
 	// Con cierta probabilidad (la define el Nivel) el enemigo muerto suelta un power-up al azar
 	private void soltarPowerUp(Enemigo muerto)
 	{
-		if (MathUtils.random() < nivel.getProbPowerUp())
+		if (muerto.sueltaPowerUpSeguro() || MathUtils.random() < nivel.getProbPowerUp())
 		{
 			float x = muerto.getX() + muerto.getAncho() / 2 - 24;
 			float y = muerto.getY();
@@ -331,6 +358,10 @@ public class PantallaJuego extends PantallaBase
 		for (Enemigo enemigo : enemigos)
 		{
 			enemigo.dibujar(game.getBatch());
+			if (enemigo instanceof EnemigoJefe && !enemigo.isEntrando())
+			{
+				barraJefe.dibujar(game.getBatch(), game.getFont(), (EnemigoJefe) enemigo);
+			}
 		}
 
 		locutor.dibujar(game.getBatch(), game.getFont());
@@ -352,23 +383,23 @@ public class PantallaJuego extends PantallaBase
 		BitmapFont font = game.getFont();
 		float transparencia = Math.min(1f, (DURACION_INTRO - tiempoFase) / 30f);
 
-		font.getData().setScale(5f);
+		font.getData().setScale(3.5f);
 		font.setColor(1f, 0.85f, 0.2f, transparencia);
 		font.draw(game.getBatch(), "OLEADA " + nivel.getNumero(), 0, Constantes.ALTO / 2 + 140,
 				Constantes.ANCHO, Align.center, false);
 
-		font.getData().setScale(2.5f);
+		font.getData().setScale(2f);
 		font.setColor(0.4f, 0.9f, 1f, transparencia);
 		font.draw(game.getBatch(), nivel.getNombre(), 0, Constantes.ALTO / 2 + 50, Constantes.ANCHO, Align.center, false);
 
 		// Antes de que entre el primer enemigo: "preparate"; después: "¡a pelear!"
-		font.getData().setScale(2.5f);
+		font.getData().setScale(2f);
 		font.setColor(1f, 1f, 1f, transparencia);
 		String mensaje = tiempoOleada < RETRASO_ENTRADA ? "¡PREPÁRATE!" : "¡ELIMINA A TODOS!";
 		font.draw(game.getBatch(), mensaje, 0, Constantes.ALTO / 2 - 30, Constantes.ANCHO, Align.center, false);
 
 		font.setColor(Color.WHITE);
-		font.getData().setScale(2f);
+		font.getData().setScale(1.5f);
 	}
 
 	// Oscurece la pantalla y muestra el cartel de pausa
@@ -377,9 +408,9 @@ public class PantallaJuego extends PantallaBase
 		game.getBatch().setColor(0, 0, 0, 0.6f);
 		game.getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
 		game.getBatch().setColor(Color.WHITE);
-		game.getFont().getData().setScale(3f);
-		game.getFont().draw(game.getBatch(), "PAUSA - AFK", 0, Constantes.ALTO / 2 + 30, Constantes.ANCHO, Align.center, false);
 		game.getFont().getData().setScale(2f);
+		game.getFont().draw(game.getBatch(), "PAUSA - AFK", 0, Constantes.ALTO / 2 + 30, Constantes.ANCHO, Align.center, false);
+		game.getFont().getData().setScale(1.5f);
 		game.getFont().draw(game.getBatch(), "Presiona P para volver", 0, Constantes.ALTO / 2 - 30, Constantes.ANCHO, Align.center, false);
 	}
 

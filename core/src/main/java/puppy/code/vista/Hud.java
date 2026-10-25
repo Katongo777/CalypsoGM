@@ -38,7 +38,7 @@ public class Hud
             font.draw(batch, "x" + vidas, 10 + 8 * 34, 44);
         }
 
-        font.draw(batch, "Oleada " + nivel.getNumero() + "  |  " + nave.getNombreArma(), 300, 44);
+        font.draw(batch, "Oleada " + nivel.getNumero() + "  |  " + nave.getNombreArma(), 350, 44);
         font.draw(batch, "Récord: " + record, Constantes.ANCHO / 2 + 190, 44);
         font.draw(batch, "Score: " + score, Constantes.ANCHO - 190, 44);
     }
