@@ -24,6 +24,7 @@ import puppy.code.modelo.enemigos.EnemigoLag;
 import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
 import puppy.code.modelo.niveles.NivelPartidaBuilder;
+import puppy.code.modelo.powerups.LootBox;
 import puppy.code.modelo.powerups.Pizza;
 import puppy.code.modelo.powerups.PowerUp;
 import puppy.code.modelo.powerups.RGB;
@@ -84,6 +85,9 @@ public class PantallaJuego extends PantallaBase
 
 		nave.reubicar();
 		crearEnemigos(recursos);
+
+		// El locutor anuncia el nombre de la oleada (lo define el Director al construir el Nivel)
+		locutor.anunciar(nivel.getNombre());
 	}
 
 	// Crea los enemigos que pide el Nivel (cuántos de cada tipo y a qué velocidad)
@@ -238,13 +242,16 @@ public class PantallaJuego extends PantallaBase
 		{
 			float x = muerto.getX() + muerto.getAncho() / 2 - 24;
 			float y = muerto.getY();
-			switch (MathUtils.random(2))
+			switch (MathUtils.random(3))
 			{
 				case 0:
 					powerUps.add(new Pizza(x, y));
 					break;
 				case 1:
 					powerUps.add(new SillaGamer(x, y));
+					break;
+				case 2:
+					powerUps.add(new LootBox(x, y));
 					break;
 				default:
 					powerUps.add(new RGB(x, y));
