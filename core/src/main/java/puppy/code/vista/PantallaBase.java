@@ -46,11 +46,13 @@ public abstract class PantallaBase implements Screen
         ScreenUtils.clear(0.02f, 0.02f, 0.1f, 1);
 
         actualizar(delta);                                   // paso 1
+        game.getFondo().actualizar();
 
         viewport.apply();
         camera.update();
         game.getBatch().setProjectionMatrix(camera.combined);
         game.getBatch().begin();
+        game.getFondo().dibujar(game.getBatch());            // el fondo de estrellas va siempre atrás
         dibujar();                                           // paso 2
         game.getBatch().end();
 

@@ -7,6 +7,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.utils.Align;
 
 import puppy.code.Constantes;
 import puppy.code.SpaceNavigation;
@@ -39,6 +41,9 @@ public class PantallaJuego extends PantallaBase
 	private Nivel nivel;
 
 	private Nave4 nave;
+	private Locutor locutor;
+	private Hud hud = new Hud();
+	private boolean pausado = false;
 	// Una sola lista para todos los enemigos
 	private ArrayList<Enemigo> enemigos = new ArrayList<>();
 	private ArrayList<Bullet> balas = new ArrayList<>();
@@ -52,15 +57,16 @@ public class PantallaJuego extends PantallaBase
 
 		// El Director usa el Builder para construir la primera oleada
 		DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
-		return new PantallaJuego(game, director.construirOleada(1), nave, 0);
+		return new PantallaJuego(game, director.construirOleada(1), nave, 0, new Locutor());
 	}
 
-	public PantallaJuego(SpaceNavigation game, Nivel nivel, Nave4 nave, int score)
+	public PantallaJuego(SpaceNavigation game, Nivel nivel, Nave4 nave, int score, Locutor locutor)
 	{
 		super(game);
 		this.nivel = nivel;
 		this.nave = nave;
 		this.score = score;
+		this.locutor = locutor;
 
 		// Los recursos vienen del Singleton: se cargan una sola vez y se reutilizan
 		GestorRecursos recursos = GestorRecursos.getInstance();
@@ -114,6 +120,17 @@ public class PantallaJuego extends PantallaBase
 	@Override
 	protected void actualizar(float delta)
 	{
+		// P pausa y reanuda el juego
+		if (Gdx.input.isKeyJustPressed(Input.Keys.P))
+		{
+			pausado = !pausado;
+		}
+		if (pausado)
+		{
+			return;
+		}
+
+		locutor.actualizar();
 		nave.actualizar();
 
 		// Teclas provisorias para probar las armas (Strategy): 1 = Pistola, 2 = Escopeta, 3 = Railgun
@@ -143,6 +160,7 @@ public class PantallaJuego extends PantallaBase
 					{
 						explosionSound.play();
 						score += enemigo.getPuntos();
+						locutor.registrarEliminacion();
 						enemigos.remove(j);
 						j--;
 						enemigos.addAll(enemigo.alMorir()); // por ejemplo, el Cheater suelta 2 Lags
@@ -182,6 +200,7 @@ public class PantallaJuego extends PantallaBase
 			// perdió vida o game over
 			if (nave.revisarColision(enemigos.get(i)))
 			{
+				locutor.registrarDanio();
 				// el enemigo se destruye con el choque
 				enemigos.remove(i);
 				i--;
@@ -193,7 +212,7 @@ public class PantallaJuego extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		dibujaEncabezado();
+		hud.dibujar(game.getBatch(), game.getFont(), nave, nivel, score, game.getHighScore());
 
 		for (Bullet b : balas)
 		{
@@ -206,16 +225,25 @@ public class PantallaJuego extends PantallaBase
 		{
 			enemigo.dibujar(game.getBatch());
 		}
+
+		locutor.dibujar(game.getBatch(), game.getFont());
+
+		if (pausado)
+		{
+			dibujarPausa();
+		}
 	}
 
-	public void dibujaEncabezado()
+	// Oscurece la pantalla y muestra el cartel de pausa
+	private void dibujarPausa()
 	{
-		CharSequence str = "Vidas: " + nave.getVidas() + " Oleada: " + nivel.getNumero() + "  Arma: "
-				+ nave.getNombreArma();
+		game.getBatch().setColor(0, 0, 0, 0.6f);
+		game.getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
+		game.getBatch().setColor(Color.WHITE);
+		game.getFont().getData().setScale(3f);
+		game.getFont().draw(game.getBatch(), "PAUSA - AFK", 0, Constantes.ALTO / 2 + 30, Constantes.ANCHO, Align.center, false);
 		game.getFont().getData().setScale(2f);
-		game.getFont().draw(game.getBatch(), str, 10, 30);
-		game.getFont().draw(game.getBatch(), "Score:" + this.score, Constantes.ANCHO - 150, 30);
-		game.getFont().draw(game.getBatch(), "Récord:" + game.getHighScore(), Constantes.ANCHO / 2 - 60, 30);
+		game.getFont().draw(game.getBatch(), "Presiona P para volver", 0, Constantes.ALTO / 2 - 30, Constantes.ANCHO, Align.center, false);
 	}
 
 	// ---------- PASO 3 del template (gancho): ¿hay que cambiar de pantalla? ----------
@@ -232,7 +260,7 @@ public class PantallaJuego extends PantallaBase
 		{
 			// Oleada completada: el Director arma la siguiente y se sigue con la misma nave
 			DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
-			game.setScreen(new PantallaJuego(game, director.construirOleada(nivel.getNumero() + 1), nave, score));
+			game.setScreen(new PantallaJuego(game, director.construirOleada(nivel.getNumero() + 1), nave, score, locutor));
 		}
 	}
 

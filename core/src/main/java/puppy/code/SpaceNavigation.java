@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.util.GestorRecursos;
+import puppy.code.vista.FondoEstrellado;
 import puppy.code.vista.PantallaMenu;
 
 
@@ -15,11 +16,13 @@ public class SpaceNavigation extends Game {
 	private String nombreJuego = "Space Navigation";
 	private SpriteBatch batch;
 	private BitmapFont font;
+	private FondoEstrellado fondo;
 
 	public void create() {
 		batch = new SpriteBatch();
 		font = new BitmapFont(); // usa Arial font x defecto
 		font.getData().setScale(2f);
+		fondo = new FondoEstrellado(); // un solo fondo para todas las pantallas
 		Screen ss = new PantallaMenu(this);
 		this.setScreen(ss);
 	}
@@ -41,6 +44,10 @@ public class SpaceNavigation extends Game {
 
 	public BitmapFont getFont() {
 		return font;
+	}
+
+	public FondoEstrellado getFondo() {
+		return fondo;
 	}
 
 	// El récord ahora lo guarda el Singleton GestorRecursos (y queda en un archivo)

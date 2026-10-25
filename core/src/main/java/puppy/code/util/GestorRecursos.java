@@ -6,6 +6,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
@@ -32,6 +34,7 @@ public class GestorRecursos
     private HashMap<String, Texture> texturas;
     private HashMap<String, Sound> sonidos;
     private Music musica;
+    private Texture pixelBlanco;
 
     // Récord de puntaje: se guarda en un archivo de texto para que no se pierda al cerrar el juego
     private static final String ARCHIVO_RECORD = "record.txt";
@@ -79,6 +82,23 @@ public class GestorRecursos
             sonidos.put(archivo, s);
         }
         return s;
+    }
+
+    /*
+        Una textura de 1x1 píxel blanco, creada por código. Sirve para dibujar
+        rectángulos de cualquier tamaño y color (estrellas, sombras, etc.).
+    */
+    public Texture getPixelBlanco()
+    {
+        if (pixelBlanco == null)
+        {
+            Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+            pm.setColor(Color.WHITE);
+            pm.fill();
+            pixelBlanco = new Texture(pm);
+            pm.dispose();
+        }
+        return pixelBlanco;
     }
 
     // La música de fondo también es única: así no se reinicia en cada ronda
@@ -165,6 +185,11 @@ public class GestorRecursos
         for (Sound s : sonidos.values())
         {
             s.dispose();
+        }
+        if (pixelBlanco != null)
+        {
+            pixelBlanco.dispose();
+            pixelBlanco = null;
         }
         texturas.clear();
         sonidos.clear();
