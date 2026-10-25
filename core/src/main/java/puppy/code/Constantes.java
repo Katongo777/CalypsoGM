@@ -12,6 +12,10 @@ public final class Constantes
     public static final int ANCHO = 1200;
     public static final int ALTO = 800;
 
+    // Los enemigos solo se mueven en la parte de arriba (el 72% de la pantalla):
+    // abajo queda espacio libre para que la nave pueda maniobrar
+    public static final float ZONA_ENEMIGOS_MIN_Y = 220;
+
     // Constructor privado: es una clase solo de constantes, no se instancia
     private Constantes() { }
 }

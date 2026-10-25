@@ -68,7 +68,7 @@ public class DirectorNiveles
             builder.agregarCheaters(Math.min(numero / 3, 3));
         }
         builder.definirVelocidad(Math.min(1f + 0.06f * numero, 1.6f));
-        builder.definirProbPowerUp(0.25f);
+        builder.definirProbPowerUp(0.12f);
 
         // Las primeras oleadas avisan qué enemigo es nuevo
         if (numero == 1)
@@ -96,7 +96,7 @@ public class DirectorNiveles
         builder.agregarLags(Math.min(2 + numero / 2, 6));
         builder.agregarCheaters(Math.min(1 + numero / 3, 3));
         builder.definirVelocidad(Math.min(1.15f + 0.06f * numero, 1.8f));
-        builder.definirProbPowerUp(0.4f);
+        builder.definirProbPowerUp(0.18f);
         builder.definirAviso("Más enemigos y más rápidos, pero caen más power-ups");
         return builder.getResult();
     }
@@ -119,7 +119,7 @@ public class DirectorNiveles
             builder.definirAviso("¡ÚLTIMO JEFE! Si lo derrotas, ganas el juego");
         }
         builder.definirVelocidad(1.3f);
-        builder.definirProbPowerUp(0.3f);
+        builder.definirProbPowerUp(0.1f);
         return builder.getResult();
     }
 

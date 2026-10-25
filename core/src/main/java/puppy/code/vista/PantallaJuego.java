@@ -51,7 +51,10 @@ public class PantallaJuego extends PantallaBase
 	// Tiempos en fotogramas (a 60 por segundo)
 	private static final int DURACION_INTRO = 210;
 	private static final int RETRASO_ENTRADA = 110;    // cuándo entra el primer enemigo
-	private static final int INTERVALO_ENTRADA = 16;   // tiempo entre un enemigo y el siguiente
+	private static final int INTERVALO_ENTRADA = 24;   // tiempo entre un enemigo y el siguiente dentro de un grupo
+	private static final int ENFRIAMIENTO_POWERUP = 600; // mínimo de fotogramas entre un power-up y el siguiente
+	private static final int ESPERA_MAXIMA_GRUPO = 420;  // si pasa este tiempo sin entrar nadie, entra el siguiente grupo igual
+	private static final int QUEDAN_PARA_NUEVO_GRUPO = 2; // cuando quedan tan pocos enemigos, entra el siguiente grupo
 	private static final int DURACION_COMPLETADA = 130;
 	private static final int MAX_ENEMIGOS = 14;       // tope para que el jefe no llene la pantalla de Lags
 
@@ -71,6 +74,11 @@ public class PantallaJuego extends PantallaBase
 	private int tiempoOleada = 0;   // fotogramas desde que empezó la oleada
 	private Random azar = new Random();
 
+	private int entrantesDelGrupo = 0;    // cuántos enemigos faltan por entrar del grupo actual
+	private int esperaGrupo = 0;          // fotogramas desde que entró el último enemigo
+	private float xBaseGrupo = 0;         // por dónde entra el grupo actual
+	private int indiceEnGrupo = 0;
+	private int enfriamientoPowerUp = 0;  // cuando es mayor que 0 no caen power-ups
 	private ArrayList<Enemigo> pendientes = new ArrayList<>(); // enemigos que todavía no han entrado
 	private ArrayList<Enemigo> enemigos = new ArrayList<>();   // enemigos que ya están en pantalla
 	private ArrayList<Bullet> balas = new ArrayList<>();
@@ -118,7 +126,7 @@ public class PantallaJuego extends PantallaBase
 		}
 		for (int i = 0; i < nivel.getCantLags(); i++)
 		{
-			pendientes.add(new EnemigoLag(0, 0, velocidad() * 1.6f, velocidad() * 1.6f,
+			pendientes.add(new EnemigoLag(0, 0, velocidad() * 1.3f, velocidad() * 1.3f,
 					recursos.getTextura("lag.png")));
 		}
 		for (int i = 0; i < nivel.getCantCheaters(); i++)
@@ -140,16 +148,64 @@ public class PantallaJuego extends PantallaBase
 	// Velocidad al azar (entre 1,5 y 3, escalada por la dificultad del nivel) y con dirección al azar
 	private float velocidad()
 	{
-		float v = (1.5f + azar.nextFloat() * 1.5f) * nivel.getVelocidad();
+		float v = Math.min((1.2f + azar.nextFloat() * 1.2f) * nivel.getVelocidad(), 4f);
 		return azar.nextBoolean() ? v : -v;
 	}
 
-	// Saca al siguiente enemigo de la cola y lo hace entrar por arriba
+	// Saca al siguiente enemigo de la cola y lo hace entrar por arriba, en su lugar dentro del grupo
 	private void hacerEntrarSiguiente()
 	{
 		Enemigo e = pendientes.remove(0);
-		e.iniciarEntrada(60 + azar.nextInt(Constantes.ANCHO - 200));
+		float x = xBaseGrupo + indiceEnGrupo * 230 + azar.nextInt(40);
+		e.iniciarEntrada(Math.min(x, Constantes.ANCHO - 120));
+		indiceEnGrupo++;
 		enemigos.add(e);
+	}
+
+	// Cuántos enemigos normales hay en pantalla (el jefe no cuenta)
+	private int contarNormales()
+	{
+		int n = 0;
+		for (Enemigo e : enemigos)
+		{
+			if (!(e instanceof EnemigoJefe))
+			{
+				n++;
+			}
+		}
+		return n;
+	}
+
+	/*
+		Los enemigos entran en GRUPOS PEQUEÑOS (mini-oleadas) y no todos de una vez:
+		cuando el grupo anterior ya casi no tiene enemigos (o pasó mucho tiempo) entra el
+		siguiente, y dentro del grupo entran de a uno, separados.
+	*/
+	private void actualizarEntradaDeEnemigos()
+	{
+		if (fase == Fase.COMPLETADA || pendientes.isEmpty() || tiempoOleada < RETRASO_ENTRADA)
+		{
+			return;
+		}
+		esperaGrupo++;
+
+		if (entrantesDelGrupo > 0)
+		{
+			if (esperaGrupo >= INTERVALO_ENTRADA)
+			{
+				hacerEntrarSiguiente();
+				entrantesDelGrupo--;
+				esperaGrupo = 0;
+			}
+		}
+		else if (contarNormales() <= QUEDAN_PARA_NUEVO_GRUPO || esperaGrupo >= ESPERA_MAXIMA_GRUPO)
+		{
+			int tamano = Math.min(2 + nivel.getNumero() / 5, 4);
+			entrantesDelGrupo = Math.min(tamano, pendientes.size());
+			indiceEnGrupo = 0;
+			xBaseGrupo = 60 + azar.nextInt(Math.max(1, Constantes.ANCHO - 200 - 230 * (entrantesDelGrupo - 1)));
+			esperaGrupo = INTERVALO_ENTRADA; // el primero entra enseguida
+		}
 	}
 
 	// ---------- PASO 1 del template: actualizar la lógica ----------
@@ -178,11 +234,11 @@ public class PantallaJuego extends PantallaBase
 			tiempoFase = 0;
 		}
 
-		// Entrada escalonada de los enemigos
-		if (fase != Fase.COMPLETADA && !pendientes.isEmpty() && tiempoOleada >= RETRASO_ENTRADA
-				&& (tiempoOleada - RETRASO_ENTRADA) % INTERVALO_ENTRADA == 0)
+		actualizarEntradaDeEnemigos();
+
+		if (enfriamientoPowerUp > 0)
 		{
-			hacerEntrarSiguiente();
+			enfriamientoPowerUp--;
 		}
 
 		// Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
@@ -317,8 +373,10 @@ public class PantallaJuego extends PantallaBase
 	// Con cierta probabilidad (la define el Nivel) el enemigo muerto suelta un power-up al azar
 	private void soltarPowerUp(Enemigo muerto)
 	{
-		if (muerto.sueltaPowerUpSeguro() || MathUtils.random() < nivel.getProbPowerUp())
+		boolean seguro = muerto.sueltaPowerUpSeguro();
+		if (seguro || (enfriamientoPowerUp == 0 && MathUtils.random() < nivel.getProbPowerUp()))
 		{
+			enfriamientoPowerUp = ENFRIAMIENTO_POWERUP;
 			float x = muerto.getX() + muerto.getAncho() / 2 - 24;
 			float y = muerto.getY();
 			switch (MathUtils.random(3))
