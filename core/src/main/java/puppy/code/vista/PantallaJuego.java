@@ -8,6 +8,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Align;
 
@@ -35,11 +36,22 @@ import puppy.code.util.GestorRecursos;
     Pantalla donde se juega. Hereda de PantallaBase (Template Method), así que
     solo define los tres pasos: actualizar (lógica), dibujar y revisarTransicion.
 
-    Ya no recibe 7 parámetros sueltos: recibe el Nivel (construido con el patrón
-    Builder), la nave del jugador y el puntaje acumulado.
+    Cada oleada pasa por tres fases:
+      1. INTRO:       cartel con el nombre de la oleada, la nave aparece y los enemigos
+                      van entrando de a uno desde arriba.
+      2. JUGANDO:     se pelea hasta eliminar a todos los enemigos.
+      3. COMPLETADA:  aviso de oleada completada y después empieza la siguiente.
 */
 public class PantallaJuego extends PantallaBase
 {
+	private enum Fase { INTRO, JUGANDO, COMPLETADA }
+
+	// Tiempos en fotogramas (a 60 por segundo)
+	private static final int DURACION_INTRO = 170;
+	private static final int RETRASO_ENTRADA = 110;    // cuándo entra el primer enemigo
+	private static final int INTERVALO_ENTRADA = 16;   // tiempo entre un enemigo y el siguiente
+	private static final int DURACION_COMPLETADA = 130;
+
 	private Sound explosionSound;
 	private Music gameMusic;
 	private int score;
@@ -49,8 +61,14 @@ public class PantallaJuego extends PantallaBase
 	private Locutor locutor;
 	private Hud hud = new Hud();
 	private boolean pausado = false;
-	// Una sola lista para todos los enemigos
-	private ArrayList<Enemigo> enemigos = new ArrayList<>();
+
+	private Fase fase = Fase.INTRO;
+	private int tiempoFase = 0;     // fotogramas que lleva la fase actual
+	private int tiempoOleada = 0;   // fotogramas desde que empezó la oleada
+	private Random azar = new Random();
+
+	private ArrayList<Enemigo> pendientes = new ArrayList<>(); // enemigos que todavía no han entrado
+	private ArrayList<Enemigo> enemigos = new ArrayList<>();   // enemigos que ya están en pantalla
 	private ArrayList<Bullet> balas = new ArrayList<>();
 	private ArrayList<PowerUp> powerUps = new ArrayList<>();
 
@@ -85,47 +103,42 @@ public class PantallaJuego extends PantallaBase
 
 		nave.aparecer();
 		crearEnemigos(recursos);
-
-		// El locutor anuncia el nombre de la oleada (lo define el Director al construir el Nivel)
-		locutor.anunciar(nivel.getNombre());
 	}
 
-	// Crea los enemigos que pide el Nivel (cuántos de cada tipo y a qué velocidad)
+	// Prepara los enemigos que pide el Nivel. No aparecen todos juntos: esperan en la cola "pendientes"
 	private void crearEnemigos(GestorRecursos recursos)
 	{
-		Random r = new Random();
 		for (int i = 0; i < nivel.getCantBots(); i++)
 		{
-			enemigos.add(new EnemigoBot(posX(r), posY(r), velocidad(r), velocidad(r), recursos.getTextura("bot.png")));
+			pendientes.add(new EnemigoBot(0, 0, velocidad(), velocidad(), recursos.getTextura("bot.png")));
 		}
 		for (int i = 0; i < nivel.getCantLags(); i++)
 		{
-			enemigos.add(new EnemigoLag(posX(r), posY(r), velocidad(r) * 1.5f, velocidad(r) * 1.5f,
+			pendientes.add(new EnemigoLag(0, 0, velocidad() * 1.6f, velocidad() * 1.6f,
 					recursos.getTextura("lag.png")));
 		}
 		for (int i = 0; i < nivel.getCantCheaters(); i++)
 		{
-			enemigos.add(new EnemigoCheater(posX(r), posY(r), velocidad(r) * 0.6f, velocidad(r) * 0.6f,
+			pendientes.add(new EnemigoCheater(0, 0, velocidad() * 0.5f, velocidad() * 0.5f,
 					recursos.getTextura("cheater.png")));
 		}
+		// Se mezclan para que no salgan todos los bots primero y después los demás
+		java.util.Collections.shuffle(pendientes, azar);
 	}
 
-	// Posiciones al azar (siempre lejos de la nave, que parte abajo)
-	private int posX(Random r)
+	// Velocidad al azar (entre 1,5 y 3, escalada por la dificultad del nivel) y con dirección al azar
+	private float velocidad()
 	{
-		return r.nextInt(Constantes.ANCHO);
+		float v = (1.5f + azar.nextFloat() * 1.5f) * nivel.getVelocidad();
+		return azar.nextBoolean() ? v : -v;
 	}
 
-	private int posY(Random r)
+	// Saca al siguiente enemigo de la cola y lo hace entrar por arriba
+	private void hacerEntrarSiguiente()
 	{
-		return 250 + r.nextInt(Constantes.ALTO - 250);
-	}
-
-	// Velocidad al azar (entre 1 y 4, escalada por la dificultad del nivel) y con dirección al azar
-	private float velocidad(Random r)
-	{
-		float v = (1 + r.nextInt(4)) * nivel.getVelocidad();
-		return r.nextBoolean() ? v : -v;
+		Enemigo e = pendientes.remove(0);
+		e.iniciarEntrada(60 + azar.nextInt(Constantes.ANCHO - 200));
+		enemigos.add(e);
 	}
 
 	// ---------- PASO 1 del template: actualizar la lógica ----------
@@ -142,8 +155,24 @@ public class PantallaJuego extends PantallaBase
 			return;
 		}
 
+		tiempoFase++;
+		tiempoOleada++;
 		locutor.actualizar();
 		nave.actualizar();
+
+		// Cambios de fase
+		if (fase == Fase.INTRO && tiempoFase >= DURACION_INTRO)
+		{
+			fase = Fase.JUGANDO;
+			tiempoFase = 0;
+		}
+
+		// Entrada escalonada de los enemigos
+		if (fase != Fase.COMPLETADA && !pendientes.isEmpty() && tiempoOleada >= RETRASO_ENTRADA
+				&& (tiempoOleada - RETRASO_ENTRADA) % INTERVALO_ENTRADA == 0)
+		{
+			hacerEntrarSiguiente();
+		}
 
 		// Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
 		if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
@@ -159,6 +188,10 @@ public class PantallaJuego extends PantallaBase
 			for (int j = 0; j < enemigos.size(); j++)
 			{
 				Enemigo enemigo = enemigos.get(j);
+				if (enemigo.isEntrando())
+				{
+					continue; // todavía está entrando: no se le puede disparar
+				}
 				if (b.revisarColision(enemigo))
 				{
 					// El enemigo pierde vida; solo muere cuando se le acaba
@@ -198,13 +231,20 @@ public class PantallaJuego extends PantallaBase
 		{
 			for (int j = i + 1; j < enemigos.size(); j++)
 			{
-				enemigos.get(i).revisarColisionEnemigo(enemigos.get(j));
+				if (!enemigos.get(i).isEntrando() && !enemigos.get(j).isEntrando())
+				{
+					enemigos.get(i).revisarColisionEnemigo(enemigos.get(j));
+				}
 			}
 		}
 
 		// colisión de los enemigos con la nave
 		for (int i = 0; i < enemigos.size(); i++)
 		{
+			if (enemigos.get(i).isEntrando())
+			{
+				continue;
+			}
 			// perdió vida o game over
 			if (nave.revisarColision(enemigos.get(i)))
 			{
@@ -232,6 +272,16 @@ public class PantallaJuego extends PantallaBase
 				powerUps.remove(i);
 				i--;
 			}
+		}
+
+		// ¿Se eliminó a todos? Entonces la oleada está completada
+		if (fase == Fase.JUGANDO && pendientes.isEmpty() && enemigos.isEmpty())
+		{
+			fase = Fase.COMPLETADA;
+			tiempoFase = 0;
+			int bono = 50 * nivel.getNumero();
+			score += bono;
+			locutor.anunciar("¡OLEADA COMPLETADA! +" + bono);
 		}
 	}
 
@@ -285,10 +335,40 @@ public class PantallaJuego extends PantallaBase
 
 		locutor.dibujar(game.getBatch(), game.getFont());
 
+		if (fase == Fase.INTRO)
+		{
+			dibujarIntro();
+		}
+
 		if (pausado)
 		{
 			dibujarPausa();
 		}
+	}
+
+	// Cartel del comienzo de la oleada (se desvanece al final de la intro)
+	private void dibujarIntro()
+	{
+		BitmapFont font = game.getFont();
+		float transparencia = Math.min(1f, (DURACION_INTRO - tiempoFase) / 30f);
+
+		font.getData().setScale(5f);
+		font.setColor(1f, 0.85f, 0.2f, transparencia);
+		font.draw(game.getBatch(), "OLEADA " + nivel.getNumero(), 0, Constantes.ALTO / 2 + 140,
+				Constantes.ANCHO, Align.center, false);
+
+		font.getData().setScale(2.5f);
+		font.setColor(0.4f, 0.9f, 1f, transparencia);
+		font.draw(game.getBatch(), nivel.getNombre(), 0, Constantes.ALTO / 2 + 50, Constantes.ANCHO, Align.center, false);
+
+		// Antes de que entre el primer enemigo: "preparate"; después: "¡a pelear!"
+		font.getData().setScale(2.5f);
+		font.setColor(1f, 1f, 1f, transparencia);
+		String mensaje = tiempoOleada < RETRASO_ENTRADA ? "¡PREPÁRATE!" : "¡ELIMINA A TODOS!";
+		font.draw(game.getBatch(), mensaje, 0, Constantes.ALTO / 2 - 30, Constantes.ANCHO, Align.center, false);
+
+		font.setColor(Color.WHITE);
+		font.getData().setScale(2f);
 	}
 
 	// Oscurece la pantalla y muestra el cartel de pausa
@@ -313,7 +393,7 @@ public class PantallaJuego extends PantallaBase
 			boolean nuevoRecord = GestorRecursos.getInstance().registrarPuntaje(score);
 			game.setScreen(new PantallaGameOver(game, score, nuevoRecord));
 		}
-		else if (enemigos.size() == 0)
+		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA)
 		{
 			// Oleada completada: el Director arma la siguiente y se sigue con la misma nave
 			DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
