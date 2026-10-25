@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 
 import puppy.code.Constantes;
@@ -22,6 +24,9 @@ public class PantallaSeleccion extends PantallaBase
 	private Personaje[] personajes = Personaje.values();
 	private int seleccionado = 0;
 	private Texture pixel = GestorRecursos.getInstance().getPixelBlanco();
+	private boolean iniciar = false;   // se hizo clic en la tarjeta que ya estaba elegida
+	private float ultimoMouseX = -1;
+	private float ultimoMouseY = -1;
 
 	public PantallaSeleccion(SpaceNavigation game)
 	{
@@ -38,6 +43,27 @@ public class PantallaSeleccion extends PantallaBase
 		if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT))
 		{
 			seleccionado = (seleccionado + 1) % personajes.length;
+		}
+
+		// Con el mouse: al pasar por encima se elige la tarjeta y un clic en la elegida inicia la partida
+		Vector2 mouse = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+		boolean mouseSeMovio = mouse.x != ultimoMouseX || mouse.y != ultimoMouseY;
+		ultimoMouseX = mouse.x;
+		ultimoMouseY = mouse.y;
+		for (int i = 0; i < personajes.length; i++)
+		{
+			if (new Rectangle(80 + i * 360, 170, 320, 430).contains(mouse))
+			{
+				if (mouseSeMovio)
+				{
+					seleccionado = i;
+				}
+				if (Gdx.input.justTouched())
+				{
+					iniciar = seleccionado == i;
+					seleccionado = i;
+				}
+			}
 		}
 	}
 
@@ -56,7 +82,7 @@ public class PantallaSeleccion extends PantallaBase
 		}
 
 		font.getData().setScale(1.5f);
-		font.draw(batch, "Flechas izquierda / derecha para elegir   |   ENTER para jugar", 0, 110,
+		font.draw(batch, "Flechas o mouse para elegir   |   ENTER o clic para jugar   |   ESC: volver", 0, 110,
 				Constantes.ANCHO, Align.center, false);
 	}
 
@@ -106,9 +132,13 @@ public class PantallaSeleccion extends PantallaBase
 	@Override
 	protected void revisarTransicion()
 	{
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || iniciar)
 		{
 			game.setScreen(PantallaJuego.nuevaPartida(game, personajes[seleccionado]));
+		}
+		else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
+		{
+			game.setScreen(new PantallaMenu(game));
 		}
 	}
 }

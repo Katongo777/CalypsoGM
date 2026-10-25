@@ -37,6 +37,7 @@ public class GestorRecursos
     private Music musica;
     private Texture pixelBlanco;
     private BitmapFont fuente;
+    private Opciones opciones;
 
     // Récord de puntaje: se guarda en un archivo de texto para que no se pierda al cerrar el juego
     private static final String ARCHIVO_RECORD = "record.txt";
@@ -110,9 +111,34 @@ public class GestorRecursos
         {
             musica = Gdx.audio.newMusic(Gdx.files.internal("piano-loops.wav"));
             musica.setLooping(true);
-            musica.setVolume(0.5f);
+            musica.setVolume(getOpciones().getVolumenMusica());
         }
         return musica;
+    }
+
+    // Las opciones del jugador (volumen y dificultad), guardadas en un archivo
+    public Opciones getOpciones()
+    {
+        if (opciones == null)
+        {
+            opciones = new Opciones();
+        }
+        return opciones;
+    }
+
+    // Reproduce un efecto de sonido con el volumen de efectos elegido en las opciones
+    public void reproducirSonido(String archivo)
+    {
+        getSonido(archivo).play(getOpciones().getVolumenEfectos());
+    }
+
+    // Aplica a la música el volumen elegido en las opciones
+    public void aplicarVolumenMusica()
+    {
+        if (musica != null)
+        {
+            musica.setVolume(getOpciones().getVolumenMusica());
+        }
     }
 
     // ---------------- Récord (persistencia en archivo + manejo de excepciones) ----------------

@@ -27,6 +27,10 @@ public class PantallaGuia extends PantallaBase
 	private static final float ANCHO_TEXTO = 440;
 	private static final float ANCHO_TEXTO_POWERUPS = 400;
 
+	private final MenuBotones botones = new MenuBotones(new String[] { "CONTINUAR", "VOLVER AL MENÚ" },
+			Constantes.ANCHO / 2f - 330, 22, 320, 54, 20, true);
+	private int eleccion = -1;
+
 	public PantallaGuia(SpaceNavigation game)
 	{
 		super(game);
@@ -36,7 +40,7 @@ public class PantallaGuia extends PantallaBase
 	@Override
 	protected void actualizar(float delta)
 	{
-		// No hay lógica que actualizar
+		eleccion = botones.actualizar(viewport);
 	}
 
 	@Override
@@ -81,10 +85,7 @@ public class PantallaGuia extends PantallaBase
 		font.draw(batch, "Controles: flechas = moverte  |  ESPACIO = disparar  |  P = pausa",
 				COLUMNA_ENEMIGOS, 125, Constantes.ANCHO - 100, Align.left, false);
 
-		font.getData().setScale(1.5f);
-		font.setColor(0.4f, 0.9f, 1f, 1f);
-		font.draw(batch, "ENTER: continuar   |   ESC: volver al menú", 0, 75, Constantes.ANCHO, Align.center, false);
-		font.setColor(Color.WHITE);
+		botones.dibujar(batch, font);
 	}
 
 	// Un subtítulo de sección
@@ -116,11 +117,11 @@ public class PantallaGuia extends PantallaBase
 	@Override
 	protected void revisarTransicion()
 	{
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER))
+		if (eleccion == 0)
 		{
 			game.setScreen(new PantallaSeleccion(game));
 		}
-		else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
+		else if (eleccion == 1 || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
 		{
 			game.setScreen(new PantallaMenu(game));
 		}

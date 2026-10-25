@@ -6,7 +6,6 @@ import java.util.Random;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.MathUtils;
@@ -15,6 +14,7 @@ import com.badlogic.gdx.utils.Align;
 import puppy.code.Constantes;
 import puppy.code.SpaceNavigation;
 import puppy.code.modelo.Bullet;
+import puppy.code.modelo.Dificultad;
 import puppy.code.modelo.Nave4;
 import puppy.code.modelo.Personaje;
 import puppy.code.modelo.armas.BFG;
@@ -49,16 +49,15 @@ public class PantallaJuego extends PantallaBase
 	private enum Fase { INTRO, JUGANDO, COMPLETADA }
 
 	// Tiempos en fotogramas (a 60 por segundo)
-	private static final int DURACION_INTRO = 210;
-	private static final int RETRASO_ENTRADA = 110;    // cuándo entra el primer enemigo
+	private static final int DURACION_INTRO = 330;
+	private static final int RETRASO_ENTRADA = 200;    // cuándo entra el primer enemigo
 	private static final int INTERVALO_ENTRADA = 24;   // tiempo entre un enemigo y el siguiente dentro de un grupo
 	private static final int ENFRIAMIENTO_POWERUP = 600; // mínimo de fotogramas entre un power-up y el siguiente
 	private static final int ESPERA_MAXIMA_GRUPO = 420;  // si pasa este tiempo sin entrar nadie, entra el siguiente grupo igual
 	private static final int QUEDAN_PARA_NUEVO_GRUPO = 2; // cuando quedan tan pocos enemigos, entra el siguiente grupo
-	private static final int DURACION_COMPLETADA = 130;
+	private static final int DURACION_COMPLETADA = 210;
 	private static final int MAX_ENEMIGOS = 14;       // tope para que el jefe no llene la pantalla de Lags
 
-	private Sound explosionSound;
 	private Music gameMusic;
 	private int score;
 	private Nivel nivel;
@@ -68,6 +67,10 @@ public class PantallaJuego extends PantallaBase
 	private Hud hud = new Hud();
 	private BarraJefe barraJefe = new BarraJefe();
 	private boolean pausado = false;
+	private Dificultad dificultad;
+	private int accionPausa = -1;   // botón del menú de pausa que se accionó
+	private MenuBotones menuPausa = new MenuBotones(new String[] { "CONTINUAR", "OPCIONES", "SALIR AL MENÚ" },
+			Constantes.ANCHO / 2f - 190, 430, 380, 60, 18, false);
 
 	private Fase fase = Fase.INTRO;
 	private int tiempoFase = 0;     // fotogramas que lleva la fase actual
@@ -88,6 +91,8 @@ public class PantallaJuego extends PantallaBase
 	public static PantallaJuego nuevaPartida(SpaceNavigation game, Personaje personaje)
 	{
 		Nave4 nave = new Nave4(personaje);
+		// la dificultad elegida en las opciones puede dar vidas extra
+		nave.setVidas(nave.getVidas() + GestorRecursos.getInstance().getOpciones().getDificultad().getVidasExtra());
 		if (game.isModoDios())
 		{
 			nave.setVidas(30); // easter egg del código Konami: 30 vidas y el BFG 9000
@@ -109,7 +114,7 @@ public class PantallaJuego extends PantallaBase
 
 		// Los recursos vienen del Singleton: se cargan una sola vez y se reutilizan
 		GestorRecursos recursos = GestorRecursos.getInstance();
-		explosionSound = recursos.getSonido("explosion.ogg");
+		dificultad = recursos.getOpciones().getDificultad();
 		gameMusic = recursos.getMusica();
 		gameMusic.play();
 
@@ -148,7 +153,7 @@ public class PantallaJuego extends PantallaBase
 	// Velocidad al azar (entre 1,5 y 3, escalada por la dificultad del nivel) y con dirección al azar
 	private float velocidad()
 	{
-		float v = Math.min((1.2f + azar.nextFloat() * 1.2f) * nivel.getVelocidad(), 4f);
+		float v = Math.min((1.2f + azar.nextFloat() * 1.2f) * nivel.getVelocidad() * dificultad.getMultVelocidad(), 4.5f);
 		return azar.nextBoolean() ? v : -v;
 	}
 
@@ -212,18 +217,38 @@ public class PantallaJuego extends PantallaBase
 	@Override
 	protected void actualizar(float delta)
 	{
-		// P pausa y reanuda el juego
-		if (Gdx.input.isKeyJustPressed(Input.Keys.P))
+		// P o ESC pausan y reanudan el juego
+		if (Gdx.input.isKeyJustPressed(Input.Keys.P) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
 		{
 			pausado = !pausado;
 		}
 		if (pausado)
 		{
+			accionPausa = menuPausa.actualizar(viewport);
+			if (accionPausa == 0)
+			{
+				pausado = false; // CONTINUAR
+				accionPausa = -1;
+			}
 			return;
 		}
 
 		tiempoFase++;
 		tiempoOleada++;
+
+		// ENTER salta el cartel de inicio y el aviso de oleada completada
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) && tiempoFase > 40)
+		{
+			if (fase == Fase.INTRO)
+			{
+				tiempoFase = DURACION_INTRO;
+				tiempoOleada = Math.max(tiempoOleada, RETRASO_ENTRADA);
+			}
+			else if (fase == Fase.COMPLETADA)
+			{
+				tiempoFase = DURACION_COMPLETADA;
+			}
+		}
 		locutor.actualizar();
 		nave.actualizar();
 
@@ -265,7 +290,7 @@ public class PantallaJuego extends PantallaBase
 					enemigo.recibirDano(b.getDanio());
 					if (enemigo.estaMuerto())
 					{
-						explosionSound.play();
+						GestorRecursos.getInstance().reproducirSonido("explosion.ogg");
 						score += enemigo.getPuntos();
 						locutor.registrarEliminacion();
 						if (enemigo instanceof EnemigoJefe)
@@ -464,6 +489,10 @@ public class PantallaJuego extends PantallaBase
 		String mensaje = tiempoOleada < RETRASO_ENTRADA ? "¡PREPÁRATE!" : "¡ELIMINA A TODOS!";
 		font.draw(game.getBatch(), mensaje, 0, Constantes.ALTO / 2 - 90, Constantes.ANCHO, Align.center, false);
 
+		font.getData().setScale(1f);
+		font.setColor(0.7f, 0.7f, 0.8f, transparencia);
+		font.draw(game.getBatch(), "ENTER: saltar", 0, Constantes.ALTO / 2 - 160, Constantes.ANCHO, Align.center, false);
+
 		font.setColor(Color.WHITE);
 		font.getData().setScale(1.5f);
 	}
@@ -471,19 +500,34 @@ public class PantallaJuego extends PantallaBase
 	// Oscurece la pantalla y muestra el cartel de pausa
 	private void dibujarPausa()
 	{
-		game.getBatch().setColor(0, 0, 0, 0.6f);
+		game.getBatch().setColor(0, 0, 0, 0.7f);
 		game.getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
 		game.getBatch().setColor(Color.WHITE);
-		game.getFont().getData().setScale(2f);
-		game.getFont().draw(game.getBatch(), "PAUSA - AFK", 0, Constantes.ALTO / 2 + 30, Constantes.ANCHO, Align.center, false);
+		game.getFont().getData().setScale(3f);
+		game.getFont().draw(game.getBatch(), "PAUSA - AFK", 0, Constantes.ALTO - 160, Constantes.ANCHO, Align.center, false);
+		menuPausa.dibujar(game.getBatch(), game.getFont());
+		game.getFont().getData().setScale(1f);
+		game.getFont().draw(game.getBatch(), "P o ESC: continuar", 0, 130, Constantes.ANCHO, Align.center, false);
 		game.getFont().getData().setScale(1.5f);
-		game.getFont().draw(game.getBatch(), "Presiona P para volver", 0, Constantes.ALTO / 2 - 30, Constantes.ANCHO, Align.center, false);
 	}
 
 	// ---------- PASO 3 del template (gancho): ¿hay que cambiar de pantalla? ----------
 	@Override
 	protected void revisarTransicion()
 	{
+		if (accionPausa == 1)
+		{
+			accionPausa = -1;
+			game.setScreen(new PantallaOpciones(game, this));
+			return;
+		}
+		if (accionPausa == 2)
+		{
+			accionPausa = -1;
+			game.setScreen(new PantallaMenu(game));
+			return;
+		}
+
 		if (nave.estaDestruido())
 		{
 			// Se guarda el récord (si corresponde) y se muestra la pantalla de fin
