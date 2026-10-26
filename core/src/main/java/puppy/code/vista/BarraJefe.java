@@ -31,7 +31,11 @@ public class BarraJefe
         batch.draw(pixel, x - 4, y - 4, ANCHO_BARRA + 8, ALTO_BARRA + 8);
         batch.setColor(0.15f, 0.05f, 0.05f, 1f);
         batch.draw(pixel, x, y, ANCHO_BARRA, ALTO_BARRA);
-        if (porcentaje > 0.5f)
+        if (jefe.tieneEscudo())
+        {
+            batch.setColor(0.3f, 0.75f, 1f, 1f);   // con escudo la barra se ve celeste
+        }
+        else if (porcentaje > 0.5f)
         {
             batch.setColor(0.2f, 0.85f, 0.3f, 1f);
         }
@@ -44,9 +48,16 @@ public class BarraJefe
             batch.setColor(0.95f, 0.2f, 0.2f, 1f);
         }
         batch.draw(pixel, x, y, ANCHO_BARRA * porcentaje, ALTO_BARRA);
+        // marcas donde el jefe cambia de fase
+        batch.setColor(1f, 1f, 1f, 1f);
+        for (float umbral : jefe.getUmbrales())
+        {
+            batch.draw(pixel, x + ANCHO_BARRA * umbral - 2, y - 4, 4, ALTO_BARRA + 8);
+        }
         batch.setColor(Color.WHITE);
 
         font.getData().setScale(1.5f);
-        font.draw(batch, "JEFE: " + jefe.getNombre(), 0, Constantes.ALTO - 8, Constantes.ANCHO, Align.center, false);
+        String texto = "JEFE: " + jefe.getNombre() + (jefe.tieneEscudo() ? "  (ESCUDO)" : "");
+        font.draw(batch, texto, 0, Constantes.ALTO - 8, Constantes.ANCHO, Align.center, false);
     }
 }
