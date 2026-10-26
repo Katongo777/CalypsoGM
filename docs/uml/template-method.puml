@@ -1,0 +1,43 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ClassBackgroundColor #F5F7FF
+skinparam ClassBorderColor #3F51B5
+skinparam ArrowColor #37474F
+
+title Patrón Template Method (GM-8): PantallaBase
+
+abstract class PantallaBase <<Template>> {
+  # game : SpaceNavigation
+  # camera : OrthographicCamera
+  # viewport : Viewport
+  + {final} render(delta : float) : void
+  # {abstract} actualizar(delta : float) : void
+  # {abstract} dibujar() : void
+  # revisarTransicion() : void
+  # getTemblor() : float
+}
+class PantallaMenu
+class PantallaGuia
+class PantallaOpciones
+class PantallaSeleccion
+class PantallaJuego
+class PantallaGameOver
+class PantallaVictoria
+PantallaBase <|-- PantallaMenu
+PantallaBase <|-- PantallaGuia
+PantallaBase <|-- PantallaOpciones
+PantallaBase <|-- PantallaSeleccion
+PantallaBase <|-- PantallaJuego
+PantallaBase <|-- PantallaGameOver
+PantallaBase <|-- PantallaVictoria
+note right of PantallaBase
+  render() fija el ORDEN:
+  1. actualizar()
+  2. dibujar()  (con fondo)
+  3. revisarTransicion()
+  getTemblor() es un gancho opcional.
+end note
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ClassBackgroundColor #F5F7FF
+skinparam ClassBorderColor #3F51B5
+skinparam ArrowColor #37474F
+
+title Patrón Singleton (GM-6): GestorRecursos
+
+class GestorRecursos <<Singleton>> {
+  - {static} instancia : GestorRecursos
+  - texturas : HashMap<String, Texture>
+  - sonidos : HashMap<String, Sound>
+  - musicas : HashMap<String, Music>
+  - fuente : BitmapFont
+  - opciones : Opciones
+  - record : int
+  - GestorRecursos()
+  + {static} getInstance() : GestorRecursos
+  + getTextura(archivo : String) : Texture
+  + reproducirSonido(archivo : String) : void
+  + reproducirMusica(archivo : String) : void
+  + getFuente() : BitmapFont
+  + getOpciones() : Opciones
+  + registrarPuntaje(p : int) : boolean
+  + liberar() : void
+}
+class Opciones {
+  - volumenMusica : float
+  - volumenEfectos : float
+  - dificultad : Dificultad
+  + guardar() : void
+}
+class PantallaJuego <<Cliente>>
+class Nave4 <<Cliente>>
+class MenuBotones <<Cliente>>
+class Hud <<Cliente>>
+GestorRecursos --> Opciones : guarda
+PantallaJuego ..> GestorRecursos : getInstance()
+Nave4 ..> GestorRecursos : getInstance()
+MenuBotones ..> GestorRecursos : getInstance()
+Hud ..> GestorRecursos : getInstance()
+note right of GestorRecursos
+  Constructor PRIVADO: nadie hace new.
+  getInstance() crea la instancia
+  solo la primera vez.
+end note
+@enduml
