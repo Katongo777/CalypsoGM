@@ -1,0 +1,62 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ClassBackgroundColor #F5F7FF
+skinparam ClassBorderColor #3F51B5
+skinparam ArrowColor #37474F
+
+title Strategy en habilidades (personajes) y en ataques (jefes)
+
+class Nave4 <<Context>> {
+  - habilidad : Habilidad
+  - energia : float
+  + usarHabilidad(ctx : ContextoCombate) : boolean
+}
+interface Habilidad <<Strategy>> {
+  + activar(nave : Nave4, ctx : ContextoCombate) : void
+  + getNombre() : String
+  + getDescripcion() : String
+}
+class Overdrive <<ConcreteStrategy>>
+class TiroCertero <<ConcreteStrategy>>
+class Burbuja <<ConcreteStrategy>>
+enum Personaje {
+  TRYHARD
+  CAMPER
+  SUPPORT
+  + crearHabilidad() : Habilidad
+}
+class EnemigoJefe <<Context>> {
+  - ataquesFase : List<List<AtaqueJefe>>
+  - ataquesEscudo : List<List<AtaqueJefe>>
+  + atacar(ctx : ContextoCombate) : void
+}
+interface AtaqueJefe <<Strategy>> {
+  + actualizar(jefe : EnemigoJefe, ctx : ContextoCombate) : void
+}
+class AtaqueApuntado <<ConcreteStrategy>>
+class AtaqueAnillo <<ConcreteStrategy>>
+class AtaqueEspiral <<ConcreteStrategy>>
+class AtaqueLluvia <<ConcreteStrategy>>
+class AtaqueLaser <<ConcreteStrategy>>
+class AtaqueInvocar <<ConcreteStrategy>>
+class AtaqueSalto <<ConcreteStrategy>>
+class AtaqueEmbestida <<ConcreteStrategy>>
+
+Nave4 --> Habilidad : usa
+Personaje ..> Habilidad : crea
+Habilidad <|.. Overdrive
+Habilidad <|.. TiroCertero
+Habilidad <|.. Burbuja
+EnemigoJefe --> AtaqueJefe : combina
+AtaqueJefe <|.. AtaqueApuntado
+AtaqueJefe <|.. AtaqueAnillo
+AtaqueJefe <|.. AtaqueEspiral
+AtaqueJefe <|.. AtaqueLluvia
+AtaqueJefe <|.. AtaqueLaser
+AtaqueJefe <|.. AtaqueInvocar
+AtaqueJefe <|.. AtaqueSalto
+AtaqueJefe <|.. AtaqueEmbestida
+@enduml

@@ -1,0 +1,96 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ClassBackgroundColor #F5F7FF
+skinparam ClassBorderColor #3F51B5
+skinparam ArrowColor #37474F
+
+title Jerarquía de clases (GM-4): Entidad, Enemigo y PowerUp
+
+interface Colisionable {
+  + getArea() : Rectangle
+  + chocaCon(otro : Colisionable) : boolean
+}
+class Rayo {
+  + estaActivo() : boolean
+}
+abstract class Entidad {
+  - spr : Sprite
+  - xVel : float
+  - yVel : float
+  - factorHitbox : float
+  + {abstract} actualizar() : void
+  + dibujar(batch : SpriteBatch) : void
+  # setPosicion(x, y) : void
+  # setTinte(r, g, b, a) : void
+}
+class Nave4 {
+  - vidas : int
+  - energia : float
+  - habilidad : Habilidad
+  + disparar() : List<Bullet>
+  + revisarGolpe(c : Colisionable) : boolean
+  + usarHabilidad(ctx : ContextoCombate) : boolean
+}
+class Bullet {
+  - danio : float
+  - atraviesa : boolean
+}
+class BalaEnemiga
+abstract class Enemigo {
+  - vida : float
+  - puntos : int
+  + {abstract} getNombre() : String
+  + recibirDano(d : float) : void
+  + alMorir() : List<Enemigo>
+  + atacar(ctx : ContextoCombate) : void
+  + seDestruyeAlChocar() : boolean
+  + sueltaPowerUpSeguro() : boolean
+  + empujable() : boolean
+  # moverConRebote() : void
+}
+class EnemigoBot
+class EnemigoLag
+class EnemigoCheater
+class EnemigoSpammer
+class EnemigoSniper
+class EnemigoJefe {
+  - fase : int
+  - escudoFrames : int
+}
+enum TipoJefe {
+  TOXIC
+  HACKER
+  SWEATY
+  ADMIN
+}
+abstract class PowerUp {
+  + {abstract} aplicar(nave : Nave4) : void
+  + {abstract} getMensaje() : String
+}
+class Pizza
+class SillaGamer
+class RGB
+class LootBox
+
+Colisionable <|.. Entidad
+Colisionable <|.. Rayo
+Entidad <|-- Nave4
+Entidad <|-- Bullet
+Entidad <|-- BalaEnemiga
+Entidad <|-- Enemigo
+Entidad <|-- PowerUp
+Enemigo <|-- EnemigoBot
+Enemigo <|-- EnemigoLag
+Enemigo <|-- EnemigoCheater
+Enemigo <|-- EnemigoSpammer
+Enemigo <|-- EnemigoSniper
+Enemigo <|-- EnemigoJefe
+PowerUp <|-- Pizza
+PowerUp <|-- SillaGamer
+PowerUp <|-- RGB
+PowerUp <|-- LootBox
+EnemigoJefe ..> TipoJefe : usa
+@enduml

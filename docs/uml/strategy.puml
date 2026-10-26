@@ -1,0 +1,54 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ClassBackgroundColor #F5F7FF
+skinparam ClassBorderColor #3F51B5
+skinparam ArrowColor #37474F
+
+title Patrón Strategy (GM-7): armas intercambiables
+
+class Nave4 <<Context>> {
+  - estrategia : EstrategiaDisparo
+  - armaOriginal : EstrategiaDisparo
+  - cooldownRestante : int
+  + disparar() : List<Bullet>
+  + setEstrategia(e : EstrategiaDisparo) : void
+  + equiparArmaTemporal(e : EstrategiaDisparo, frames : int) : void
+}
+
+interface EstrategiaDisparo <<Strategy>> {
+  + disparar(x : float, y : float) : List<Bullet>
+  + getCooldown() : int
+  + getNombre() : String
+}
+
+class Pistola <<ConcreteStrategy>> {
+  + disparar(x, y) : List<Bullet>
+}
+class Escopeta <<ConcreteStrategy>> {
+  + disparar(x, y) : List<Bullet>
+}
+class Railgun <<ConcreteStrategy>> {
+  + disparar(x, y) : List<Bullet>
+}
+class BFG <<ConcreteStrategy>> {
+  + disparar(x, y) : List<Bullet>
+}
+class Bullet {
+  - danio : int
+  - atraviesa : boolean
+}
+
+Nave4 --> "1" EstrategiaDisparo : usa
+EstrategiaDisparo <|.. Pistola
+EstrategiaDisparo <|.. Escopeta
+EstrategiaDisparo <|.. Railgun
+EstrategiaDisparo <|.. BFG
+EstrategiaDisparo ..> Bullet : crea
+note right of Nave4
+  La nave solo llama a disparar().
+  No sabe qué arma es.
+end note
+@enduml

@@ -1,0 +1,64 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ClassBackgroundColor #F5F7FF
+skinparam ClassBorderColor #3F51B5
+skinparam ArrowColor #37474F
+
+title Patrón Builder (GM-9): construcción de oleadas
+
+class DirectorNiveles <<Director>> {
+  + {static} TOTAL_OLEADAS : int = 20
+  - builder : NivelBuilder
+  + construirOleadaNormal(numero : int) : Nivel
+  + construirOleadaHardcore(numero : int) : Nivel
+  + construirOleadaJefe(numero : int, jefe : TipoJefe) : Nivel
+  + construirOleada(numero : int) : Nivel
+}
+interface NivelBuilder <<Builder>> {
+  + reset() : void
+  + definirNumero(n : int) : void
+  + definirNombre(s : String) : void
+  + agregarBots(c : int) : void
+  + agregarLags(c : int) : void
+  + agregarCheaters(c : int) : void
+  + agregarSpammers(c : int) : void
+  + agregarSnipers(c : int) : void
+  + agregarJefe(tipo : TipoJefe) : void
+  + definirAviso(s : String) : void
+  + definirVelocidad(v : float) : void
+  + definirProbPowerUp(p : float) : void
+  + getResult() : Nivel
+}
+class NivelPartidaBuilder <<ConcreteBuilder>> {
+  - nivel : Nivel
+}
+class Nivel <<Product>> {
+  - numero : int
+  - nombre : String
+  - cantBots : int
+  - cantLags : int
+  - cantCheaters : int
+  - cantSpammers : int
+  - cantSnipers : int
+  - tipoJefe : TipoJefe
+  - aviso : String
+  - velocidad : float
+  - probPowerUp : float
+}
+enum TipoJefe {
+  TOXIC
+  HACKER
+  SWEATY
+  ADMIN
+}
+class PantallaJuego <<Cliente>>
+
+DirectorNiveles --> "1" NivelBuilder
+NivelBuilder <|.. NivelPartidaBuilder
+NivelPartidaBuilder ..> Nivel : crea
+PantallaJuego ..> DirectorNiveles : pide la oleada
+Nivel ..> TipoJefe
+@enduml
