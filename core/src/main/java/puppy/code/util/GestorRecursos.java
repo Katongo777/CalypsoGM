@@ -34,7 +34,8 @@ public class GestorRecursos
 
     private HashMap<String, Texture> texturas;
     private HashMap<String, Sound> sonidos;
-    private Music musica;
+    private HashMap<String, Music> musicas;
+    private String pistaActual;
     private Texture pixelBlanco;
     private BitmapFont fuente;
     private Opciones opciones;
@@ -48,6 +49,7 @@ public class GestorRecursos
     {
         texturas = new HashMap<>();
         sonidos = new HashMap<>();
+        musicas = new HashMap<>();
         record = leerRecord();
     }
 
@@ -104,16 +106,37 @@ public class GestorRecursos
         return pixelBlanco;
     }
 
-    // La música de fondo también es única: así no se reinicia en cada ronda
-    public Music getMusica()
+    /*
+        La música: hay varias canciones (menú, juego y jefe) pero suena UNA sola a la vez.
+        Si se pide la que ya está sonando no se reinicia, así la música no se corta al
+        cambiar de pantalla.
+    */
+    public void reproducirMusica(String archivo)
     {
-        if (musica == null)
+        if (archivo.equals(pistaActual) && musicas.get(archivo).isPlaying())
         {
-            musica = Gdx.audio.newMusic(Gdx.files.internal("piano-loops.wav"));
-            musica.setLooping(true);
-            musica.setVolume(getOpciones().getVolumenMusica());
+            return;
         }
-        return musica;
+        detenerMusica();
+        Music m = musicas.get(archivo);
+        if (m == null)
+        {
+            m = Gdx.audio.newMusic(Gdx.files.internal(archivo));
+            m.setLooping(true);
+            musicas.put(archivo, m);
+        }
+        m.setVolume(getOpciones().getVolumenMusica());
+        m.play();
+        pistaActual = archivo;
+    }
+
+    public void detenerMusica()
+    {
+        if (pistaActual != null && musicas.get(pistaActual) != null)
+        {
+            musicas.get(pistaActual).stop();
+        }
+        pistaActual = null;
     }
 
     // Las opciones del jugador (volumen y dificultad), guardadas en un archivo
@@ -135,9 +158,9 @@ public class GestorRecursos
     // Aplica a la música el volumen elegido en las opciones
     public void aplicarVolumenMusica()
     {
-        if (musica != null)
+        for (Music m : musicas.values())
         {
-            musica.setVolume(getOpciones().getVolumenMusica());
+            m.setVolume(getOpciones().getVolumenMusica());
         }
     }
 
@@ -238,10 +261,11 @@ public class GestorRecursos
         }
         texturas.clear();
         sonidos.clear();
-        if (musica != null)
+        for (Music m : musicas.values())
         {
-            musica.dispose();
-            musica = null;
+            m.dispose();
         }
+        musicas.clear();
+        pistaActual = null;
     }
 }

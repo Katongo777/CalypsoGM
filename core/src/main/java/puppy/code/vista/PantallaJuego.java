@@ -5,7 +5,6 @@ import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.MathUtils;
@@ -56,13 +55,15 @@ public class PantallaJuego extends PantallaBase
 	private static final int DURACION_INTRO = 330;
 	private static final int RETRASO_ENTRADA = 200;    // cuándo entra el primer enemigo
 	private static final int INTERVALO_ENTRADA = 24;   // tiempo entre un enemigo y el siguiente dentro de un grupo
+	private static final String PISTA_JUEGO = "piano-loops.wav";
+	private static final String PISTA_JEFE = "musica_jefe.wav";
 	private static final int ENFRIAMIENTO_POWERUP = 600; // mínimo de fotogramas entre un power-up y el siguiente
 	private static final int ESPERA_MAXIMA_GRUPO = 420;  // si pasa este tiempo sin entrar nadie, entra el siguiente grupo igual
 	private static final int QUEDAN_PARA_NUEVO_GRUPO = 2; // cuando quedan tan pocos enemigos, entra el siguiente grupo
 	private static final int DURACION_COMPLETADA = 210;
 	private static final int MAX_ENEMIGOS = 14;       // tope para que el jefe no llene la pantalla de Lags
 
-	private Music gameMusic;
+	private String pistaDeseada = PISTA_JUEGO;   // la canción que debería sonar ahora
 	private int score;
 	private Nivel nivel;
 
@@ -123,8 +124,7 @@ public class PantallaJuego extends PantallaBase
 		dificultad = recursos.getOpciones().getDificultad();
 		contexto = new ContextoCombate(nave, dificultad, nivel.getNumero());
 		balasEnemigas = contexto.getBalasEnemigas();
-		gameMusic = recursos.getMusica();
-		gameMusic.play();
+		recursos.reproducirMusica(pistaDeseada);
 
 		nave.aparecer();
 		crearEnemigos(recursos);
@@ -182,6 +182,25 @@ public class PantallaJuego extends PantallaBase
 		e.iniciarEntrada(Math.min(x, Constantes.ANCHO - 120));
 		indiceEnGrupo++;
 		enemigos.add(e);
+	}
+
+	// Con un jefe en pantalla suena la canción tensa; cuando no hay jefe, la del juego
+	private void actualizarMusica()
+	{
+		boolean hayJefe = false;
+		for (Enemigo e : enemigos)
+		{
+			if (e instanceof EnemigoJefe)
+			{
+				hayJefe = true;
+			}
+		}
+		String pista = hayJefe ? PISTA_JEFE : PISTA_JUEGO;
+		if (!pista.equals(pistaDeseada))
+		{
+			pistaDeseada = pista;
+			GestorRecursos.getInstance().reproducirMusica(pista);
+		}
 	}
 
 	// Cuántos enemigos normales hay en pantalla (el jefe no cuenta)
@@ -276,6 +295,7 @@ public class PantallaJuego extends PantallaBase
 			tiempoFase = 0;
 		}
 
+		actualizarMusica();
 		actualizarEntradaDeEnemigos();
 
 		if (enfriamientoPowerUp > 0)
@@ -286,7 +306,12 @@ public class PantallaJuego extends PantallaBase
 		// Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
 		if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
 		{
-			balas.addAll(nave.disparar());
+			ArrayList<Bullet> nuevas = new ArrayList<>(nave.disparar());
+			if (!nuevas.isEmpty())
+			{
+				GestorRecursos.getInstance().reproducirSonido("disparo.wav");
+			}
+			balas.addAll(nuevas);
 		}
 
 		// colisiones entre balas y enemigos y su destrucción
@@ -417,6 +442,7 @@ public class PantallaJuego extends PantallaBase
 			if (nave.chocaCon(p))
 			{
 				p.aplicar(nave);
+				GestorRecursos.getInstance().reproducirSonido("powerup.wav");
 				locutor.anunciar(p.getMensaje());
 				powerUps.remove(i);
 				i--;
@@ -602,6 +628,6 @@ public class PantallaJuego extends PantallaBase
 	@Override
 	public void show()
 	{
-		gameMusic.play();
+		GestorRecursos.getInstance().reproducirMusica(pistaDeseada);
 	}
 }

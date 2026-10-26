@@ -59,6 +59,7 @@ public class MenuBotones
     */
     public int actualizar(Viewport viewport)
     {
+        int seleccionAntes = seleccion;
         int anterior = horizontal ? Input.Keys.LEFT : Input.Keys.UP;
         int siguiente = horizontal ? Input.Keys.RIGHT : Input.Keys.DOWN;
         if (Gdx.input.isKeyJustPressed(anterior))
@@ -91,6 +92,7 @@ public class MenuBotones
                 if (areas[i].contains(mouse))
                 {
                     seleccion = i;
+                    GestorRecursos.getInstance().reproducirSonido("ui_aceptar.wav");
                     return i;
                 }
             }
@@ -98,7 +100,12 @@ public class MenuBotones
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER))
         {
+            GestorRecursos.getInstance().reproducirSonido("ui_aceptar.wav");
             return seleccion;
+        }
+        if (seleccion != seleccionAntes)
+        {
+            GestorRecursos.getInstance().reproducirSonido("ui_mover.wav");
         }
         return -1;
     }

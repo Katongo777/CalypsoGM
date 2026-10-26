@@ -87,4 +87,11 @@ public class PantallaGameOver extends PantallaBase
 			game.setScreen(new PantallaSeleccion(game));
 		}
 	}
+
+	// Suena la canción del menú (si ya está sonando no se reinicia)
+	@Override
+	public void show()
+	{
+		GestorRecursos.getInstance().reproducirMusica("musica_menu.wav");
+	}
 }
