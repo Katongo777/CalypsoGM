@@ -60,6 +60,18 @@ public class NivelPartidaBuilder implements NivelBuilder
     }
 
     @Override
+    public void agregarSpammers(int cantidad)
+    {
+        nivel.setCantSpammers(nivel.getCantSpammers() + cantidad);
+    }
+
+    @Override
+    public void agregarSnipers(int cantidad)
+    {
+        nivel.setCantSnipers(nivel.getCantSnipers() + cantidad);
+    }
+
+    @Override
     public void agregarJefe(TipoJefe tipo)
     {
         nivel.setTipoJefe(tipo);

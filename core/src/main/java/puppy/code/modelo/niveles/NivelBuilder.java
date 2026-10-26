@@ -30,6 +30,10 @@ public interface NivelBuilder
 
     void agregarCheaters(int cantidad);
 
+    void agregarSpammers(int cantidad);
+
+    void agregarSnipers(int cantidad);
+
     void agregarJefe(TipoJefe tipo);
 
     void definirAviso(String aviso);

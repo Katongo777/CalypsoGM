@@ -25,6 +25,8 @@ import puppy.code.modelo.enemigos.EnemigoBot;
 import puppy.code.modelo.enemigos.EnemigoCheater;
 import puppy.code.modelo.enemigos.EnemigoJefe;
 import puppy.code.modelo.enemigos.EnemigoLag;
+import puppy.code.modelo.enemigos.EnemigoSniper;
+import puppy.code.modelo.enemigos.EnemigoSpammer;
 import puppy.code.modelo.enemigos.TipoJefe;
 import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
@@ -144,6 +146,15 @@ public class PantallaJuego extends PantallaBase
 		{
 			pendientes.add(new EnemigoCheater(0, 0, velocidad() * 0.5f, velocidad() * 0.5f,
 					recursos.getTextura("cheater.png")));
+		}
+		for (int i = 0; i < nivel.getCantSpammers(); i++)
+		{
+			pendientes.add(new EnemigoSpammer(0, 0, Math.abs(velocidad()) * 1.1f * (azar.nextBoolean() ? 1 : -1), 0,
+					recursos.getTextura("spammer.png")));
+		}
+		for (int i = 0; i < nivel.getCantSnipers(); i++)
+		{
+			pendientes.add(new EnemigoSniper(0, 0, velocidad() * 0.5f, velocidad() * 0.5f, recursos.getTextura("sniper.png")));
 		}
 		// Se mezclan para que no salgan todos los bots primero y después los demás
 		java.util.Collections.shuffle(pendientes, azar);

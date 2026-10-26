@@ -6,7 +6,7 @@ import puppy.code.modelo.enemigos.TipoJefe;
     PATRÓN BUILDER (GM-9): este es el PRODUCTO.
 
     Un Nivel (o "oleada") describe qué enemigos aparecen y qué tan difícil es:
-    cuántos bots, lags y cheaters, si trae un jefe, un aviso para el jugador,
+    cuántos bots, lags, cheaters, spammers y snipers, si trae un jefe, un aviso para el jugador,
     la velocidad y la probabilidad de que dejen un power-up.
 
     Es un objeto con muchas partes opcionales. Si lo crearamos con un constructor
@@ -20,6 +20,8 @@ public class Nivel
     private int cantBots;
     private int cantLags;
     private int cantCheaters;
+    private int cantSpammers;
+    private int cantSnipers;
     private float velocidad;
     private float probPowerUp;
     private TipoJefe tipoJefe;  // null si la oleada no tiene jefe
@@ -41,6 +43,12 @@ public class Nivel
     public int getCantCheaters() { return cantCheaters; }
     public void setCantCheaters(int cantCheaters) { this.cantCheaters = cantCheaters; }
 
+    public int getCantSpammers() { return cantSpammers; }
+    public void setCantSpammers(int cantSpammers) { this.cantSpammers = cantSpammers; }
+
+    public int getCantSnipers() { return cantSnipers; }
+    public void setCantSnipers(int cantSnipers) { this.cantSnipers = cantSnipers; }
+
     public float getVelocidad() { return velocidad; }
     public void setVelocidad(float velocidad) { this.velocidad = velocidad; }
 
@@ -60,6 +68,6 @@ public class Nivel
 
     public int getTotalEnemigos()
     {
-        return cantBots + cantLags + cantCheaters + (tieneJefe() ? 1 : 0);
+        return cantBots + cantLags + cantCheaters + cantSpammers + cantSnipers + (tieneJefe() ? 1 : 0);
     }
 }
