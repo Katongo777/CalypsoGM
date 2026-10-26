@@ -9,7 +9,6 @@ import com.badlogic.gdx.math.MathUtils;
 
 import puppy.code.modelo.BalaEnemiga;
 import puppy.code.modelo.ContextoCombate;
-
 import puppy.code.util.GestorRecursos;
 
 /*
@@ -33,6 +32,12 @@ public class EnemigoCheater extends Enemigo
     public String getNombre()
     {
         return "Cheater";
+    }
+
+    @Override
+    public Color getColorExplosion()
+    {
+        return new Color(0.7f, 0.5f, 1f, 1f);
     }
 
     @Override

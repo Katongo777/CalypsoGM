@@ -175,9 +175,25 @@ public class DirectorNiveles
         }
         else
         {
-            builder.definirAviso("¡JEFE! Barra de vida arriba. Cuidado con sus ataques");
+            builder.definirAviso(avisoDeJefe(jefe));
         }
         return builder.getResult();
+    }
+
+    // Una pista sobre cómo pelear contra cada jefe
+    private String avisoDeJefe(TipoJefe jefe)
+    {
+        switch (jefe)
+        {
+            case TOXIC:
+                return "¡JEFE! Escupe veneno. A la mitad de su vida se pone un escudo";
+            case HACKER:
+                return "¡JEFE! Se teletransporta y lanza rayos. Mira las líneas rojas";
+            case SWEATY:
+                return "¡JEFE! Espirales de balas y embestidas. Tiene 2 escudos";
+            default:
+                return "¡JEFE! Rayos de ban en 3 fases. Rompe sus escudos";
+        }
     }
 
     // ¿Esta oleada es hardcore?
@@ -187,18 +203,21 @@ public class DirectorNiveles
     }
 
     // Qué jefe toca en cada oleada de jefe (null si la oleada no tiene jefe)
-    // Provisorio: el commit 32 agrega los jefes nuevos del 10 y del 15
     private TipoJefe jefeDe(int numero)
     {
-        if (numero == 5 || numero == 10)
+        switch (numero)
         {
-            return TipoJefe.TOXIC;
+            case 5:
+                return TipoJefe.TOXIC;
+            case 10:
+                return TipoJefe.HACKER;
+            case 15:
+                return TipoJefe.SWEATY;
+            case 20:
+                return TipoJefe.ADMIN;
+            default:
+                return null;
         }
-        if (numero == 15 || numero == 20)
-        {
-            return TipoJefe.ADMIN;
-        }
-        return null;
     }
 
     // Elige la receta según el número de oleada

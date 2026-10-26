@@ -38,6 +38,12 @@ public class EnemigoSniper extends Enemigo
     }
 
     @Override
+    public Color getColorExplosion()
+    {
+        return new Color(0.5f, 0.8f, 0.3f, 1f);
+    }
+
+    @Override
     public void actualizar()
     {
         if (framesApuntando > 0 && !isEntrando())

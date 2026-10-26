@@ -38,6 +38,12 @@ public class EnemigoSpammer extends Enemigo
     }
 
     @Override
+    public Color getColorExplosion()
+    {
+        return new Color(0.4f, 0.85f, 1f, 1f);
+    }
+
+    @Override
     public void actualizar()
     {
         tiempo++;

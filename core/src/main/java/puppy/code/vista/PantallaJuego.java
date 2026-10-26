@@ -18,6 +18,7 @@ import puppy.code.modelo.ContextoCombate;
 import puppy.code.modelo.Dificultad;
 import puppy.code.modelo.Nave4;
 import puppy.code.modelo.Personaje;
+import puppy.code.modelo.Rayo;
 import puppy.code.modelo.armas.BFG;
 import puppy.code.modelo.enemigos.Enemigo;
 import puppy.code.modelo.enemigos.EnemigoBot;
@@ -92,6 +93,17 @@ public class PantallaJuego extends PantallaBase
 	private ArrayList<Bullet> balas;   // las balas del jugador (están en el contexto del combate)
 	private ContextoCombate contexto;
 	private ArrayList<BalaEnemiga> balasEnemigas;
+	private ArrayList<Rayo> rayos;
+	private boolean jefeAnunciado = false;
+	private Particulas particulas = new Particulas();
+	private int vidasPrevias;            // para notar cuándo se pierde una vida
+	private int temblorFrames = 0;       // efectos de impacto: temblor, destello y congelado
+	private int temblorTotal = 1;
+	private float temblorAmplitud = 0;
+	private int destelloFrames = 0;
+	private int destelloTotal = 1;
+	private Color destelloColor = Color.WHITE;
+	private int congelarFrames = 0;      // "hit-stop": el juego se detiene un instante para dar peso al golpe
 	private ArrayList<PowerUp> powerUps = new ArrayList<>();
 
 	// Arma una partida nueva: oleada 1, la nave del personaje elegido y puntaje 0
@@ -108,7 +120,9 @@ public class PantallaJuego extends PantallaBase
 
 		// El Director usa el Builder para construir la primera oleada
 		DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
-		return new PantallaJuego(game, director.construirOleada(1), nave, 0, new Locutor());
+		// Para probar los jefes sin jugar todas las oleadas: java -Dcalypso.oleada=10 (se ignora si no se pone)
+		int oleadaInicial = Math.max(1, Math.min(Integer.getInteger("calypso.oleada", 1), DirectorNiveles.TOTAL_OLEADAS));
+		return new PantallaJuego(game, director.construirOleada(oleadaInicial), nave, 0, new Locutor());
 	}
 
 	public PantallaJuego(SpaceNavigation game, Nivel nivel, Nave4 nave, int score, Locutor locutor)
@@ -124,8 +138,10 @@ public class PantallaJuego extends PantallaBase
 		dificultad = recursos.getOpciones().getDificultad();
 		contexto = new ContextoCombate(nave, dificultad, nivel.getNumero());
 		balasEnemigas = contexto.getBalasEnemigas();
+		rayos = contexto.getRayos();
 		balas = contexto.getBalasJugador();
 		recursos.reproducirMusica(pistaDeseada);
+		vidasPrevias = nave.getVidas();
 
 		nave.aparecer();
 		crearEnemigos(recursos);
@@ -195,6 +211,12 @@ public class PantallaJuego extends PantallaBase
 			{
 				hayJefe = true;
 			}
+		}
+		if (hayJefe && !jefeAnunciado)
+		{
+			jefeAnunciado = true;
+			locutor.anunciar("¡LLEGÓ EL JEFE!");
+			GestorRecursos.getInstance().reproducirSonido("jefe_aviso.wav");
 		}
 		String pista = hayJefe ? PISTA_JEFE : PISTA_JUEGO;
 		if (!pista.equals(pistaDeseada))
@@ -270,6 +292,22 @@ public class PantallaJuego extends PantallaBase
 			return;
 		}
 
+		// los efectos de impacto avanzan siempre; el congelado detiene el resto del juego unos fotogramas
+		particulas.actualizar();
+		if (temblorFrames > 0)
+		{
+			temblorFrames--;
+		}
+		if (destelloFrames > 0)
+		{
+			destelloFrames--;
+		}
+		if (congelarFrames > 0)
+		{
+			congelarFrames--;
+			return;
+		}
+
 		tiempoFase++;
 		tiempoOleada++;
 
@@ -309,6 +347,8 @@ public class PantallaJuego extends PantallaBase
 		{
 			locutor.anunciar("¡" + nave.getHabilidad().getNombre().toUpperCase() + "!");
 			GestorRecursos.getInstance().reproducirSonido("habilidad.wav");
+			temblar(12, 6);
+			destellar(new Color(1f, 0.9f, 0.4f, 1f), 14);
 		}
 
 		// Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
@@ -331,6 +371,7 @@ public class PantallaJuego extends PantallaBase
 				}
 				if (b.revisarColision(enemigo))
 				{
+					particulas.explosion(b.getX() + b.getAncho() / 2, b.getY() + b.getAlto(), Color.WHITE, 3, 3f);
 					// El enemigo pierde vida; solo muere cuando se le acaba
 					enemigo.recibirDano(b.getDanio());
 					if (enemigo.estaMuerto())
@@ -339,9 +380,18 @@ public class PantallaJuego extends PantallaBase
 						score += enemigo.getPuntos();
 						nave.sumarEnergia(enemigo.getPuntos() * 0.8f); // cada baja carga la habilidad
 						locutor.registrarEliminacion();
+						particulas.explosion(enemigo.getX() + enemigo.getAncho() / 2, enemigo.getY() + enemigo.getAlto() / 2,
+								enemigo.getColorExplosion(), 14, 5f);
 						if (enemigo instanceof EnemigoJefe)
 						{
 							locutor.anunciar("¡JEFE ELIMINADO! GG");
+							particulas.explosion(enemigo.getX() + enemigo.getAncho() / 2, enemigo.getY() + enemigo.getAlto() / 2,
+									enemigo.getColorExplosion(), 90, 11f);
+							temblar(40, 12);
+							destellar(Color.WHITE, 30);
+							congelarFrames = 25;
+							balasEnemigas.clear();
+							rayos.clear();
 						}
 						enemigos.remove(j);
 						j--;
@@ -406,6 +456,33 @@ public class PantallaJuego extends PantallaBase
 			}
 		}
 
+		// los jefes pueden dejar mensajes y sonidos ("¡SE PONE UN ESCUDO!")
+		for (String mensaje : contexto.recogerMensajes())
+		{
+			locutor.anunciar(mensaje);
+		}
+		for (String sonido : contexto.recogerSonidos())
+		{
+			GestorRecursos.getInstance().reproducirSonido(sonido);
+		}
+
+		// rayos: primero avisan y después dañan a la nave si la tocan
+		for (int i = 0; i < rayos.size(); i++)
+		{
+			Rayo rayo = rayos.get(i);
+			rayo.actualizar();
+			int vidasAntes = nave.getVidas();
+			if (rayo.estaActivo() && nave.revisarGolpe(rayo) && nave.getVidas() < vidasAntes)
+			{
+				locutor.registrarDanio();
+			}
+			if (rayo.estaTerminado())
+			{
+				rayos.remove(i);
+				i--;
+			}
+		}
+
 		// colisiones entre enemigos y sus rebotes (cada pareja se revisa una sola vez)
 		for (int i = 0; i < enemigos.size(); i++)
 		{
@@ -458,16 +535,50 @@ public class PantallaJuego extends PantallaBase
 			}
 		}
 
+		// ¿Perdió una vida? Entonces tiembla la pantalla, destella en rojo y el juego se congela un instante
+		if (nave.getVidas() < vidasPrevias)
+		{
+			temblar(18, 10);
+			destellar(new Color(1f, 0.15f, 0.15f, 1f), 22);
+			congelarFrames = 6;
+			particulas.explosion(nave.getX() + nave.getAncho() / 2, nave.getY() + nave.getAlto() / 2, new Color(1f, 0.4f, 0.4f, 1f), 20, 6f);
+		}
+		vidasPrevias = nave.getVidas();
+
 		// ¿Se eliminó a todos? Entonces la oleada está completada
 		if (fase == Fase.JUGANDO && pendientes.isEmpty() && enemigos.isEmpty())
 		{
 			fase = Fase.COMPLETADA;
 			tiempoFase = 0;
 			balasEnemigas.clear(); // al terminar la oleada desaparecen las balas enemigas
+			rayos.clear();
 			int bono = 50 * nivel.getNumero();
 			score += bono;
 			locutor.anunciar("¡OLEADA COMPLETADA! +" + bono);
 		}
+	}
+
+	// Hace temblar la pantalla "frames" fotogramas con una intensidad máxima en píxeles
+	private void temblar(int frames, float amplitud)
+	{
+		temblorFrames = frames;
+		temblorTotal = frames;
+		temblorAmplitud = amplitud;
+	}
+
+	// Pinta toda la pantalla de un color que se va desvaneciendo
+	private void destellar(Color color, int frames)
+	{
+		destelloColor = color;
+		destelloFrames = frames;
+		destelloTotal = frames;
+	}
+
+	// Gancho de PantallaBase: mientras hay temblor, la intensidad baja con el tiempo
+	@Override
+	protected float getTemblor()
+	{
+		return temblorFrames > 0 ? temblorAmplitud * temblorFrames / temblorTotal : 0;
 	}
 
 	// Con cierta probabilidad (la define el Nivel) el enemigo muerto suelta un power-up al azar
@@ -516,6 +627,11 @@ public class PantallaJuego extends PantallaBase
 
 		nave.dibujar(game.getBatch());
 
+		for (Rayo r : rayos)
+		{
+			r.dibujar(game.getBatch());
+		}
+
 		for (BalaEnemiga be : balasEnemigas)
 		{
 			be.dibujar(game.getBatch());
@@ -528,6 +644,15 @@ public class PantallaJuego extends PantallaBase
 			{
 				barraJefe.dibujar(game.getBatch(), game.getFont(), (EnemigoJefe) enemigo);
 			}
+		}
+
+		particulas.dibujar(game.getBatch());
+
+		if (destelloFrames > 0)
+		{
+			game.getBatch().setColor(destelloColor.r, destelloColor.g, destelloColor.b, 0.4f * destelloFrames / destelloTotal);
+			game.getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
+			game.getBatch().setColor(Color.WHITE);
 		}
 
 		locutor.dibujar(game.getBatch(), game.getFont());

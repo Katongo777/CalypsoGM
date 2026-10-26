@@ -3,6 +3,7 @@ package puppy.code.modelo.enemigos;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 
@@ -151,6 +152,12 @@ public abstract class Enemigo extends Entidad
             setPosicion(getX(), Constantes.ALTO - getAlto());
             setYVel(-Math.abs(getYVel()));
         }
+    }
+
+    // De qué color sale la explosión cuando lo eliminan (los hijos pueden elegir el suyo)
+    public Color getColorExplosion()
+    {
+        return new Color(1f, 0.7f, 0.2f, 1f);
     }
 
     // ¿Se lo puede empujar? Los enemigos normales sí; el jefe es "pesado" y no se mueve por choques

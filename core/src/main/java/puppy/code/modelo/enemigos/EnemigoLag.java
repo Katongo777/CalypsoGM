@@ -35,6 +35,12 @@ public class EnemigoLag extends Enemigo
     }
 
     @Override
+    public Color getColorExplosion()
+    {
+        return new Color(1f, 0.3f, 0.3f, 1f);
+    }
+
+    @Override
     public void actualizar()
     {
         moverConRebote();
@@ -66,9 +72,9 @@ public class EnemigoLag extends Enemigo
         float x = getX();
         float y = getY();
         setPosicion(x + MathUtils.random(-4, 4), y + MathUtils.random(-4, 4));
-        batch.setColor(1f, 1f, 1f, framesParaSalto % 6 < 3 ? 0.45f : 1f);
+        setTinte(1f, 1f, 1f, framesParaSalto % 6 < 3 ? 0.45f : 1f);
         super.dibujar(batch);
-        batch.setColor(Color.WHITE);
+        setTinte(1f, 1f, 1f, 1f);
         setPosicion(x, y);
     }
 }

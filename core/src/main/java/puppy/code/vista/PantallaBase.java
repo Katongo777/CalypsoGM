@@ -2,6 +2,7 @@ package puppy.code.vista;
 
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -46,11 +47,17 @@ public abstract class PantallaBase implements Screen
         ScreenUtils.clear(0.02f, 0.02f, 0.1f, 1);
 
         actualizar(delta);                                   // paso 1
+        game.getFondo().actualizar();
 
         viewport.apply();
+        // la cámara siempre apunta al centro del mundo, más un pequeño temblor si la pantalla lo pide
+        float temblor = getTemblor();
+        camera.position.set(Constantes.ANCHO / 2f + (temblor > 0 ? MathUtils.random(-temblor, temblor) : 0),
+                Constantes.ALTO / 2f + (temblor > 0 ? MathUtils.random(-temblor, temblor) : 0), 0);
         camera.update();
         game.getBatch().setProjectionMatrix(camera.combined);
         game.getBatch().begin();
+        game.getFondo().dibujar(game.getBatch());            // el fondo de estrellas va siempre atrás
         dibujar();                                           // paso 2
         game.getBatch().end();
 
@@ -65,6 +72,12 @@ public abstract class PantallaBase implements Screen
     // Paso opcional (gancho): por defecto no hace nada
     protected void revisarTransicion()
     {
+    }
+
+    // Gancho opcional: cuántos píxeles tiembla la pantalla ahora (0 = no tiembla)
+    protected float getTemblor()
+    {
+        return 0;
     }
 
     @Override

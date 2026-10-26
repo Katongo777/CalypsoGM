@@ -80,6 +80,12 @@ public abstract class Entidad implements Colisionable
         spr.setPosition(x, y);
     }
 
+    // Tiñe la imagen (el color se multiplica con los colores del dibujo; 1,1,1,1 = sin tinte)
+    protected void setTinte(float r, float g, float b, float a)
+    {
+        spr.setColor(r, g, b, a);
+    }
+
     protected void setFactorHitbox(float factor)
     {
         this.factorHitbox = factor;

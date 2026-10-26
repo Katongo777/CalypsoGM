@@ -1,7 +1,6 @@
 package puppy.code.modelo;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.Constantes;
 import puppy.code.util.GestorRecursos;
@@ -15,7 +14,6 @@ import puppy.code.util.GestorRecursos;
 public class BalaEnemiga extends Entidad
 {
     private boolean destruida = false;
-    private Color color = new Color(Color.WHITE);
 
     public BalaEnemiga(float x, float y, float xVel, float yVel)
     {
@@ -36,7 +34,7 @@ public class BalaEnemiga extends Entidad
 
     public BalaEnemiga conColor(Color color)
     {
-        this.color = new Color(color);
+        setTinte(color.r, color.g, color.b, color.a);
         return this;
     }
 
@@ -53,12 +51,4 @@ public class BalaEnemiga extends Entidad
 
     public void destruir() { destruida = true; }
     public boolean isDestruida() { return destruida; }
-
-    @Override
-    public void dibujar(SpriteBatch batch)
-    {
-        batch.setColor(color);
-        super.dibujar(batch);
-        batch.setColor(Color.WHITE);
-    }
 }
