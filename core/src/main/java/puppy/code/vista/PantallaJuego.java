@@ -13,7 +13,9 @@ import com.badlogic.gdx.utils.Align;
 
 import puppy.code.Constantes;
 import puppy.code.SpaceNavigation;
+import puppy.code.modelo.BalaEnemiga;
 import puppy.code.modelo.Bullet;
+import puppy.code.modelo.ContextoCombate;
 import puppy.code.modelo.Dificultad;
 import puppy.code.modelo.Nave4;
 import puppy.code.modelo.Personaje;
@@ -85,6 +87,8 @@ public class PantallaJuego extends PantallaBase
 	private ArrayList<Enemigo> pendientes = new ArrayList<>(); // enemigos que todavía no han entrado
 	private ArrayList<Enemigo> enemigos = new ArrayList<>();   // enemigos que ya están en pantalla
 	private ArrayList<Bullet> balas = new ArrayList<>();
+	private ContextoCombate contexto;
+	private ArrayList<BalaEnemiga> balasEnemigas;
 	private ArrayList<PowerUp> powerUps = new ArrayList<>();
 
 	// Arma una partida nueva: oleada 1, la nave del personaje elegido y puntaje 0
@@ -115,6 +119,8 @@ public class PantallaJuego extends PantallaBase
 		// Los recursos vienen del Singleton: se cargan una sola vez y se reutilizan
 		GestorRecursos recursos = GestorRecursos.getInstance();
 		dificultad = recursos.getOpciones().getDificultad();
+		contexto = new ContextoCombate(nave, dificultad, nivel.getNumero());
+		balasEnemigas = contexto.getBalasEnemigas();
 		gameMusic = recursos.getMusica();
 		gameMusic.play();
 
@@ -322,15 +328,42 @@ public class PantallaJuego extends PantallaBase
 			enemigo.actualizar();
 		}
 
-		// algunos enemigos (el jefe) crean enemigos nuevos mientras están vivos
-		ArrayList<Enemigo> nuevos = new ArrayList<>();
-		for (Enemigo enemigo : enemigos)
+		// los enemigos atacan (disparan, invocan...) solo cuando la oleada ya está en juego
+		if (fase == Fase.JUGANDO && !nave.estaApareciendo())
 		{
-			nuevos.addAll(enemigo.generarEnemigos());
+			for (Enemigo enemigo : enemigos)
+			{
+				if (!enemigo.isEntrando())
+				{
+					enemigo.atacar(contexto);
+				}
+			}
 		}
+		java.util.List<Enemigo> nuevos = contexto.recogerNuevos();
 		if (enemigos.size() < MAX_ENEMIGOS)
 		{
 			enemigos.addAll(nuevos);
+		}
+
+		// balas enemigas: se mueven y, si tocan la nave, le hacen daño
+		for (int i = 0; i < balasEnemigas.size(); i++)
+		{
+			BalaEnemiga bala = balasEnemigas.get(i);
+			bala.actualizar();
+			int vidasAntes = nave.getVidas();
+			if (nave.revisarGolpe(bala))
+			{
+				if (nave.getVidas() < vidasAntes)
+				{
+					locutor.registrarDanio();
+				}
+				bala.destruir();
+			}
+			if (bala.isDestruida() || bala.salioDePantalla())
+			{
+				balasEnemigas.remove(i);
+				i--;
+			}
 		}
 
 		// colisiones entre enemigos y sus rebotes (cada pareja se revisa una sola vez)
@@ -389,6 +422,7 @@ public class PantallaJuego extends PantallaBase
 		{
 			fase = Fase.COMPLETADA;
 			tiempoFase = 0;
+			balasEnemigas.clear(); // al terminar la oleada desaparecen las balas enemigas
 			int bono = 50 * nivel.getNumero();
 			score += bono;
 			locutor.anunciar("¡OLEADA COMPLETADA! +" + bono);
@@ -440,6 +474,11 @@ public class PantallaJuego extends PantallaBase
 		}
 
 		nave.dibujar(game.getBatch());
+
+		for (BalaEnemiga be : balasEnemigas)
+		{
+			be.dibujar(game.getBatch());
+		}
 
 		for (Enemigo enemigo : enemigos)
 		{

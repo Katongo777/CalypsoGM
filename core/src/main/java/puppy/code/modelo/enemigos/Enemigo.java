@@ -55,23 +55,6 @@ public abstract class Enemigo extends Entidad
         return entrando;
     }
 
-    private static final float VELOCIDAD_ENTRADA = 4f;
-
-    /*
-        Hace que el enemigo aparezca por arriba de la pantalla en la posición x y baje hasta
-        entrar. Mientras entra no choca con nada (así la entrada no es injusta).
-    */
-    public void iniciarEntrada(float x)
-    {
-        setPosicion(Math.max(0, Math.min(x, Constantes.ANCHO - getAncho())), Constantes.ALTO + 20);
-        entrando = true;
-    }
-
-    public boolean isEntrando()
-    {
-        return entrando;
-    }
-
     // Cada tipo de enemigo define su propio nombre
     public abstract String getNombre();
 
