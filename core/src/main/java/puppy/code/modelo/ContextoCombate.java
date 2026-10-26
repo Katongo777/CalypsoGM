@@ -19,6 +19,7 @@ public class ContextoCombate
     private final Dificultad dificultad;
     private final int numeroOleada;
     private final ArrayList<BalaEnemiga> balasEnemigas = new ArrayList<>();
+    private final ArrayList<Bullet> balasJugador = new ArrayList<>();
     private final ArrayList<Enemigo> nuevosEnemigos = new ArrayList<>();
 
     public ContextoCombate(Nave4 nave, Dificultad dificultad, int numeroOleada)
@@ -59,4 +60,5 @@ public class ContextoCombate
     public Nave4 getNave() { return nave; }
     public int getNumeroOleada() { return numeroOleada; }
     public ArrayList<BalaEnemiga> getBalasEnemigas() { return balasEnemigas; }
+    public ArrayList<Bullet> getBalasJugador() { return balasJugador; }
 }

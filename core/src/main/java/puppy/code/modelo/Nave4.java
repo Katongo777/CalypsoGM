@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import puppy.code.Constantes;
 import puppy.code.modelo.armas.EstrategiaDisparo;
 import puppy.code.modelo.enemigos.Enemigo;
+import puppy.code.modelo.habilidades.Habilidad;
 import puppy.code.util.GestorRecursos;
 
 /*
@@ -39,6 +40,11 @@ public class Nave4 extends Entidad
     private int armaTemporalRestante = 0;      // fotogramas que quedan de un arma temporal
     private int cooldownRestante = 0;
 
+    // Habilidad especial: una barra de energía (0 a 100) que se llena eliminando enemigos
+    public static final float ENERGIA_MAXIMA = 100f;
+    private Habilidad habilidad;
+    private float energia = 0;
+
     // Efectos de power-ups: cuántos fotogramas les quedan (0 = inactivo)
     private int escudoRestante = 0;
     private int turboRestante = 0;
@@ -56,6 +62,7 @@ public class Nave4 extends Entidad
         this.velocidad = personaje.getVelocidad();
         this.estrategia = personaje.crearArma();
         this.armaOriginal = estrategia;
+        this.habilidad = personaje.crearHabilidad();
         setTamano(64, 64);
         setFactorHitbox(0.55f); // solo el cuerpo de la nave cuenta para los choques
     }
@@ -197,6 +204,7 @@ public class Nave4 extends Entidad
     private void recibirDano()
     {
         vidas--;
+        perderEnergia(25); // cada vez que te golpean, la barra de la habilidad baja un poco
         herido = true;
         tiempoHerido = tiempoHeridoMax;
         GestorRecursos.getInstance().reproducirSonido("hurt.ogg");
@@ -223,6 +231,40 @@ public class Nave4 extends Entidad
             batch.draw(halo, getX() - 16, getY() - 16, getAncho() + 32, getAlto() + 32);
         }
     }
+
+    // ---- Habilidad especial ----
+    public void sumarEnergia(float cantidad)
+    {
+        energia = Math.min(ENERGIA_MAXIMA, energia + cantidad);
+    }
+
+    public void perderEnergia(float cantidad)
+    {
+        energia = Math.max(0, energia - cantidad);
+    }
+
+    public boolean habilidadLista()
+    {
+        return energia >= ENERGIA_MAXIMA;
+    }
+
+    /*
+        Usa la habilidad si la barra está llena (y la nave no está apareciendo). Después la
+        barra queda en cero. Devuelve true si se activó.
+    */
+    public boolean usarHabilidad(ContextoCombate contexto)
+    {
+        if (!habilidadLista() || apareciendo)
+        {
+            return false;
+        }
+        habilidad.activar(this, contexto);
+        energia = 0;
+        return true;
+    }
+
+    public float getEnergia() { return energia; }
+    public Habilidad getHabilidad() { return habilidad; }
 
     public boolean estaDestruido() { return destruida; }
     public boolean estaHerido() { return herido; }

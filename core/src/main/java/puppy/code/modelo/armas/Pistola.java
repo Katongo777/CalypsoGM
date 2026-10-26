@@ -20,7 +20,7 @@ public class Pistola implements EstrategiaDisparo
         // La imagen original es de 4x8 píxeles; se dibuja 3 veces más grande (12x24)
         balas.add(new Bullet(x - 6, y, 0, 10, recursos.getTextura("bala_pistola.png"), 12, 24, 1));
 
-        recursos.getSonido("pop-sound.mp3").play(0.6f, 1.0f, 0);
+        recursos.reproducirSonido("pop-sound.mp3", 0.6f, 1.0f);
         return balas;
     }
 

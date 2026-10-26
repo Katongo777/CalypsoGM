@@ -89,7 +89,7 @@ public class PantallaJuego extends PantallaBase
 	private int enfriamientoPowerUp = 0;  // cuando es mayor que 0 no caen power-ups
 	private ArrayList<Enemigo> pendientes = new ArrayList<>(); // enemigos que todavía no han entrado
 	private ArrayList<Enemigo> enemigos = new ArrayList<>();   // enemigos que ya están en pantalla
-	private ArrayList<Bullet> balas = new ArrayList<>();
+	private ArrayList<Bullet> balas;   // las balas del jugador (están en el contexto del combate)
 	private ContextoCombate contexto;
 	private ArrayList<BalaEnemiga> balasEnemigas;
 	private ArrayList<PowerUp> powerUps = new ArrayList<>();
@@ -124,6 +124,7 @@ public class PantallaJuego extends PantallaBase
 		dificultad = recursos.getOpciones().getDificultad();
 		contexto = new ContextoCombate(nave, dificultad, nivel.getNumero());
 		balasEnemigas = contexto.getBalasEnemigas();
+		balas = contexto.getBalasJugador();
 		recursos.reproducirMusica(pistaDeseada);
 
 		nave.aparecer();
@@ -303,15 +304,17 @@ public class PantallaJuego extends PantallaBase
 			enfriamientoPowerUp--;
 		}
 
+		// X: usa la habilidad especial si la barra está llena
+		if (Gdx.input.isKeyJustPressed(Input.Keys.X) && nave.usarHabilidad(contexto))
+		{
+			locutor.anunciar("¡" + nave.getHabilidad().getNombre().toUpperCase() + "!");
+			GestorRecursos.getInstance().reproducirSonido("habilidad.wav");
+		}
+
 		// Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
 		if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
 		{
-			ArrayList<Bullet> nuevas = new ArrayList<>(nave.disparar());
-			if (!nuevas.isEmpty())
-			{
-				GestorRecursos.getInstance().reproducirSonido("disparo.wav");
-			}
-			balas.addAll(nuevas);
+			balas.addAll(nave.disparar());
 		}
 
 		// colisiones entre balas y enemigos y su destrucción
@@ -334,6 +337,7 @@ public class PantallaJuego extends PantallaBase
 					{
 						GestorRecursos.getInstance().reproducirSonido("explosion.ogg");
 						score += enemigo.getPuntos();
+						nave.sumarEnergia(enemigo.getPuntos() * 0.8f); // cada baja carga la habilidad
 						locutor.registrarEliminacion();
 						if (enemigo instanceof EnemigoJefe)
 						{

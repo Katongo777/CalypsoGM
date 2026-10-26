@@ -155,6 +155,12 @@ public class GestorRecursos
         getSonido(archivo).play(getOpciones().getVolumenEfectos());
     }
 
+    // Igual, pero con volumen y tono propios (se multiplica por el volumen de efectos de las opciones)
+    public void reproducirSonido(String archivo, float volumen, float tono)
+    {
+        getSonido(archivo).play(volumen * getOpciones().getVolumenEfectos(), tono, 0);
+    }
+
     // Aplica a la música el volumen elegido en las opciones
     public void aplicarVolumenMusica()
     {

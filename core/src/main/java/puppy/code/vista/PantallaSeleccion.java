@@ -120,12 +120,15 @@ public class PantallaSeleccion extends PantallaBase
 		font.draw(batch, p.getNombre(), x, y + 250, ancho, Align.center, false);
 
 		font.getData().setScale(1.5f);
-		font.draw(batch, "Arma: " + p.crearArma().getNombre(), x, y + 195, ancho, Align.center, false);
-		font.draw(batch, "Vidas: " + p.getVidas(), x, y + 155, ancho, Align.center, false);
-		font.draw(batch, "Velocidad: " + (int) p.getVelocidad(), x, y + 115, ancho, Align.center, false);
+		font.draw(batch, "Arma: " + p.crearArma().getNombre(), x, y + 205, ancho, Align.center, false);
+		font.draw(batch, "Vidas: " + p.getVidas(), x, y + 170, ancho, Align.center, false);
+		font.draw(batch, "Velocidad: " + (int) p.getVelocidad(), x, y + 135, ancho, Align.center, false);
+		font.setColor(1f, 0.85f, 0.2f, 1f);
+		font.draw(batch, "X: " + p.crearHabilidad().getNombre(), x, y + 100, ancho, Align.center, false);
+		font.setColor(Color.WHITE);
 
 		font.getData().setScale(1f);
-		font.draw(batch, "\"" + p.getFrase() + "\"", x + 20, y + 70, ancho - 40, Align.center, true);
+		font.draw(batch, "\"" + p.getFrase() + "\"", x + 20, y + 55, ancho - 40, Align.center, true);
 		font.getData().setScale(1.5f);
 	}
 
