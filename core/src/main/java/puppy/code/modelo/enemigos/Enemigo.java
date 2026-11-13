@@ -5,10 +5,13 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
 import puppy.code.Constantes;
 import puppy.code.modelo.ContextoCombate;
+import puppy.code.modelo.EfectosCombate;
 import puppy.code.modelo.Entidad;
 
 /*
@@ -22,8 +25,10 @@ import puppy.code.modelo.Entidad;
     tipo concreto. Por eso no se puede hacer "new Enemigo(...)".
 
     POLIMORFISMO: PantallaJuego guarda una lista de Enemigo y llama a
-    actualizar() en todos; cada hijo responde a su manera, sin que la pantalla
-    tenga que saber de qué tipo es.
+    actualizar(), atacar(), alAparecer(), alSerDerrotado()... en todos; cada hijo
+    responde a su manera. La pantalla nunca pregunta de qué tipo es cada enemigo
+    (no revisa clases ni convierte tipos): eso respeta el principio de
+    Abierto/Cerrado, porque un enemigo nuevo no obliga a cambiar la pantalla.
 */
 public abstract class Enemigo extends Entidad
 {
@@ -90,6 +95,39 @@ public abstract class Enemigo extends Entidad
         usando el ContextoCombate (ahí dejan sus balas y sus enemigos nuevos).
     */
     public void atacar(ContextoCombate contexto)
+    {
+    }
+
+    /*
+        Gancho: se llama cuando el enemigo entra a la pantalla. Por defecto no pide nada;
+        el jefe lo usa para anunciarse y cambiar la música.
+    */
+    public void alAparecer(EfectosCombate efectos)
+    {
+    }
+
+    /*
+        Gancho: se llama cuando el jugador lo elimina, después de la explosión normal.
+        Por defecto no pide nada más; el jefe pide una explosión enorme y premia al jugador.
+    */
+    public void alSerDerrotado(EfectosCombate efectos)
+    {
+    }
+
+    /*
+        ¿Cuenta para decidir cuándo entra el siguiente grupo de enemigos? Los normales sí.
+        El jefe no: mientras pelea, igual tienen que seguir llegando sus refuerzos.
+    */
+    public boolean cuentaParaGrupo()
+    {
+        return true;
+    }
+
+    /*
+        Gancho de dibujo: lo que el enemigo muestra en la interfaz, encima de todo
+        (por ejemplo, la barra de vida del jefe). Por defecto, nada.
+    */
+    public void dibujarInterfaz(SpriteBatch batch, BitmapFont font)
     {
     }
 

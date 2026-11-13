@@ -5,10 +5,12 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import puppy.code.Constantes;
 import puppy.code.modelo.ContextoCombate;
+import puppy.code.modelo.EfectosCombate;
 import puppy.code.modelo.jefes.AtaqueAnillo;
 import puppy.code.modelo.jefes.AtaqueApuntado;
 import puppy.code.modelo.jefes.AtaqueEmbestida;
@@ -20,6 +22,7 @@ import puppy.code.modelo.jefes.AtaqueLaser;
 import puppy.code.modelo.jefes.AtaqueLluvia;
 import puppy.code.modelo.jefes.AtaqueSalto;
 import puppy.code.util.GestorRecursos;
+import puppy.code.vista.BarraJefe;
 
 /*
     El JEFE: un enemigo grande con mucha vida y varias FASES.
@@ -36,6 +39,9 @@ import puppy.code.util.GestorRecursos;
 public class EnemigoJefe extends Enemigo
 {
     private static final int DURACION_MAXIMA_ESCUDO = 600; // 10 segundos
+    private static final String MUSICA_JEFE = "musica_jefe.wav";
+    private static final String MUSICA_NORMAL = "piano-loops.wav";
+    private static final int VIDAS_DE_PREMIO = 2;
 
     private final TipoJefe tipo;
     private final String nombre;
@@ -58,6 +64,7 @@ public class EnemigoJefe extends Enemigo
     private int estadoEmbestida = 0;
     private int framesAvisoEmbestida = 0;
     private float xEmbestida = 0;
+    private final BarraJefe barra = new BarraJefe(); // su barra de vida, arriba de la pantalla
 
     public EnemigoJefe(TipoJefe tipo, Texture tx)
     {
@@ -156,9 +163,10 @@ public class EnemigoJefe extends Enemigo
         return vidaMaxima;
     }
 
+    // Devuelve una COPIA: así nadie puede cambiar desde afuera dónde cambia de fase el jefe
     public float[] getUmbrales()
     {
-        return umbrales;
+        return umbrales.clone();
     }
 
     public boolean tieneEscudo()
@@ -386,6 +394,46 @@ public class EnemigoJefe extends Enemigo
     public boolean sueltaPowerUpSeguro()
     {
         return true;
+    }
+
+    // Al aparecer, el jefe se anuncia y pone su propia música
+    @Override
+    public void alAparecer(EfectosCombate efectos)
+    {
+        efectos.anunciar("¡LLEGÓ EL JEFE!");
+        efectos.reproducirSonido("jefe_aviso.wav");
+        efectos.cambiarMusica(MUSICA_JEFE);
+    }
+
+    // Al derrotarlo: explosión enorme, pantalla que tiembla, se limpian sus balas y el jugador gana vidas
+    @Override
+    public void alSerDerrotado(EfectosCombate efectos)
+    {
+        efectos.anunciar("¡JEFE ELIMINADO! +" + VIDAS_DE_PREMIO + " VIDAS");
+        efectos.curarNave(VIDAS_DE_PREMIO);
+        efectos.explotar(getX() + getAncho() / 2, getY() + getAlto() / 2, getColorExplosion(), 90, 11f);
+        efectos.temblar(40, 12);
+        efectos.destellar(Color.WHITE, 30);
+        efectos.congelar(25);
+        efectos.limpiarAtaquesEnemigos();
+        efectos.cambiarMusica(MUSICA_NORMAL);
+    }
+
+    // Mientras el jefe pelea, sus refuerzos siguen entrando: no cuenta para los grupos
+    @Override
+    public boolean cuentaParaGrupo()
+    {
+        return false;
+    }
+
+    // Su barra de vida se dibuja arriba de la pantalla (solo cuando ya entró)
+    @Override
+    public void dibujarInterfaz(SpriteBatch batch, BitmapFont font)
+    {
+        if (!isEntrando())
+        {
+            barra.dibujar(batch, font, this);
+        }
     }
 
     // Dibujo: rojizo al recibir un golpe o al avisar la embestida, parpadea al teletransportarse, burbuja con escudo

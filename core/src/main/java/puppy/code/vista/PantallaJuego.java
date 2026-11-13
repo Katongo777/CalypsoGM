@@ -16,6 +16,7 @@ import puppy.code.modelo.BalaEnemiga;
 import puppy.code.modelo.Bullet;
 import puppy.code.modelo.ContextoCombate;
 import puppy.code.modelo.Dificultad;
+import puppy.code.modelo.EfectosCombate;
 import puppy.code.modelo.Nave4;
 import puppy.code.modelo.Personaje;
 import puppy.code.modelo.Rayo;
@@ -42,13 +43,17 @@ import puppy.code.util.GestorRecursos;
     Pantalla donde se juega. Hereda de PantallaBase (Template Method), así que
     solo define los tres pasos: actualizar (lógica), dibujar y revisarTransicion.
 
+    También implementa EfectosCombate: cuando un enemigo aparece o muere, la pantalla se lo
+    avisa y el enemigo pide los efectos que quiera (anuncio, temblor, música...). Así la
+    pantalla no necesita saber de qué tipo es cada enemigo.
+
     Cada oleada pasa por tres fases:
       1. INTRO:       cartel con el nombre de la oleada, la nave aparece y los enemigos
                       van entrando de a uno desde arriba.
       2. JUGANDO:     se pelea hasta eliminar a todos los enemigos.
       3. COMPLETADA:  aviso de oleada completada y después empieza la siguiente.
 */
-public class PantallaJuego extends PantallaBase
+public class PantallaJuego extends PantallaBase implements EfectosCombate
 {
 	private enum Fase { INTRO, JUGANDO, COMPLETADA }
 
@@ -57,7 +62,6 @@ public class PantallaJuego extends PantallaBase
 	private static final int RETRASO_ENTRADA = 200;    // cuándo entra el primer enemigo
 	private static final int INTERVALO_ENTRADA = 24;   // tiempo entre un enemigo y el siguiente dentro de un grupo
 	private static final String PISTA_JUEGO = "piano-loops.wav";
-	private static final String PISTA_JEFE = "musica_jefe.wav";
 	private static final int ENFRIAMIENTO_POWERUP = 600; // mínimo de fotogramas entre un power-up y el siguiente
 	private static final int ESPERA_MAXIMA_GRUPO = 420;  // si pasa este tiempo sin entrar nadie, entra el siguiente grupo igual
 	private static final int QUEDAN_PARA_NUEVO_GRUPO = 2; // cuando quedan tan pocos enemigos, entra el siguiente grupo
@@ -71,7 +75,6 @@ public class PantallaJuego extends PantallaBase
 	private Nave4 nave;
 	private Locutor locutor;
 	private Hud hud = new Hud();
-	private BarraJefe barraJefe = new BarraJefe();
 	private boolean pausado = false;
 	private Dificultad dificultad;
 	private int accionPausa = -1;   // botón del menú de pausa que se accionó
@@ -94,7 +97,6 @@ public class PantallaJuego extends PantallaBase
 	private ContextoCombate contexto;
 	private ArrayList<BalaEnemiga> balasEnemigas;
 	private ArrayList<Rayo> rayos;
-	private boolean jefeAnunciado = false;
 	private Particulas particulas = new Particulas();
 	private int vidasPrevias;            // para notar cuándo se pierde una vida
 	private int temblorFrames = 0;       // efectos de impacto: temblor, destello y congelado
@@ -203,40 +205,16 @@ public class PantallaJuego extends PantallaBase
 		e.iniciarEntrada(Math.min(x, Constantes.ANCHO - 120));
 		indiceEnGrupo++;
 		enemigos.add(e);
+		e.alAparecer(this); // cada enemigo decide si se anuncia (el jefe sí)
 	}
 
-	// Con un jefe en pantalla suena la canción tensa; cuando no hay jefe, la del juego
-	private void actualizarMusica()
-	{
-		boolean hayJefe = false;
-		for (Enemigo e : enemigos)
-		{
-			if (e instanceof EnemigoJefe)
-			{
-				hayJefe = true;
-			}
-		}
-		if (hayJefe && !jefeAnunciado)
-		{
-			jefeAnunciado = true;
-			locutor.anunciar("¡LLEGÓ EL JEFE!");
-			GestorRecursos.getInstance().reproducirSonido("jefe_aviso.wav");
-		}
-		String pista = hayJefe ? PISTA_JEFE : PISTA_JUEGO;
-		if (!pista.equals(pistaDeseada))
-		{
-			pistaDeseada = pista;
-			GestorRecursos.getInstance().reproducirMusica(pista);
-		}
-	}
-
-	// Cuántos enemigos normales hay en pantalla (el jefe no cuenta)
-	private int contarNormales()
+	// Cuántos enemigos en pantalla cuentan para el grupo (cada enemigo lo dice: el jefe no cuenta)
+	private int contarDelGrupo()
 	{
 		int n = 0;
 		for (Enemigo e : enemigos)
 		{
-			if (!(e instanceof EnemigoJefe))
+			if (e.cuentaParaGrupo())
 			{
 				n++;
 			}
@@ -266,7 +244,7 @@ public class PantallaJuego extends PantallaBase
 				esperaGrupo = 0;
 			}
 		}
-		else if (contarNormales() <= QUEDAN_PARA_NUEVO_GRUPO || esperaGrupo >= ESPERA_MAXIMA_GRUPO)
+		else if (contarDelGrupo() <= QUEDAN_PARA_NUEVO_GRUPO || esperaGrupo >= ESPERA_MAXIMA_GRUPO)
 		{
 			int tamano = Math.min(2 + nivel.getNumero() / 5, 4);
 			entrantesDelGrupo = Math.min(tamano, pendientes.size());
@@ -338,7 +316,6 @@ public class PantallaJuego extends PantallaBase
 			tiempoFase = 0;
 		}
 
-		actualizarMusica();
 		actualizarEntradaDeEnemigos();
 
 		if (enfriamientoPowerUp > 0)
@@ -386,18 +363,7 @@ public class PantallaJuego extends PantallaBase
 						locutor.registrarEliminacion();
 						particulas.explosion(enemigo.getX() + enemigo.getAncho() / 2, enemigo.getY() + enemigo.getAlto() / 2,
 								enemigo.getColorExplosion(), 14, 5f);
-						if (enemigo instanceof EnemigoJefe)
-						{
-							locutor.anunciar("¡JEFE ELIMINADO! +2 VIDAS");
-							nave.curar(2); // premio por derrotar a un jefe
-							particulas.explosion(enemigo.getX() + enemigo.getAncho() / 2, enemigo.getY() + enemigo.getAlto() / 2,
-									enemigo.getColorExplosion(), 90, 11f);
-							temblar(40, 12);
-							destellar(Color.WHITE, 30);
-							congelarFrames = 25;
-							balasEnemigas.clear();
-							rayos.clear();
-						}
+						enemigo.alSerDerrotado(this); // el jefe pide su gran explosión; los demás, nada más
 						enemigos.remove(j);
 						j--;
 						enemigos.addAll(enemigo.alMorir()); // por ejemplo, el Cheater suelta 2 Lags
@@ -569,8 +535,10 @@ public class PantallaJuego extends PantallaBase
 		}
 	}
 
+	// ---------- Efectos que piden los enemigos (interfaz EfectosCombate) ----------
 	// Hace temblar la pantalla "frames" fotogramas con una intensidad máxima en píxeles
-	private void temblar(int frames, float amplitud)
+	@Override
+	public void temblar(int frames, float amplitud)
 	{
 		temblorFrames = frames;
 		temblorTotal = frames;
@@ -578,11 +546,59 @@ public class PantallaJuego extends PantallaBase
 	}
 
 	// Pinta toda la pantalla de un color que se va desvaneciendo
-	private void destellar(Color color, int frames)
+	@Override
+	public void destellar(Color color, int frames)
 	{
 		destelloColor = color;
 		destelloFrames = frames;
 		destelloTotal = frames;
+	}
+
+	@Override
+	public void anunciar(String texto)
+	{
+		locutor.anunciar(texto);
+	}
+
+	@Override
+	public void reproducirSonido(String archivo)
+	{
+		GestorRecursos.getInstance().reproducirSonido(archivo);
+	}
+
+	@Override
+	public void cambiarMusica(String archivo)
+	{
+		if (!archivo.equals(pistaDeseada))
+		{
+			pistaDeseada = archivo;
+			GestorRecursos.getInstance().reproducirMusica(archivo);
+		}
+	}
+
+	@Override
+	public void congelar(int fotogramas)
+	{
+		congelarFrames = Math.max(congelarFrames, fotogramas);
+	}
+
+	@Override
+	public void explotar(float x, float y, Color color, int cantidad, float fuerza)
+	{
+		particulas.explosion(x, y, color, cantidad, fuerza);
+	}
+
+	@Override
+	public void limpiarAtaquesEnemigos()
+	{
+		balasEnemigas.clear();
+		rayos.clear();
+	}
+
+	@Override
+	public void curarNave(int vidas)
+	{
+		nave.curar(vidas);
 	}
 
 	// Gancho de PantallaBase: mientras hay temblor, la intensidad baja con el tiempo
@@ -660,10 +676,7 @@ public class PantallaJuego extends PantallaBase
 		for (Enemigo enemigo : enemigos)
 		{
 			enemigo.dibujar(game.getBatch());
-			if (enemigo instanceof EnemigoJefe && !enemigo.isEntrando())
-			{
-				barraJefe.dibujar(game.getBatch(), game.getFont(), (EnemigoJefe) enemigo);
-			}
+			enemigo.dibujarInterfaz(game.getBatch(), game.getFont()); // por ejemplo, la barra del jefe
 		}
 
 		particulas.dibujar(game.getBatch());
