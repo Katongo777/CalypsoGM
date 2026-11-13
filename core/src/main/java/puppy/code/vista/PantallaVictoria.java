@@ -93,7 +93,7 @@ public class PantallaVictoria extends PantallaBase
 		}
 		else
 		{
-			font.draw(batch, "Récord: " + GestorRecursos.getInstance().getRecord(), 0, 380,
+			font.draw(batch, "Récord: " + game.getHighScore(), 0, 380,
 					Constantes.ANCHO, Align.center, false);
 		}
 

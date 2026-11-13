@@ -769,14 +769,14 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		if (nave.estaDestruido())
 		{
 			// Se guarda el récord (si corresponde) y se muestra la pantalla de fin
-			boolean nuevoRecord = GestorRecursos.getInstance().registrarPuntaje(score);
+			boolean nuevoRecord = game.registrarPuntaje(score);
 			game.setScreen(new PantallaGameOver(game, score, nuevoRecord));
 		}
 		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA
 				&& nivel.getNumero() >= DirectorNiveles.TOTAL_OLEADAS)
 		{
 			// Se completó la última oleada: se guarda el récord y se muestra la victoria
-			boolean nuevoRecord = GestorRecursos.getInstance().registrarPuntaje(score);
+			boolean nuevoRecord = game.registrarPuntaje(score);
 			game.setScreen(new PantallaVictoria(game, score, nuevoRecord));
 		}
 		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA)

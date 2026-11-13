@@ -1,16 +1,15 @@
 package puppy.code.util;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 
 /*
     PATRON SINGLETON (GM-6)
@@ -21,6 +20,8 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
     Solucion: esta clase tiene UNA sola instancia en todo el programa. Guarda cada
     recurso en un HashMap la primera vez que se pide, y despues lo reutiliza.
+    Solo se ocupa de los recursos (y de reproducirlos con el volumen elegido); el récord
+    de puntaje vive en su propia clase, GestorRecord.
 
     Como se logra que sea unica:
       1. El constructor es privado: nadie puede hacer "new GestorRecursos()".
@@ -32,17 +33,14 @@ public class GestorRecursos
     // La única instancia de la clase (atributo estático)
     private static GestorRecursos instancia;
 
-    private HashMap<String, Texture> texturas;
-    private HashMap<String, Sound> sonidos;
-    private HashMap<String, Music> musicas;
+    // Se declaran como Map (la interfaz) y no como HashMap: el resto de la clase no depende de la implementación
+    private final Map<String, Texture> texturas;
+    private final Map<String, Sound> sonidos;
+    private final Map<String, Music> musicas;
     private String pistaActual;
     private Texture pixelBlanco;
     private BitmapFont fuente;
     private Opciones opciones;
-
-    // Récord de puntaje: se guarda en un archivo de texto para que no se pierda al cerrar el juego
-    private static final String ARCHIVO_RECORD = "record.txt";
-    private int record;
 
     // Constructor privado: así nadie más puede crear otra instancia
     private GestorRecursos()
@@ -50,7 +48,6 @@ public class GestorRecursos
         texturas = new HashMap<>();
         sonidos = new HashMap<>();
         musicas = new HashMap<>();
-        record = leerRecord();
     }
 
     // Punto de acceso global: crea la instancia solo la primera vez
@@ -167,68 +164,6 @@ public class GestorRecursos
         for (Music m : musicas.values())
         {
             m.setVolume(getOpciones().getVolumenMusica());
-        }
-    }
-
-    // ---------------- Récord (persistencia en archivo + manejo de excepciones) ----------------
-
-    public int getRecord()
-    {
-        return record;
-    }
-
-    /*
-        Se llama al terminar una partida. Si el puntaje supera el récord, lo guarda
-        en el archivo y devuelve true (para avisarle al jugador).
-    */
-    public boolean registrarPuntaje(int puntaje)
-    {
-        if (puntaje > record)
-        {
-            record = puntaje;
-            guardarRecord();
-            return true;
-        }
-        return false;
-    }
-
-    /*
-        Lee el récord del archivo. Si el archivo no existe, está dañado o no se puede
-        leer, NO se cae el juego: se atrapa la excepción con try-catch y se empieza en 0.
-    */
-    private int leerRecord()
-    {
-        try
-        {
-            FileHandle archivo = Gdx.files.local(ARCHIVO_RECORD);
-            if (!archivo.exists())
-            {
-                return 0;
-            }
-            return Integer.parseInt(archivo.readString().trim());
-        }
-        catch (NumberFormatException e)
-        {
-            System.out.println("El archivo del récord tiene un valor inválido, se empieza desde 0.");
-            return 0;
-        }
-        catch (GdxRuntimeException e)
-        {
-            System.out.println("No se pudo leer el récord: " + e.getMessage());
-            return 0;
-        }
-    }
-
-    // Escribe el récord en el archivo; si falla, avisa por consola pero el juego sigue
-    private void guardarRecord()
-    {
-        try
-        {
-            Gdx.files.local(ARCHIVO_RECORD).writeString(String.valueOf(record), false);
-        }
-        catch (GdxRuntimeException e)
-        {
-            System.out.println("No se pudo guardar el récord: " + e.getMessage());
         }
     }
 

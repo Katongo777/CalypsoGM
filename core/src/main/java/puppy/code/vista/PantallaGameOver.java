@@ -69,7 +69,7 @@ public class PantallaGameOver extends PantallaBase
 		}
 		else
 		{
-			font.draw(batch, "Récord: " + GestorRecursos.getInstance().getRecord(), 0, 370,
+			font.draw(batch, "Récord: " + game.getHighScore(), 0, 370,
 					Constantes.ANCHO, Align.center, false);
 		}
 

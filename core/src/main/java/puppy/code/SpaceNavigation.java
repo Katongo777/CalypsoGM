@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import puppy.code.util.GestorRecord;
 import puppy.code.util.GestorRecursos;
 import puppy.code.vista.FondoEstrellado;
 import puppy.code.vista.PantallaMenu;
@@ -19,12 +20,14 @@ public class SpaceNavigation extends Game {
 	private SpriteBatch batch;
 	private BitmapFont font;
 	private FondoEstrellado fondo;
+	private GestorRecord record; // el mejor puntaje, guardado en un archivo
 
 	public void create() {
 		batch = new SpriteBatch();
 		font = GestorRecursos.getInstance().getFuente(); // fuente pixel-art propia
 		font.getData().setScale(1.5f);
 		fondo = new FondoEstrellado(); // un solo fondo para todas las pantallas
+		record = new GestorRecord();
 		Screen ss = new PantallaMenu(this);
 		this.setScreen(ss);
 	}
@@ -67,9 +70,14 @@ public class SpaceNavigation extends Game {
 		this.modoDios = modoDios;
 	}
 
-	// El récord ahora lo guarda el Singleton GestorRecursos (y queda en un archivo)
+	// El récord lo guarda GestorRecord (en un archivo): las pantallas se lo piden al juego
 	public int getHighScore() {
-		return GestorRecursos.getInstance().getRecord();
+		return record.getRecord();
+	}
+
+	// Al terminar una partida: devuelve true si el puntaje es un récord nuevo
+	public boolean registrarPuntaje(int puntaje) {
+		return record.registrar(puntaje);
 	}
 	
 	
