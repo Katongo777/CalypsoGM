@@ -1,0 +1,285 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title Juego base SpaceNav2024 (antes de las modificaciones): diagrama de clases
+package "puppy.code" {
+class "Ball2" as Ball2 {
+  -x : int
+  -y : int
+  -xSpeed : int
+  -ySpeed : int
+  -spr : Sprite
+  --
+  +<<create>> Ball2(x : int, y : int, size : int, xSpeed : int, ySpeed : int, tx : Texture)
+  +update() : void
+  +getArea() : Rectangle
+  +draw(batch : SpriteBatch) : void
+  +checkCollision(b2 : Ball2) : void
+  +getXSpeed() : int
+  +setXSpeed(xSpeed : int) : void
+  +getySpeed() : int
+  +setySpeed(ySpeed : int) : void
+}
+class "Bullet" as Bullet {
+  -xSpeed : int
+  -ySpeed : int
+  -destroyed : boolean
+  -spr : Sprite
+  --
+  +<<create>> Bullet(x : float, y : float, xSpeed : int, ySpeed : int, tx : Texture)
+  +update() : void
+  +draw(batch : SpriteBatch) : void
+  +checkCollision(b2 : Ball2) : boolean
+  +isDestroyed() : boolean
+}
+class "Nave4" as Nave4 {
+  -destruida : boolean
+  -vidas : int
+  -xVel : float
+  -yVel : float
+  -spr : Sprite
+  -sonidoHerido : Sound
+  -soundBala : Sound
+  -txBala : Texture
+  -herido : boolean
+  -tiempoHeridoMax : int
+  -tiempoHerido : int
+  --
+  +<<create>> Nave4(x : int, y : int, tx : Texture, soundChoque : Sound, txBala : Texture, soundBala : Sound)
+  +draw(batch : SpriteBatch, juego : PantallaJuego) : void
+  +checkCollision(b : Ball2) : boolean
+  +estaDestruido() : boolean
+  +estaHerido() : boolean
+  +getVidas() : int
+  +getX() : int
+  +getY() : int
+  +setVidas(vidas2 : int) : void
+}
+class "PantallaGameOver" as PantallaGameOver {
+  -game : SpaceNavigation
+  -camera : OrthographicCamera
+  --
+  +<<create>> PantallaGameOver(game : SpaceNavigation)
+  +render(delta : float) : void
+  +show() : void
+  +resize(width : int, height : int) : void
+  +pause() : void
+  +resume() : void
+  +hide() : void
+  +dispose() : void
+}
+class "PantallaJuego" as PantallaJuego {
+  -game : SpaceNavigation
+  -camera : OrthographicCamera
+  -batch : SpriteBatch
+  -explosionSound : Sound
+  -gameMusic : Music
+  -score : int
+  -ronda : int
+  -velXAsteroides : int
+  -velYAsteroides : int
+  -cantAsteroides : int
+  -nave : Nave4
+  -balls1 : ArrayList<Ball2>
+  -balls2 : ArrayList<Ball2>
+  -balas : ArrayList<Bullet>
+  --
+  +<<create>> PantallaJuego(game : SpaceNavigation, ronda : int, vidas : int, score : int, velXAsteroides : int, velYAsteroides : int, cantAsteroides : int)
+  +dibujaEncabezado() : void
+  +render(delta : float) : void
+  +agregarBala(bb : Bullet) : boolean
+  +show() : void
+  +resize(width : int, height : int) : void
+  +pause() : void
+  +resume() : void
+  +hide() : void
+  +dispose() : void
+}
+class "PantallaMenu" as PantallaMenu {
+  -game : SpaceNavigation
+  -camera : OrthographicCamera
+  --
+  +<<create>> PantallaMenu(game : SpaceNavigation)
+  +render(delta : float) : void
+  +show() : void
+  +resize(width : int, height : int) : void
+  +pause() : void
+  +resume() : void
+  +hide() : void
+  +dispose() : void
+}
+class "SpaceNavigation" as SpaceNavigation {
+  -nombreJuego : String
+  -batch : SpriteBatch
+  -font : BitmapFont
+  -highScore : int
+  --
+  +create() : void
+  +render() : void
+  +dispose() : void
+  +getBatch() : SpriteBatch
+  +getFont() : BitmapFont
+  +getHighScore() : int
+  +setHighScore(highScore : int) : void
+}
+}
+package "puppy.code.lwjgl3" {
+class "Lwjgl3Launcher" as Lwjgl3Launcher {
+  +{static} main(args : String[]) : void
+  -{static} createApplication() : Lwjgl3Application
+  -{static} getDefaultConfiguration() : Lwjgl3ApplicationConfiguration
+}
+class "StartupHelper" as StartupHelper {
+  -{static} JVM_RESTARTED_ARG : String {readOnly}
+  --
+  -<<create>> StartupHelper()
+  +{static} startNewJvmIfRequired(redirectOutput : boolean) : boolean
+  +{static} startNewJvmIfRequired() : boolean
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "BitmapFont" as BitmapFont <<LibGDX>> {
+  + draw(batch : Batch, text : String, x : float, y : float) : GlyphLayout
+  + getData() : BitmapFontData
+  + setColor(c : Color) : void
+}
+abstract class "Game" as Game <<LibGDX>> {
+  + create() : void
+  + render() : void
+  + dispose() : void
+  + setScreen(screen : Screen) : void
+  + getScreen() : Screen
+}
+class "Lwjgl3Application" as Lwjgl3Application <<LibGDX>> {
+}
+class "Lwjgl3ApplicationConfiguration" as Lwjgl3ApplicationConfiguration <<LibGDX>> {
+  + setTitle(t : String) : void
+  + setWindowedMode(w : int, h : int) : void
+}
+class "MathUtils" as MathUtils <<LibGDX>> {
+  + {static} random(rango : int) : int
+}
+interface "Music" as Music <<LibGDX>> {
+  + play() : void
+  + stop() : void
+  + setVolume(v : float) : void
+  + setLooping(b : boolean) : void
+}
+class "OrthographicCamera" as OrthographicCamera <<LibGDX>> {
+  + update() : void
+}
+class "Rectangle" as Rectangle <<LibGDX>> {
+  + x : float
+  + y : float
+  + width : float
+  + height : float
+  --
+  + overlaps(r : Rectangle) : boolean
+}
+interface "Screen" as Screen <<LibGDX>> {
+  + show() : void
+  + render(delta : float) : void
+  + resize(width : int, height : int) : void
+  + pause() : void
+  + resume() : void
+  + hide() : void
+  + dispose() : void
+}
+class "ScreenUtils" as ScreenUtils <<LibGDX>> {
+  + {static} clear(r : float, g : float, b : float, a : float) : void
+}
+interface "Sound" as Sound <<LibGDX>> {
+  + play(volumen : float) : long
+  + dispose() : void
+}
+class "Sprite" as Sprite <<LibGDX>> {
+  + setPosition(x : float, y : float) : void
+  + setSize(w : float, h : float) : void
+  + getBoundingRectangle() : Rectangle
+  + draw(batch : Batch) : void
+}
+class "SpriteBatch" as SpriteBatch <<LibGDX>> {
+  + begin() : void
+  + end() : void
+  + draw(t : Texture, x : float, y : float, w : float, h : float) : void
+  + setColor(r : float, g : float, b : float, a : float) : void
+}
+class "Texture" as Texture <<LibGDX>> {
+  + getWidth() : int
+  + getHeight() : int
+  + dispose() : void
+}
+}
+Ball2 ..> Rectangle
+Ball2 --> "1" Sprite : spr
+Ball2 ..> SpriteBatch
+Ball2 ..> Texture
+Bullet ..> Ball2
+Bullet --> "1" Sprite : spr
+Bullet ..> SpriteBatch
+Bullet ..> Texture
+Game --> "1" Screen : screen
+Lwjgl3Launcher ..> Lwjgl3Application
+Lwjgl3Launcher ..> Lwjgl3ApplicationConfiguration
+Lwjgl3Launcher ..> SpaceNavigation
+Lwjgl3Launcher ..> StartupHelper
+Nave4 ..> Ball2
+Nave4 ..> Bullet
+Nave4 ..> MathUtils
+Nave4 ..> PantallaJuego
+Nave4 --> "1" Sound : sonidoHerido
+Nave4 --> "1" Sound : soundBala
+Nave4 --> "1" Sprite : spr
+Nave4 ..> SpriteBatch
+Nave4 --> "1" Texture : txBala
+PantallaGameOver --> "1" OrthographicCamera : camera
+PantallaGameOver ..> PantallaJuego
+PantallaGameOver ..> Screen
+Screen <|.. PantallaGameOver
+PantallaGameOver ..> ScreenUtils
+PantallaGameOver --> "1" SpaceNavigation : game
+PantallaJuego --> "*" Ball2 : balls1
+PantallaJuego --> "*" Ball2 : balls2
+PantallaJuego --> "*" Bullet : balas
+PantallaJuego --> "1" Music : gameMusic
+PantallaJuego --> "1" Nave4 : nave
+PantallaJuego --> "1" OrthographicCamera : camera
+PantallaJuego ..> PantallaGameOver
+PantallaJuego ..> Screen
+Screen <|.. PantallaJuego
+PantallaJuego --> "1" Sound : explosionSound
+PantallaJuego --> "1" SpaceNavigation : game
+PantallaJuego --> "1" SpriteBatch : batch
+PantallaJuego ..> Texture
+PantallaMenu --> "1" OrthographicCamera : camera
+PantallaMenu ..> PantallaJuego
+PantallaMenu ..> Screen
+Screen <|.. PantallaMenu
+PantallaMenu ..> ScreenUtils
+PantallaMenu --> "1" SpaceNavigation : game
+SpaceNavigation --> "1" BitmapFont : font
+Game <|-- SpaceNavigation
+SpaceNavigation ..> PantallaMenu
+SpaceNavigation ..> Screen
+SpaceNavigation --> "1" SpriteBatch : batch
+@enduml

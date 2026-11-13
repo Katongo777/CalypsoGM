@@ -1,0 +1,385 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title Paquete puppy.code.modelo.enemigos, puppy.code.modelo.jefes
+package "puppy.code.modelo.enemigos" {
+abstract class "Enemigo" as Enemigo {
+  -vida : float
+  -puntos : int
+  -entrando : boolean
+  -{static} VELOCIDAD_ENTRADA : float {readOnly}
+  --
+  #<<create>> Enemigo(x : float, y : float, xVel : float, yVel : float, tx : Texture, vida : int, puntos : int)
+  +iniciarEntrada(x : float) : void
+  +isEntrando() : boolean
+  +{abstract} getNombre() : String
+  +recibirDano(danio : float) : void
+  +estaMuerto() : boolean
+  +alMorir() : List<Enemigo>
+  +atacar(contexto : ContextoCombate) : void
+  +alAparecer(efectos : EfectosCombate) : void
+  +alSerDerrotado(efectos : EfectosCombate) : void
+  +cuentaParaGrupo() : boolean
+  +dibujarInterfaz(batch : SpriteBatch, font : BitmapFont) : void
+  +seDestruyeAlChocar() : boolean
+  +sueltaPowerUpSeguro() : boolean
+  #ubicarDentroDePantalla() : void
+  #moverConRebote() : void
+  +getColorExplosion() : Color
+  +empujable() : boolean
+  +revisarColisionEnemigo(otro : Enemigo) : void
+  +getVida() : float
+  +getPuntos() : int
+}
+class "EnemigoBot" as EnemigoBot {
+  -framesParaDisparar : int
+  --
+  +<<create>> EnemigoBot(x : int, y : int, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+}
+class "EnemigoCheater" as EnemigoCheater {
+  -framesParaDisparar : int
+  --
+  +<<create>> EnemigoCheater(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+  +alMorir() : List<Enemigo>
+}
+class "EnemigoJefe" as EnemigoJefe {
+  -{static} DURACION_MAXIMA_ESCUDO : int {readOnly}
+  -{static} MUSICA_JEFE : String {readOnly}
+  -{static} MUSICA_NORMAL : String {readOnly}
+  -{static} VIDAS_DE_PREMIO : int {readOnly}
+  -tipo : TipoJefe
+  -nombre : String
+  -vidaMaxima : int
+  -velocidadBase : float
+  -umbrales : float[]
+  -ataquesFase : List<List<AtaqueJefe>>
+  -ataquesEscudo : List<List<AtaqueJefe>>
+  -fase : int
+  -escudoFrames : int
+  -escudoNumero : int
+  -apoyo : List<Enemigo>
+  -tiempo : int
+  -framesDestello : int
+  -framesAparicion : int
+  -estadoEmbestida : int
+  -framesAvisoEmbestida : int
+  -xEmbestida : float
+  -barra : BarraJefe
+  --
+  +<<create>> EnemigoJefe(tipo : TipoJefe, tx : Texture)
+  -armarAtaques() : void
+  ~definirUmbrales(fracciones : float[]) : void
+  ~fase(ataques : AtaqueJefe[]) : void
+  ~escudo(ataques : AtaqueJefe[]) : void
+  +getNombre() : String
+  +getVidaMaxima() : int
+  +getUmbrales() : float[]
+  +tieneEscudo() : boolean
+  +estaEnojado() : boolean
+  +registrarApoyo(enemigo : Enemigo) : void
+  +recibirDano(danio : float) : void
+  +actualizar() : void
+  -alturaPatrulla() : float
+  -moverEmbestida() : void
+  +iniciarEmbestida(xObjetivo : float) : void
+  +teletransportar(x : float) : void
+  +atacar(contexto : ContextoCombate) : void
+  -iniciarEscudo(contexto : ContextoCombate) : void
+  -romperEscudo(contexto : ContextoCombate) : void
+  -apoyoDerrotado() : boolean
+  +getColorExplosion() : Color
+  +empujable() : boolean
+  +seDestruyeAlChocar() : boolean
+  +sueltaPowerUpSeguro() : boolean
+  +alAparecer(efectos : EfectosCombate) : void
+  +alSerDerrotado(efectos : EfectosCombate) : void
+  +cuentaParaGrupo() : boolean
+  +dibujarInterfaz(batch : SpriteBatch, font : BitmapFont) : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoLag" as EnemigoLag {
+  -{static} FRAMES_AVISO : int {readOnly}
+  -framesParaSalto : int
+  --
+  +<<create>> EnemigoLag(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoSniper" as EnemigoSniper {
+  -{static} FRAMES_APUNTANDO : int {readOnly}
+  -framesParaApuntar : int
+  -framesApuntando : int
+  -objetivoX : float
+  -objetivoY : float
+  --
+  +<<create>> EnemigoSniper(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoSpammer" as EnemigoSpammer {
+  -alturaObjetivo : float
+  -tiempo : int
+  -framesParaRafaga : int
+  -balasPorDisparar : int
+  -framesEntreBalas : int
+  --
+  +<<create>> EnemigoSpammer(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+}
+enum "TipoJefe" as TipoJefe {
+  TOXIC
+  HACKER
+  SWEATY
+  ADMIN
+  ..
+  -nombre : String
+  -archivoImagen : String
+  -vida : int
+  -puntos : int
+  -velocidad : float
+  -aviso : String
+  --
+  ~<<create>> TipoJefe(nombre : String, archivoImagen : String, vida : int, puntos : int, velocidad : float, aviso : String)
+  ~{abstract} armarAtaques(jefe : EnemigoJefe) : void
+  +getNombre() : String
+  +getArchivoImagen() : String
+  +getVida() : int
+  +getPuntos() : int
+  +getVelocidad() : float
+  +getAviso() : String
+}
+}
+package "puppy.code.modelo.jefes" {
+class "AtaqueAnillo" as AtaqueAnillo {
+  -intervalo : int
+  -cantidad : int
+  -rapidez : float
+  -color : Color
+  -frames : int
+  --
+  +<<create>> AtaqueAnillo(intervalo : int, cantidad : int, rapidez : float, color : Color)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+  +{static} disparar(jefe : EnemigoJefe, contexto : ContextoCombate, cantidad : int, rapidez : float, color : Color) : void
+}
+class "AtaqueApuntado" as AtaqueApuntado {
+  -intervalo : int
+  -cantidad : int
+  -rapidez : float
+  -color : Color
+  -frames : int
+  --
+  +<<create>> AtaqueApuntado(intervalo : int, cantidad : int, rapidez : float, color : Color)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+class "AtaqueEmbestida" as AtaqueEmbestida {
+  -intervalo : int
+  -frames : int
+  --
+  +<<create>> AtaqueEmbestida(intervalo : int)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+class "AtaqueEspiral" as AtaqueEspiral {
+  -cadaFrames : int
+  -brazos : int
+  -rapidez : float
+  -color : Color
+  -frames : int
+  -angulo : float
+  --
+  +<<create>> AtaqueEspiral(cadaFrames : int, brazos : int, rapidez : float, color : Color)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+class "AtaqueInvocar" as AtaqueInvocar {
+  -primeraEn : int
+  -intervalo : int
+  -tipo : Apoyo
+  -cantidad : int
+  -frames : int
+  -yaInvoco : boolean
+  --
+  +<<create>> AtaqueInvocar(primeraEn : int, intervalo : int, tipo : Apoyo, cantidad : int)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+enum "AtaqueInvocar.Apoyo" as AtaqueInvocar_Apoyo {
+  BOT
+  LAG
+  CHEATER
+  SPAMMER
+  SNIPER
+  ..
+  --
+  ~{abstract} crear(x : float, y : float, xVel : float) : Enemigo
+}
+interface "AtaqueJefe" as AtaqueJefe {
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+class "AtaqueLaser" as AtaqueLaser {
+  -intervalo : int
+  -cantidad : int
+  -horizontal : boolean
+  -frames : int
+  --
+  +<<create>> AtaqueLaser(intervalo : int, cantidad : int, horizontal : boolean)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+class "AtaqueLluvia" as AtaqueLluvia {
+  -intervalo : int
+  -rapidez : float
+  -color : Color
+  -frames : int
+  --
+  +<<create>> AtaqueLluvia(intervalo : int, rapidez : float, color : Color)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+class "AtaqueSalto" as AtaqueSalto {
+  -intervalo : int
+  -balasAlLlegar : int
+  -color : Color
+  -frames : int
+  --
+  +<<create>> AtaqueSalto(intervalo : int, balasAlLlegar : int, color : Color)
+  +actualizar(jefe : EnemigoJefe, contexto : ContextoCombate) : void
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "BitmapFont" as BitmapFont <<LibGDX>> {
+  + draw(batch : Batch, text : String, x : float, y : float) : GlyphLayout
+  + getData() : BitmapFontData
+  + setColor(c : Color) : void
+}
+class "Color" as Color <<LibGDX>> {
+  + r : float
+  + g : float
+  + b : float
+  + a : float
+  --
+}
+class "MathUtils" as MathUtils <<LibGDX>> {
+  + {static} random(rango : int) : int
+}
+class "Rectangle" as Rectangle <<LibGDX>> {
+  + x : float
+  + y : float
+  + width : float
+  + height : float
+  --
+  + overlaps(r : Rectangle) : boolean
+}
+class "SpriteBatch" as SpriteBatch <<LibGDX>> {
+  + begin() : void
+  + end() : void
+  + draw(t : Texture, x : float, y : float, w : float, h : float) : void
+  + setColor(r : float, g : float, b : float, a : float) : void
+}
+class "Texture" as Texture <<LibGDX>> {
+  + getWidth() : int
+  + getHeight() : int
+  + dispose() : void
+}
+}
+AtaqueJefe <|.. AtaqueAnillo
+AtaqueAnillo --> "1" Color : color
+AtaqueAnillo ..> EnemigoJefe
+AtaqueAnillo ..> MathUtils
+AtaqueJefe <|.. AtaqueApuntado
+AtaqueApuntado --> "1" Color : color
+AtaqueApuntado ..> EnemigoJefe
+AtaqueJefe <|.. AtaqueEmbestida
+AtaqueEmbestida ..> EnemigoJefe
+AtaqueJefe <|.. AtaqueEspiral
+AtaqueEspiral --> "1" Color : color
+AtaqueEspiral ..> EnemigoJefe
+AtaqueEspiral ..> MathUtils
+AtaqueInvocar --> "1" AtaqueInvocar_Apoyo : tipo
+AtaqueInvocar +-- AtaqueInvocar_Apoyo
+AtaqueJefe <|.. AtaqueInvocar
+AtaqueInvocar ..> Enemigo
+AtaqueInvocar ..> EnemigoJefe
+AtaqueInvocar_Apoyo ..> Enemigo
+AtaqueJefe ..> EnemigoJefe
+AtaqueJefe <|.. AtaqueLaser
+AtaqueLaser ..> EnemigoJefe
+AtaqueLaser ..> MathUtils
+AtaqueJefe <|.. AtaqueLluvia
+AtaqueLluvia --> "1" Color : color
+AtaqueLluvia ..> EnemigoJefe
+AtaqueLluvia ..> MathUtils
+AtaqueSalto ..> AtaqueAnillo
+AtaqueJefe <|.. AtaqueSalto
+AtaqueSalto --> "1" Color : color
+AtaqueSalto ..> EnemigoJefe
+AtaqueSalto ..> MathUtils
+Enemigo ..> BitmapFont
+Enemigo ..> Color
+Enemigo ..> Rectangle
+Enemigo ..> SpriteBatch
+Enemigo ..> Texture
+Enemigo <|-- EnemigoBot
+EnemigoBot ..> MathUtils
+EnemigoBot ..> Texture
+EnemigoCheater ..> Color
+EnemigoCheater ..> Enemigo
+Enemigo <|-- EnemigoCheater
+EnemigoCheater ..> EnemigoLag
+EnemigoCheater ..> MathUtils
+EnemigoCheater ..> Texture
+EnemigoJefe --> "*" AtaqueJefe : ataquesEscudo
+EnemigoJefe --> "*" AtaqueJefe : ataquesFase
+EnemigoJefe ..> BitmapFont
+EnemigoJefe ..> Color
+EnemigoJefe --> "*" Enemigo : apoyo
+Enemigo <|-- EnemigoJefe
+EnemigoJefe ..> SpriteBatch
+EnemigoJefe ..> Texture
+EnemigoJefe --> "1" TipoJefe : tipo
+EnemigoLag ..> Color
+Enemigo <|-- EnemigoLag
+EnemigoLag ..> MathUtils
+EnemigoLag ..> SpriteBatch
+EnemigoLag ..> Texture
+EnemigoSniper ..> Color
+Enemigo <|-- EnemigoSniper
+EnemigoSniper ..> MathUtils
+EnemigoSniper ..> SpriteBatch
+EnemigoSniper ..> Texture
+EnemigoSpammer ..> Color
+Enemigo <|-- EnemigoSpammer
+EnemigoSpammer ..> MathUtils
+EnemigoSpammer ..> Texture
+TipoJefe ..> EnemigoJefe
+@enduml

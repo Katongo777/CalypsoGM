@@ -1,0 +1,285 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title GM-8: patrón Template Method (PantallaBase implementa Screen de LibGDX)
+package "puppy.code" {
+class "SpaceNavigation" as SpaceNavigation {
+  -nombreJuego : String
+  -modoDios : boolean
+  -guiaVista : boolean
+  -batch : SpriteBatch
+  -font : BitmapFont
+  -fondo : FondoEstrellado
+  -record : GestorRecord
+  --
+  +create() : void
+  +render() : void
+  +dispose() : void
+  +getBatch() : SpriteBatch
+  +getFont() : BitmapFont
+  +getFondo() : FondoEstrellado
+  +isGuiaVista() : boolean
+  +marcarGuiaVista() : void
+  +isModoDios() : boolean
+  +activarModoDios() : void
+  +getHighScore() : int
+  +registrarPuntaje(puntaje : int) : boolean
+}
+}
+package "puppy.code.vista" {
+abstract class "PantallaBase" as PantallaBase {
+  -game : SpaceNavigation
+  -camera : OrthographicCamera
+  -viewport : Viewport
+  --
+  #<<create>> PantallaBase(game : SpaceNavigation)
+  +render(delta : float) : void
+  #getGame() : SpaceNavigation
+  #getViewport() : Viewport
+  #{abstract} actualizar(delta : float) : void
+  #{abstract} dibujar() : void
+  #revisarTransicion() : void
+  #getTemblor() : float
+  +resize(width : int, height : int) : void
+  +show() : void
+  +pause() : void
+  +resume() : void
+  +hide() : void
+  +dispose() : void
+}
+class "PantallaGameOver" as PantallaGameOver {
+  -{static} FRASES : String[] {readOnly}
+  -score : int
+  -nuevoRecord : boolean
+  -frase : String
+  --
+  +<<create>> PantallaGameOver(game : SpaceNavigation, score : int, nuevoRecord : boolean)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaGuia" as PantallaGuia {
+  -{static} COLUMNA_IZQUIERDA : float {readOnly}
+  -{static} COLUMNA_DERECHA : float {readOnly}
+  -pagina : int
+  -eleccion : int
+  --
+  +<<create>> PantallaGuia(game : SpaceNavigation)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  -dibujarPaginaEnemigos(batch : SpriteBatch, font : BitmapFont) : void
+  -dibujarPaginaNave(batch : SpriteBatch, font : BitmapFont) : void
+  -titulo(batch : SpriteBatch, font : BitmapFont, texto : String, x : float, y : float) : void
+  -fila(batch : SpriteBatch, font : BitmapFont, imagen : Texture, nombre : String, descripcion : String, x : float, y : float, lado : float, anchoTexto : float) : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaJuego" as PantallaJuego {
+  -{static} DURACION_INTRO : int {readOnly}
+  -{static} RETRASO_ENTRADA : int {readOnly}
+  -{static} INTERVALO_ENTRADA : int {readOnly}
+  -{static} PISTA_JUEGO : String {readOnly}
+  -{static} ENFRIAMIENTO_POWERUP : int {readOnly}
+  -{static} ESPERA_MAXIMA_GRUPO : int {readOnly}
+  -{static} QUEDAN_PARA_NUEVO_GRUPO : int {readOnly}
+  -{static} DURACION_COMPLETADA : int {readOnly}
+  -{static} MAX_ENEMIGOS : int {readOnly}
+  -pistaDeseada : String
+  -score : int
+  -nivel : Nivel
+  -nave : Nave4
+  -locutor : Locutor
+  -hud : Hud
+  -pausado : boolean
+  -dificultad : Dificultad
+  -accionPausa : int
+  -fase : Fase
+  -tiempoFase : int
+  -tiempoOleada : int
+  -azar : Random
+  -entrantesDelGrupo : int
+  -esperaGrupo : int
+  -xBaseGrupo : float
+  -indiceEnGrupo : int
+  -enfriamientoPowerUp : int
+  -pendientes : List<Enemigo>
+  -enemigos : List<Enemigo>
+  -balas : List<Bullet>
+  -contexto : ContextoCombate
+  -balasEnemigas : List<BalaEnemiga>
+  -rayos : List<Rayo>
+  -particulas : Particulas
+  -vidasPrevias : int
+  -temblorFrames : int
+  -temblorTotal : int
+  -temblorAmplitud : float
+  -destelloFrames : int
+  -destelloTotal : int
+  -destelloColor : Color
+  -congelarFrames : int
+  -powerUps : List<PowerUp>
+  -generadorPowerUps : GeneradorPowerUps
+  --
+  +{static} nuevaPartida(game : SpaceNavigation, personaje : Personaje) : PantallaJuego
+  +<<create>> PantallaJuego(game : SpaceNavigation, nivel : Nivel, nave : Nave4, score : int, locutor : Locutor)
+  -prepararEnemigos() : void
+  -hacerEntrarSiguiente() : void
+  -contarDelGrupo() : int
+  -actualizarEntradaDeEnemigos() : void
+  #actualizar(delta : float) : void
+  -recogerDelContexto() : void
+  +temblar(frames : int, amplitud : float) : void
+  +destellar(color : Color, frames : int) : void
+  +anunciar(texto : String) : void
+  +reproducirSonido(archivo : String) : void
+  +cambiarMusica(archivo : String) : void
+  +congelar(fotogramas : int) : void
+  +explotar(x : float, y : float, color : Color, cantidad : int, fuerza : float) : void
+  +limpiarAtaquesEnemigos() : void
+  +curarNave(vidas : int) : void
+  #getTemblor() : float
+  -soltarPowerUp(muerto : Enemigo) : void
+  -agregarPowerUp(x : float, y : float, curacion : boolean) : void
+  #dibujar() : void
+  -dibujarIntro() : void
+  -dibujarPausa() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaMenu" as PantallaMenu {
+  -{static} JUGAR : int {readOnly}
+  -{static} GUIA : int {readOnly}
+  -{static} OPCIONES : int {readOnly}
+  -{static} SALIR : int {readOnly}
+  -konami : CodigoKonami
+  -tiempoMensaje : int
+  -eleccion : int
+  --
+  +<<create>> PantallaMenu(game : SpaceNavigation)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaOpciones" as PantallaOpciones {
+  -{static} MUSICA : int {readOnly}
+  -{static} EFECTOS : int {readOnly}
+  -{static} DIFICULTAD : int {readOnly}
+  -{static} VOLVER : int {readOnly}
+  -volverA : Screen
+  -opciones : Opciones
+  -volver : boolean
+  --
+  +<<create>> PantallaOpciones(game : SpaceNavigation, volverA : Screen)
+  #actualizar(delta : float) : void
+  -cambiar(opcion : int, paso : int) : void
+  -siguienteVolumen(actual : float, paso : int) : float
+  -actualizarEtiquetas() : void
+  #dibujar() : void
+  #revisarTransicion() : void
+}
+class "PantallaSeleccion" as PantallaSeleccion {
+  -personajes : Personaje[]
+  -seleccionado : int
+  -pixel : Texture
+  -iniciar : boolean
+  -ultimoMouseX : float
+  -ultimoMouseY : float
+  --
+  +<<create>> PantallaSeleccion(game : SpaceNavigation)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  -dibujarTarjeta(batch : SpriteBatch, font : BitmapFont, p : Personaje, x : float, y : float, activa : boolean) : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaVictoria" as PantallaVictoria {
+  -{static} CANTIDAD_CONFETI : int {readOnly}
+  -score : int
+  -nuevoRecord : boolean
+  -confetiX : float[]
+  -confetiY : float[]
+  -confetiVel : float[]
+  -confetiColor : Color[]
+  --
+  +<<create>> PantallaVictoria(game : SpaceNavigation, score : int, nuevoRecord : boolean)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+abstract class "Game" as Game <<LibGDX>> {
+  + create() : void
+  + render() : void
+  + dispose() : void
+  + setScreen(screen : Screen) : void
+  + getScreen() : Screen
+}
+interface "Screen" as Screen <<LibGDX>> {
+  + show() : void
+  + render(delta : float) : void
+  + resize(width : int, height : int) : void
+  + pause() : void
+  + resume() : void
+  + hide() : void
+  + dispose() : void
+}
+}
+Game --> "1" Screen : screen
+Screen <|.. PantallaBase
+PantallaBase --> "1" SpaceNavigation : game
+PantallaBase <|-- PantallaGameOver
+PantallaGameOver ..> PantallaSeleccion
+PantallaGameOver ..> SpaceNavigation
+PantallaBase <|-- PantallaGuia
+PantallaGuia ..> PantallaMenu
+PantallaGuia ..> PantallaSeleccion
+PantallaGuia ..> SpaceNavigation
+PantallaBase <|-- PantallaJuego
+PantallaJuego ..> PantallaGameOver
+PantallaJuego ..> PantallaMenu
+PantallaJuego ..> PantallaOpciones
+PantallaJuego ..> PantallaVictoria
+PantallaJuego ..> SpaceNavigation
+PantallaBase <|-- PantallaMenu
+PantallaMenu ..> PantallaGuia
+PantallaMenu ..> PantallaOpciones
+PantallaMenu ..> PantallaSeleccion
+PantallaMenu ..> SpaceNavigation
+PantallaBase <|-- PantallaOpciones
+PantallaOpciones --> "1" Screen : volverA
+PantallaOpciones ..> SpaceNavigation
+PantallaBase <|-- PantallaSeleccion
+PantallaSeleccion ..> PantallaJuego
+PantallaSeleccion ..> PantallaMenu
+PantallaSeleccion ..> SpaceNavigation
+PantallaBase <|-- PantallaVictoria
+PantallaVictoria ..> PantallaSeleccion
+PantallaVictoria ..> SpaceNavigation
+Game <|-- SpaceNavigation
+SpaceNavigation ..> PantallaMenu
+SpaceNavigation ..> Screen
+@enduml

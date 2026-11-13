@@ -1,0 +1,156 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title Paquete puppy.code.modelo.armas, puppy.code.modelo.habilidades, puppy.code.modelo.powerups
+package "puppy.code.modelo.armas" {
+class "BFG" as BFG {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+class "Escopeta" as Escopeta {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+interface "EstrategiaDisparo" as EstrategiaDisparo {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+class "Pistola" as Pistola {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+class "Railgun" as Railgun {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+}
+package "puppy.code.modelo.habilidades" {
+class "Burbuja" as Burbuja {
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+interface "Habilidad" as Habilidad {
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+class "Overdrive" as Overdrive {
+  -{static} DURACION : int {readOnly}
+  --
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+class "TiroCertero" as TiroCertero {
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+}
+package "puppy.code.modelo.powerups" {
+interface "FabricaPowerUp" as FabricaPowerUp {
+  +crear(x : float, y : float) : PowerUp
+}
+class "GeneradorPowerUps" as GeneradorPowerUps {
+  -fabricas : List<FabricaPowerUp>
+  -fabricaCuracion : FabricaPowerUp
+  --
+  +<<create>> GeneradorPowerUps()
+  +crearAlAzar(x : float, y : float) : PowerUp
+  +crearCuracion(x : float, y : float) : PowerUp
+}
+class "LootBox" as LootBox {
+  -nombreArma : String
+  --
+  +<<create>> LootBox(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+class "Pizza" as Pizza {
+  +<<create>> Pizza(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+abstract class "PowerUp" as PowerUp {
+  #<<create>> PowerUp(x : float, y : float, tx : Texture)
+  +{abstract} aplicar(nave : Nave4) : void
+  +{abstract} getMensaje() : String
+  +actualizar() : void
+  +salioDePantalla() : boolean
+}
+class "RGB" as RGB {
+  +<<create>> RGB(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+class "SillaGamer" as SillaGamer {
+  +<<create>> SillaGamer(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "MathUtils" as MathUtils <<LibGDX>> {
+  + {static} random(rango : int) : int
+}
+class "Texture" as Texture <<LibGDX>> {
+  + getWidth() : int
+  + getHeight() : int
+  + dispose() : void
+}
+}
+EstrategiaDisparo <|.. BFG
+Habilidad <|.. Burbuja
+EstrategiaDisparo <|.. Escopeta
+Escopeta ..> Texture
+FabricaPowerUp ..> PowerUp
+GeneradorPowerUps --> "*" FabricaPowerUp : fabricas
+GeneradorPowerUps --> "1" FabricaPowerUp : fabricaCuracion
+GeneradorPowerUps ..> LootBox
+GeneradorPowerUps ..> MathUtils
+GeneradorPowerUps ..> Pizza
+GeneradorPowerUps ..> PowerUp
+GeneradorPowerUps ..> RGB
+GeneradorPowerUps ..> SillaGamer
+LootBox ..> BFG
+LootBox ..> Escopeta
+LootBox ..> EstrategiaDisparo
+LootBox ..> MathUtils
+PowerUp <|-- LootBox
+LootBox ..> Railgun
+Overdrive ..> Escopeta
+Habilidad <|.. Overdrive
+EstrategiaDisparo <|.. Pistola
+PowerUp <|-- Pizza
+PowerUp ..> Texture
+PowerUp <|-- RGB
+EstrategiaDisparo <|.. Railgun
+PowerUp <|-- SillaGamer
+Habilidad <|.. TiroCertero
+@enduml

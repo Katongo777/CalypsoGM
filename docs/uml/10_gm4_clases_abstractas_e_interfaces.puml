@@ -1,0 +1,495 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title GM-4: clases abstractas (Entidad, Enemigo, PowerUp, PantallaBase) e interfaces (Colisionable, EfectosCombate, FabricaPowerUp)
+package "puppy.code.modelo" {
+class "BalaEnemiga" as BalaEnemiga {
+  -destruida : boolean
+  --
+  +<<create>> BalaEnemiga(x : float, y : float, xVel : float, yVel : float)
+  +{static} apuntada(x : float, y : float, objetivoX : float, objetivoY : float, rapidez : float, desvio : float) : BalaEnemiga
+  +conColor(color : Color) : BalaEnemiga
+  +actualizar() : void
+  +salioDePantalla() : boolean
+  +destruir() : void
+  +isDestruida() : boolean
+}
+class "Bullet" as Bullet {
+  -destroyed : boolean
+  -danio : float
+  -atraviesa : boolean
+  -golpeados : ArrayList<Enemigo>
+  --
+  +<<create>> Bullet(x : float, y : float, xVel : float, yVel : float, tx : Texture, ancho : float, alto : float, danio : float)
+  +<<create>> Bullet(x : float, y : float, xVel : float, yVel : float, tx : Texture, ancho : float, alto : float, danio : float, atraviesa : boolean)
+  +actualizar() : void
+  -comprobarLimitesPantalla() : void
+  +revisarColision(enemigo : Enemigo) : boolean
+  -destruir() : void
+  +isDestroyed() : boolean
+  +getDanio() : float
+  +escalarDanio(factor : float) : void
+}
+interface "Colisionable" as Colisionable {
+  +getArea() : Rectangle
+  +chocaCon(otro : Colisionable) : boolean
+}
+interface "EfectosCombate" as EfectosCombate {
+  +anunciar(texto : String) : void
+  +reproducirSonido(archivo : String) : void
+  +cambiarMusica(archivo : String) : void
+  +temblar(fotogramas : int, intensidad : float) : void
+  +destellar(color : Color, fotogramas : int) : void
+  +congelar(fotogramas : int) : void
+  +explotar(x : float, y : float, color : Color, cantidad : int, fuerza : float) : void
+  +limpiarAtaquesEnemigos() : void
+  +curarNave(vidas : int) : void
+}
+abstract class "Entidad" as Entidad {
+  -spr : Sprite
+  -xVel : float
+  -yVel : float
+  -factorHitbox : float
+  --
+  +<<create>> Entidad(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +{abstract} actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+  +getArea() : Rectangle
+  +chocaCon(otro : Colisionable) : boolean
+  +getX() : float
+  +getY() : float
+  +getAncho() : float
+  +getAlto() : float
+  +getXVel() : float
+  +getYVel() : float
+  +setXVel(xVel : float) : void
+  +setYVel(yVel : float) : void
+  #setPosicion(x : float, y : float) : void
+  #setTinte(r : float, g : float, b : float, a : float) : void
+  #setFactorHitbox(factor : float) : void
+  #setTamano(ancho : float, alto : float) : void
+  #rotar(grados : float) : void
+}
+class "Nave4" as Nave4 {
+  -destruida : boolean
+  -vidas : int
+  -velocidad : float
+  -personaje : Personaje
+  -herido : boolean
+  -apareciendo : boolean
+  -tiempoHeridoMax : int
+  -tiempoHerido : int
+  -estrategia : EstrategiaDisparo
+  -armaOriginal : EstrategiaDisparo
+  -armaTemporalRestante : int
+  -cooldownRestante : int
+  +{static} ENERGIA_MAXIMA : float {readOnly}
+  -{static} VIDAS_MAXIMAS : int {readOnly}
+  -{static} VIDAS_MAXIMAS_ESPECIALES : int {readOnly}
+  -habilidad : Habilidad
+  -energia : float
+  -escudoRestante : int
+  -turboRestante : int
+  --
+  +<<create>> Nave4(personaje : Personaje)
+  +actualizar() : void
+  -manejarInputTeclado() : void
+  +disparar() : List<Bullet>
+  -actualizarPosicion() : void
+  -actualizarEstadoHerido() : void
+  +revisarColision(enemigo : Enemigo) : boolean
+  +revisarGolpe(fuente : Colisionable) : boolean
+  -recibirDano() : void
+  +dibujar(batch : SpriteBatch) : void
+  +sumarEnergia(cantidad : float) : void
+  +perderEnergia(cantidad : float) : void
+  +habilidadLista() : boolean
+  +usarHabilidad(contexto : ContextoCombate) : boolean
+  +getEnergia() : float
+  +getHabilidad() : Habilidad
+  +estaDestruido() : boolean
+  +estaHerido() : boolean
+  +getPersonaje() : Personaje
+  +getVidas() : int
+  +asegurarVidas(minimo : int) : void
+  +curar(cantidad : int) : void
+  +activarEscudo(fotogramas : int) : void
+  +activarTurbo(fotogramas : int) : void
+  +tieneEscudo() : boolean
+  +tieneTurbo() : boolean
+  +aparecer() : void
+  +estaApareciendo() : boolean
+  +getEstrategia() : EstrategiaDisparo
+  +getNombreArma() : String
+  +setEstrategia(estrategia : EstrategiaDisparo) : void
+  +equiparArmaTemporal(arma : EstrategiaDisparo, fotogramas : int) : void
+}
+class "Rayo" as Rayo {
+  -posicion : float
+  -horizontal : boolean
+  -grosor : float
+  -framesAviso : int
+  -framesActivo : int
+  --
+  +<<create>> Rayo(posicion : float, horizontal : boolean, framesAviso : int, framesActivo : int, grosor : float)
+  +actualizar() : void
+  +estaActivo() : boolean
+  +estaTerminado() : boolean
+  +getArea() : Rectangle
+  +chocaCon(otro : Colisionable) : boolean
+  +dibujar(batch : SpriteBatch) : void
+  -dibujarFranja(batch : SpriteBatch, pixel : Texture, ancho : float) : void
+}
+}
+package "puppy.code.modelo.enemigos" {
+abstract class "Enemigo" as Enemigo {
+  -vida : float
+  -puntos : int
+  -entrando : boolean
+  -{static} VELOCIDAD_ENTRADA : float {readOnly}
+  --
+  #<<create>> Enemigo(x : float, y : float, xVel : float, yVel : float, tx : Texture, vida : int, puntos : int)
+  +iniciarEntrada(x : float) : void
+  +isEntrando() : boolean
+  +{abstract} getNombre() : String
+  +recibirDano(danio : float) : void
+  +estaMuerto() : boolean
+  +alMorir() : List<Enemigo>
+  +atacar(contexto : ContextoCombate) : void
+  +alAparecer(efectos : EfectosCombate) : void
+  +alSerDerrotado(efectos : EfectosCombate) : void
+  +cuentaParaGrupo() : boolean
+  +dibujarInterfaz(batch : SpriteBatch, font : BitmapFont) : void
+  +seDestruyeAlChocar() : boolean
+  +sueltaPowerUpSeguro() : boolean
+  #ubicarDentroDePantalla() : void
+  #moverConRebote() : void
+  +getColorExplosion() : Color
+  +empujable() : boolean
+  +revisarColisionEnemigo(otro : Enemigo) : void
+  +getVida() : float
+  +getPuntos() : int
+}
+class "EnemigoBot" as EnemigoBot {
+  -framesParaDisparar : int
+  --
+  +<<create>> EnemigoBot(x : int, y : int, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+}
+class "EnemigoCheater" as EnemigoCheater {
+  -framesParaDisparar : int
+  --
+  +<<create>> EnemigoCheater(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+  +alMorir() : List<Enemigo>
+}
+class "EnemigoJefe" as EnemigoJefe {
+  -{static} DURACION_MAXIMA_ESCUDO : int {readOnly}
+  -{static} MUSICA_JEFE : String {readOnly}
+  -{static} MUSICA_NORMAL : String {readOnly}
+  -{static} VIDAS_DE_PREMIO : int {readOnly}
+  -tipo : TipoJefe
+  -nombre : String
+  -vidaMaxima : int
+  -velocidadBase : float
+  -umbrales : float[]
+  -ataquesFase : List<List<AtaqueJefe>>
+  -ataquesEscudo : List<List<AtaqueJefe>>
+  -fase : int
+  -escudoFrames : int
+  -escudoNumero : int
+  -apoyo : List<Enemigo>
+  -tiempo : int
+  -framesDestello : int
+  -framesAparicion : int
+  -estadoEmbestida : int
+  -framesAvisoEmbestida : int
+  -xEmbestida : float
+  -barra : BarraJefe
+  --
+  +<<create>> EnemigoJefe(tipo : TipoJefe, tx : Texture)
+  -armarAtaques() : void
+  ~definirUmbrales(fracciones : float[]) : void
+  ~fase(ataques : AtaqueJefe[]) : void
+  ~escudo(ataques : AtaqueJefe[]) : void
+  +getNombre() : String
+  +getVidaMaxima() : int
+  +getUmbrales() : float[]
+  +tieneEscudo() : boolean
+  +estaEnojado() : boolean
+  +registrarApoyo(enemigo : Enemigo) : void
+  +recibirDano(danio : float) : void
+  +actualizar() : void
+  -alturaPatrulla() : float
+  -moverEmbestida() : void
+  +iniciarEmbestida(xObjetivo : float) : void
+  +teletransportar(x : float) : void
+  +atacar(contexto : ContextoCombate) : void
+  -iniciarEscudo(contexto : ContextoCombate) : void
+  -romperEscudo(contexto : ContextoCombate) : void
+  -apoyoDerrotado() : boolean
+  +getColorExplosion() : Color
+  +empujable() : boolean
+  +seDestruyeAlChocar() : boolean
+  +sueltaPowerUpSeguro() : boolean
+  +alAparecer(efectos : EfectosCombate) : void
+  +alSerDerrotado(efectos : EfectosCombate) : void
+  +cuentaParaGrupo() : boolean
+  +dibujarInterfaz(batch : SpriteBatch, font : BitmapFont) : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoLag" as EnemigoLag {
+  -{static} FRAMES_AVISO : int {readOnly}
+  -framesParaSalto : int
+  --
+  +<<create>> EnemigoLag(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoSniper" as EnemigoSniper {
+  -{static} FRAMES_APUNTANDO : int {readOnly}
+  -framesParaApuntar : int
+  -framesApuntando : int
+  -objetivoX : float
+  -objetivoY : float
+  --
+  +<<create>> EnemigoSniper(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoSpammer" as EnemigoSpammer {
+  -alturaObjetivo : float
+  -tiempo : int
+  -framesParaRafaga : int
+  -balasPorDisparar : int
+  -framesEntreBalas : int
+  --
+  +<<create>> EnemigoSpammer(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+}
+}
+package "puppy.code.modelo.powerups" {
+interface "FabricaPowerUp" as FabricaPowerUp {
+  +crear(x : float, y : float) : PowerUp
+}
+class "GeneradorPowerUps" as GeneradorPowerUps {
+  -fabricas : List<FabricaPowerUp>
+  -fabricaCuracion : FabricaPowerUp
+  --
+  +<<create>> GeneradorPowerUps()
+  +crearAlAzar(x : float, y : float) : PowerUp
+  +crearCuracion(x : float, y : float) : PowerUp
+}
+class "LootBox" as LootBox {
+  -nombreArma : String
+  --
+  +<<create>> LootBox(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+class "Pizza" as Pizza {
+  +<<create>> Pizza(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+abstract class "PowerUp" as PowerUp {
+  #<<create>> PowerUp(x : float, y : float, tx : Texture)
+  +{abstract} aplicar(nave : Nave4) : void
+  +{abstract} getMensaje() : String
+  +actualizar() : void
+  +salioDePantalla() : boolean
+}
+class "RGB" as RGB {
+  +<<create>> RGB(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+class "SillaGamer" as SillaGamer {
+  +<<create>> SillaGamer(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+}
+package "puppy.code.vista" {
+class "PantallaJuego" as PantallaJuego {
+  -{static} DURACION_INTRO : int {readOnly}
+  -{static} RETRASO_ENTRADA : int {readOnly}
+  -{static} INTERVALO_ENTRADA : int {readOnly}
+  -{static} PISTA_JUEGO : String {readOnly}
+  -{static} ENFRIAMIENTO_POWERUP : int {readOnly}
+  -{static} ESPERA_MAXIMA_GRUPO : int {readOnly}
+  -{static} QUEDAN_PARA_NUEVO_GRUPO : int {readOnly}
+  -{static} DURACION_COMPLETADA : int {readOnly}
+  -{static} MAX_ENEMIGOS : int {readOnly}
+  -pistaDeseada : String
+  -score : int
+  -nivel : Nivel
+  -nave : Nave4
+  -locutor : Locutor
+  -hud : Hud
+  -pausado : boolean
+  -dificultad : Dificultad
+  -accionPausa : int
+  -fase : Fase
+  -tiempoFase : int
+  -tiempoOleada : int
+  -azar : Random
+  -entrantesDelGrupo : int
+  -esperaGrupo : int
+  -xBaseGrupo : float
+  -indiceEnGrupo : int
+  -enfriamientoPowerUp : int
+  -pendientes : List<Enemigo>
+  -enemigos : List<Enemigo>
+  -balas : List<Bullet>
+  -contexto : ContextoCombate
+  -balasEnemigas : List<BalaEnemiga>
+  -rayos : List<Rayo>
+  -particulas : Particulas
+  -vidasPrevias : int
+  -temblorFrames : int
+  -temblorTotal : int
+  -temblorAmplitud : float
+  -destelloFrames : int
+  -destelloTotal : int
+  -destelloColor : Color
+  -congelarFrames : int
+  -powerUps : List<PowerUp>
+  -generadorPowerUps : GeneradorPowerUps
+  --
+  +{static} nuevaPartida(game : SpaceNavigation, personaje : Personaje) : PantallaJuego
+  +<<create>> PantallaJuego(game : SpaceNavigation, nivel : Nivel, nave : Nave4, score : int, locutor : Locutor)
+  -prepararEnemigos() : void
+  -hacerEntrarSiguiente() : void
+  -contarDelGrupo() : int
+  -actualizarEntradaDeEnemigos() : void
+  #actualizar(delta : float) : void
+  -recogerDelContexto() : void
+  +temblar(frames : int, amplitud : float) : void
+  +destellar(color : Color, frames : int) : void
+  +anunciar(texto : String) : void
+  +reproducirSonido(archivo : String) : void
+  +cambiarMusica(archivo : String) : void
+  +congelar(fotogramas : int) : void
+  +explotar(x : float, y : float, color : Color, cantidad : int, fuerza : float) : void
+  +limpiarAtaquesEnemigos() : void
+  +curarNave(vidas : int) : void
+  #getTemblor() : float
+  -soltarPowerUp(muerto : Enemigo) : void
+  -agregarPowerUp(x : float, y : float, curacion : boolean) : void
+  #dibujar() : void
+  -dibujarIntro() : void
+  -dibujarPausa() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "Rectangle" as Rectangle <<LibGDX>> {
+  + x : float
+  + y : float
+  + width : float
+  + height : float
+  --
+  + overlaps(r : Rectangle) : boolean
+}
+class "Sprite" as Sprite <<LibGDX>> {
+  + setPosition(x : float, y : float) : void
+  + setSize(w : float, h : float) : void
+  + getBoundingRectangle() : Rectangle
+  + draw(batch : Batch) : void
+}
+}
+Entidad <|-- BalaEnemiga
+Bullet --> "*" Enemigo : golpeados
+Entidad <|-- Bullet
+Colisionable ..> Rectangle
+Enemigo ..> EfectosCombate
+Entidad <|-- Enemigo
+Enemigo ..> Rectangle
+EnemigoBot ..> BalaEnemiga
+Enemigo <|-- EnemigoBot
+EnemigoCheater ..> BalaEnemiga
+EnemigoCheater ..> Enemigo
+Enemigo <|-- EnemigoCheater
+EnemigoCheater ..> EnemigoLag
+EnemigoJefe ..> EfectosCombate
+EnemigoJefe --> "*" Enemigo : apoyo
+Enemigo <|-- EnemigoJefe
+Enemigo <|-- EnemigoLag
+EnemigoSniper ..> BalaEnemiga
+Enemigo <|-- EnemigoSniper
+EnemigoSpammer ..> BalaEnemiga
+Enemigo <|-- EnemigoSpammer
+Entidad ..> Colisionable
+Colisionable <|.. Entidad
+Entidad ..> Rectangle
+Entidad --> "1" Sprite : spr
+FabricaPowerUp ..> PowerUp
+GeneradorPowerUps --> "*" FabricaPowerUp : fabricas
+GeneradorPowerUps --> "1" FabricaPowerUp : fabricaCuracion
+GeneradorPowerUps ..> LootBox
+GeneradorPowerUps ..> Pizza
+GeneradorPowerUps ..> PowerUp
+GeneradorPowerUps ..> RGB
+GeneradorPowerUps ..> SillaGamer
+LootBox ..> Nave4
+PowerUp <|-- LootBox
+Nave4 ..> Bullet
+Nave4 ..> Colisionable
+Nave4 ..> Enemigo
+Entidad <|-- Nave4
+PantallaJuego --> "*" BalaEnemiga : balasEnemigas
+PantallaJuego --> "*" Bullet : balas
+EfectosCombate <|.. PantallaJuego
+PantallaJuego --> "*" Enemigo : enemigos
+PantallaJuego --> "*" Enemigo : pendientes
+PantallaJuego --> "1" GeneradorPowerUps : generadorPowerUps
+PantallaJuego --> "1" Nave4 : nave
+PantallaJuego --> "*" PowerUp : powerUps
+PantallaJuego --> "*" Rayo : rayos
+Pizza ..> Nave4
+PowerUp <|-- Pizza
+Entidad <|-- PowerUp
+PowerUp ..> Nave4
+RGB ..> Nave4
+PowerUp <|-- RGB
+Rayo ..> Colisionable
+Colisionable <|.. Rayo
+Rayo ..> Rectangle
+SillaGamer ..> Nave4
+PowerUp <|-- SillaGamer
+@enduml

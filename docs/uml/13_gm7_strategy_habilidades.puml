@@ -1,0 +1,183 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title GM-7: patrón Strategy en las habilidades especiales (Habilidad)
+package "puppy.code.modelo" {
+class "ContextoCombate" as ContextoCombate {
+  -nave : Nave4
+  -dificultad : Dificultad
+  -numeroOleada : int
+  -agresividad : float
+  -balasEnemigas : List<BalaEnemiga>
+  -balasJugador : List<Bullet>
+  -rayos : List<Rayo>
+  -nuevosEnemigos : List<Enemigo>
+  -mensajes : List<String>
+  -sonidos : List<String>
+  -premios : List<float[]>
+  -limpiarPedido : boolean
+  -{static} FACTOR_BALAS_BASE : float {readOnly}
+  --
+  +<<create>> ContextoCombate(nave : Nave4, dificultad : Dificultad, numeroOleada : int, agresividad : float)
+  +disparar(bala : BalaEnemiga) : void
+  +agregarRayo(rayo : Rayo) : void
+  +agregarBalaJugador(bala : Bullet) : void
+  +limpiarBalasEnemigas() : void
+  +recogerPedidoLimpieza() : boolean
+  +recogerBalasEnemigas() : List<BalaEnemiga>
+  +recogerBalasJugador() : List<Bullet>
+  +recogerRayos() : List<Rayo>
+  +agregarEnemigo(enemigo : Enemigo) : void
+  +anunciar(texto : String) : void
+  +reproducir(sonido : String) : void
+  +recogerNuevos() : List<Enemigo>
+  +recogerMensajes() : List<String>
+  +recogerSonidos() : List<String>
+  +avisoRayo(fotogramas : int) : int
+  +pedirPremio(x : float, y : float) : void
+  +recogerPremios() : List<float[]>
+  +intervalo(fotogramas : int) : int
+  +intervaloRapido(fotogramas : int) : int
+  +getNaveCentroX() : float
+  +getNaveCentroY() : float
+  +getNave() : Nave4
+  +getNumeroOleada() : int
+}
+class "Nave4" as Nave4 {
+  -destruida : boolean
+  -vidas : int
+  -velocidad : float
+  -personaje : Personaje
+  -herido : boolean
+  -apareciendo : boolean
+  -tiempoHeridoMax : int
+  -tiempoHerido : int
+  -estrategia : EstrategiaDisparo
+  -armaOriginal : EstrategiaDisparo
+  -armaTemporalRestante : int
+  -cooldownRestante : int
+  +{static} ENERGIA_MAXIMA : float {readOnly}
+  -{static} VIDAS_MAXIMAS : int {readOnly}
+  -{static} VIDAS_MAXIMAS_ESPECIALES : int {readOnly}
+  -habilidad : Habilidad
+  -energia : float
+  -escudoRestante : int
+  -turboRestante : int
+  --
+  +<<create>> Nave4(personaje : Personaje)
+  +actualizar() : void
+  -manejarInputTeclado() : void
+  +disparar() : List<Bullet>
+  -actualizarPosicion() : void
+  -actualizarEstadoHerido() : void
+  +revisarColision(enemigo : Enemigo) : boolean
+  +revisarGolpe(fuente : Colisionable) : boolean
+  -recibirDano() : void
+  +dibujar(batch : SpriteBatch) : void
+  +sumarEnergia(cantidad : float) : void
+  +perderEnergia(cantidad : float) : void
+  +habilidadLista() : boolean
+  +usarHabilidad(contexto : ContextoCombate) : boolean
+  +getEnergia() : float
+  +getHabilidad() : Habilidad
+  +estaDestruido() : boolean
+  +estaHerido() : boolean
+  +getPersonaje() : Personaje
+  +getVidas() : int
+  +asegurarVidas(minimo : int) : void
+  +curar(cantidad : int) : void
+  +activarEscudo(fotogramas : int) : void
+  +activarTurbo(fotogramas : int) : void
+  +tieneEscudo() : boolean
+  +tieneTurbo() : boolean
+  +aparecer() : void
+  +estaApareciendo() : boolean
+  +getEstrategia() : EstrategiaDisparo
+  +getNombreArma() : String
+  +setEstrategia(estrategia : EstrategiaDisparo) : void
+  +equiparArmaTemporal(arma : EstrategiaDisparo, fotogramas : int) : void
+}
+enum "Personaje" as Personaje {
+  TRYHARD
+  CAMPER
+  SUPPORT
+  ..
+  -nombre : String
+  -archivoNave : String
+  -vidas : int
+  -velocidad : float
+  -frase : String
+  -fabricaArma : Supplier<EstrategiaDisparo>
+  -fabricaHabilidad : Supplier<Habilidad>
+  --
+  ~<<create>> Personaje(nombre : String, archivoNave : String, vidas : int, velocidad : float, frase : String, fabricaArma : Supplier<EstrategiaDisparo>, fabricaHabilidad : Supplier<Habilidad>)
+  +crearArma() : EstrategiaDisparo
+  +crearHabilidad() : Habilidad
+  +getNombre() : String
+  +getArchivoNave() : String
+  +getVidas() : int
+  +getVelocidad() : float
+  +getFrase() : String
+}
+}
+package "puppy.code.modelo.habilidades" {
+class "Burbuja" as Burbuja {
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+interface "Habilidad" as Habilidad {
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+class "Overdrive" as Overdrive {
+  -{static} DURACION : int {readOnly}
+  --
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+class "TiroCertero" as TiroCertero {
+  +activar(nave : Nave4, contexto : ContextoCombate) : void
+  +getNombre() : String
+  +getDescripcion() : String
+}
+}
+Burbuja ..> ContextoCombate
+Habilidad <|.. Burbuja
+Burbuja ..> Nave4
+ContextoCombate --> "1" Nave4 : nave
+Habilidad ..> ContextoCombate
+Habilidad ..> Nave4
+Nave4 ..> ContextoCombate
+Nave4 --> "1" Habilidad : habilidad
+Nave4 --> "1" Personaje : personaje
+Overdrive ..> ContextoCombate
+Habilidad <|.. Overdrive
+Overdrive ..> Nave4
+Personaje --> "1" Habilidad : fabricaHabilidad
+TiroCertero ..> ContextoCombate
+Habilidad <|.. TiroCertero
+TiroCertero ..> Nave4
+@enduml

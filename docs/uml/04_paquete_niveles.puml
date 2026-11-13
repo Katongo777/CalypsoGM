@@ -1,0 +1,127 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title Paquete puppy.code.modelo.niveles
+package "puppy.code.modelo.niveles" {
+class "DirectorNiveles" as DirectorNiveles {
+  +{static} TOTAL_OLEADAS : int {readOnly}
+  -{static} AGRESIVIDAD_INICIAL : float {readOnly}
+  -{static} AGRESIVIDAD_POR_OLEADA : float {readOnly}
+  -{static} AGRESIVIDAD_MAXIMA : float {readOnly}
+  -{static} EXTRA_HARDCORE : float {readOnly}
+  -{static} AGRESIVIDAD_JEFE : float {readOnly}
+  -{static} NOMBRES : String[] {readOnly}
+  -builder : NivelBuilder
+  --
+  +<<create>> DirectorNiveles(builder : NivelBuilder)
+  -nombreDe(numero : int) : String
+  -velocidadDe(numero : int) : float
+  -agresividadDe(numero : int) : float
+  +construirOleadaNormal(numero : int) : Nivel
+  +construirOleadaHardcore(numero : int) : Nivel
+  +construirOleadaJefe(numero : int, jefe : TipoJefe) : Nivel
+  -esHardcore(numero : int) : boolean
+  -jefeDe(numero : int) : TipoJefe
+  +construirOleada(numero : int) : Nivel
+}
+class "Nivel" as Nivel {
+  -numero : int
+  -nombre : String
+  -aviso : String
+  -probPowerUp : float
+  -agresividad : float
+  -jefe : Enemigo
+  -enemigos : List<Enemigo>
+  --
+  ~<<create>> Nivel()
+  ~definirNumero(numero : int) : void
+  ~definirNombre(nombre : String) : void
+  ~definirAviso(aviso : String) : void
+  ~definirProbPowerUp(probabilidad : float) : void
+  ~definirAgresividad(agresividad : float) : void
+  ~definirJefe(jefe : Enemigo) : void
+  ~agregarEnemigo(enemigo : Enemigo) : void
+  ~mezclarEnemigos(azar : Random) : void
+  +getNumero() : int
+  +getNombre() : String
+  +getAviso() : String
+  +getProbPowerUp() : float
+  +getAgresividad() : float
+  +tieneJefe() : boolean
+  +getJefe() : Enemigo
+  +getEnemigos() : List<Enemigo>
+  +getTotalEnemigos() : int
+}
+interface "NivelBuilder" as NivelBuilder {
+  +reset() : void
+  +definirNumero(numero : int) : void
+  +definirNombre(nombre : String) : void
+  +agregarBots(cantidad : int) : void
+  +agregarLags(cantidad : int) : void
+  +agregarCheaters(cantidad : int) : void
+  +agregarSpammers(cantidad : int) : void
+  +agregarSnipers(cantidad : int) : void
+  +agregarJefe(tipo : TipoJefe) : void
+  +definirAviso(aviso : String) : void
+  +definirVelocidad(velocidad : float) : void
+  +definirProbPowerUp(probabilidad : float) : void
+  +definirAgresividad(agresividad : float) : void
+  +getResult() : Nivel
+}
+class "NivelPartidaBuilder" as NivelPartidaBuilder {
+  -{static} VELOCIDAD_MAXIMA : float {readOnly}
+  -dificultad : Dificultad
+  -azar : Random
+  -nivel : Nivel
+  -velocidad : float
+  -bots : int
+  -lags : int
+  -cheaters : int
+  -spammers : int
+  -snipers : int
+  -tipoJefe : TipoJefe
+  --
+  +<<create>> NivelPartidaBuilder(dificultad : Dificultad)
+  +reset() : void
+  +definirNumero(numero : int) : void
+  +definirNombre(nombre : String) : void
+  +agregarBots(cantidad : int) : void
+  +agregarLags(cantidad : int) : void
+  +agregarCheaters(cantidad : int) : void
+  +agregarSpammers(cantidad : int) : void
+  +agregarSnipers(cantidad : int) : void
+  +agregarJefe(tipo : TipoJefe) : void
+  +definirAviso(aviso : String) : void
+  +definirVelocidad(velocidad : float) : void
+  +definirProbPowerUp(probabilidad : float) : void
+  +definirAgresividad(agresividad : float) : void
+  +getResult() : Nivel
+  -velocidadAlAzar(factor : float) : float
+}
+}
+DirectorNiveles ..> Nivel
+DirectorNiveles --> "1" NivelBuilder : builder
+NivelBuilder ..> Nivel
+NivelPartidaBuilder --> "1" Nivel : nivel
+NivelBuilder <|.. NivelPartidaBuilder
+@enduml

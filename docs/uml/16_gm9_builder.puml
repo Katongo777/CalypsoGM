@@ -1,0 +1,415 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title GM-9: patrón Builder (DirectorNiveles, NivelBuilder, NivelPartidaBuilder y Nivel)
+package "puppy.code.modelo" {
+enum "Dificultad" as Dificultad {
+  FACIL
+  NORMAL
+  DIFICIL
+  ..
+  -nombre : String
+  -multVelocidad : float
+  -multIntervalo : float
+  -vidasExtra : int
+  -multBalas : float
+  -multAviso : float
+  --
+  ~<<create>> Dificultad(nombre : String, multVelocidad : float, multIntervalo : float, vidasExtra : int, multBalas : float, multAviso : float)
+  +siguiente(paso : int) : Dificultad
+  +getNombre() : String
+  +getMultVelocidad() : float
+  +getMultIntervalo() : float
+  +getVidasExtra() : int
+  +getMultBalas() : float
+  +getMultAviso() : float
+}
+}
+package "puppy.code.modelo.enemigos" {
+abstract class "Enemigo" as Enemigo {
+  -vida : float
+  -puntos : int
+  -entrando : boolean
+  -{static} VELOCIDAD_ENTRADA : float {readOnly}
+  --
+  #<<create>> Enemigo(x : float, y : float, xVel : float, yVel : float, tx : Texture, vida : int, puntos : int)
+  +iniciarEntrada(x : float) : void
+  +isEntrando() : boolean
+  +{abstract} getNombre() : String
+  +recibirDano(danio : float) : void
+  +estaMuerto() : boolean
+  +alMorir() : List<Enemigo>
+  +atacar(contexto : ContextoCombate) : void
+  +alAparecer(efectos : EfectosCombate) : void
+  +alSerDerrotado(efectos : EfectosCombate) : void
+  +cuentaParaGrupo() : boolean
+  +dibujarInterfaz(batch : SpriteBatch, font : BitmapFont) : void
+  +seDestruyeAlChocar() : boolean
+  +sueltaPowerUpSeguro() : boolean
+  #ubicarDentroDePantalla() : void
+  #moverConRebote() : void
+  +getColorExplosion() : Color
+  +empujable() : boolean
+  +revisarColisionEnemigo(otro : Enemigo) : void
+  +getVida() : float
+  +getPuntos() : int
+}
+class "EnemigoBot" as EnemigoBot {
+  -framesParaDisparar : int
+  --
+  +<<create>> EnemigoBot(x : int, y : int, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+}
+class "EnemigoCheater" as EnemigoCheater {
+  -framesParaDisparar : int
+  --
+  +<<create>> EnemigoCheater(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+  +alMorir() : List<Enemigo>
+}
+class "EnemigoJefe" as EnemigoJefe {
+  -{static} DURACION_MAXIMA_ESCUDO : int {readOnly}
+  -{static} MUSICA_JEFE : String {readOnly}
+  -{static} MUSICA_NORMAL : String {readOnly}
+  -{static} VIDAS_DE_PREMIO : int {readOnly}
+  -tipo : TipoJefe
+  -nombre : String
+  -vidaMaxima : int
+  -velocidadBase : float
+  -umbrales : float[]
+  -ataquesFase : List<List<AtaqueJefe>>
+  -ataquesEscudo : List<List<AtaqueJefe>>
+  -fase : int
+  -escudoFrames : int
+  -escudoNumero : int
+  -apoyo : List<Enemigo>
+  -tiempo : int
+  -framesDestello : int
+  -framesAparicion : int
+  -estadoEmbestida : int
+  -framesAvisoEmbestida : int
+  -xEmbestida : float
+  -barra : BarraJefe
+  --
+  +<<create>> EnemigoJefe(tipo : TipoJefe, tx : Texture)
+  -armarAtaques() : void
+  ~definirUmbrales(fracciones : float[]) : void
+  ~fase(ataques : AtaqueJefe[]) : void
+  ~escudo(ataques : AtaqueJefe[]) : void
+  +getNombre() : String
+  +getVidaMaxima() : int
+  +getUmbrales() : float[]
+  +tieneEscudo() : boolean
+  +estaEnojado() : boolean
+  +registrarApoyo(enemigo : Enemigo) : void
+  +recibirDano(danio : float) : void
+  +actualizar() : void
+  -alturaPatrulla() : float
+  -moverEmbestida() : void
+  +iniciarEmbestida(xObjetivo : float) : void
+  +teletransportar(x : float) : void
+  +atacar(contexto : ContextoCombate) : void
+  -iniciarEscudo(contexto : ContextoCombate) : void
+  -romperEscudo(contexto : ContextoCombate) : void
+  -apoyoDerrotado() : boolean
+  +getColorExplosion() : Color
+  +empujable() : boolean
+  +seDestruyeAlChocar() : boolean
+  +sueltaPowerUpSeguro() : boolean
+  +alAparecer(efectos : EfectosCombate) : void
+  +alSerDerrotado(efectos : EfectosCombate) : void
+  +cuentaParaGrupo() : boolean
+  +dibujarInterfaz(batch : SpriteBatch, font : BitmapFont) : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoLag" as EnemigoLag {
+  -{static} FRAMES_AVISO : int {readOnly}
+  -framesParaSalto : int
+  --
+  +<<create>> EnemigoLag(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoSniper" as EnemigoSniper {
+  -{static} FRAMES_APUNTANDO : int {readOnly}
+  -framesParaApuntar : int
+  -framesApuntando : int
+  -objetivoX : float
+  -objetivoY : float
+  --
+  +<<create>> EnemigoSniper(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "EnemigoSpammer" as EnemigoSpammer {
+  -alturaObjetivo : float
+  -tiempo : int
+  -framesParaRafaga : int
+  -balasPorDisparar : int
+  -framesEntreBalas : int
+  --
+  +<<create>> EnemigoSpammer(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +getNombre() : String
+  +getColorExplosion() : Color
+  +actualizar() : void
+  +atacar(contexto : ContextoCombate) : void
+}
+enum "TipoJefe" as TipoJefe {
+  TOXIC
+  HACKER
+  SWEATY
+  ADMIN
+  ..
+  -nombre : String
+  -archivoImagen : String
+  -vida : int
+  -puntos : int
+  -velocidad : float
+  -aviso : String
+  --
+  ~<<create>> TipoJefe(nombre : String, archivoImagen : String, vida : int, puntos : int, velocidad : float, aviso : String)
+  ~{abstract} armarAtaques(jefe : EnemigoJefe) : void
+  +getNombre() : String
+  +getArchivoImagen() : String
+  +getVida() : int
+  +getPuntos() : int
+  +getVelocidad() : float
+  +getAviso() : String
+}
+}
+package "puppy.code.modelo.niveles" {
+class "DirectorNiveles" as DirectorNiveles {
+  +{static} TOTAL_OLEADAS : int {readOnly}
+  -{static} AGRESIVIDAD_INICIAL : float {readOnly}
+  -{static} AGRESIVIDAD_POR_OLEADA : float {readOnly}
+  -{static} AGRESIVIDAD_MAXIMA : float {readOnly}
+  -{static} EXTRA_HARDCORE : float {readOnly}
+  -{static} AGRESIVIDAD_JEFE : float {readOnly}
+  -{static} NOMBRES : String[] {readOnly}
+  -builder : NivelBuilder
+  --
+  +<<create>> DirectorNiveles(builder : NivelBuilder)
+  -nombreDe(numero : int) : String
+  -velocidadDe(numero : int) : float
+  -agresividadDe(numero : int) : float
+  +construirOleadaNormal(numero : int) : Nivel
+  +construirOleadaHardcore(numero : int) : Nivel
+  +construirOleadaJefe(numero : int, jefe : TipoJefe) : Nivel
+  -esHardcore(numero : int) : boolean
+  -jefeDe(numero : int) : TipoJefe
+  +construirOleada(numero : int) : Nivel
+}
+class "Nivel" as Nivel {
+  -numero : int
+  -nombre : String
+  -aviso : String
+  -probPowerUp : float
+  -agresividad : float
+  -jefe : Enemigo
+  -enemigos : List<Enemigo>
+  --
+  ~<<create>> Nivel()
+  ~definirNumero(numero : int) : void
+  ~definirNombre(nombre : String) : void
+  ~definirAviso(aviso : String) : void
+  ~definirProbPowerUp(probabilidad : float) : void
+  ~definirAgresividad(agresividad : float) : void
+  ~definirJefe(jefe : Enemigo) : void
+  ~agregarEnemigo(enemigo : Enemigo) : void
+  ~mezclarEnemigos(azar : Random) : void
+  +getNumero() : int
+  +getNombre() : String
+  +getAviso() : String
+  +getProbPowerUp() : float
+  +getAgresividad() : float
+  +tieneJefe() : boolean
+  +getJefe() : Enemigo
+  +getEnemigos() : List<Enemigo>
+  +getTotalEnemigos() : int
+}
+interface "NivelBuilder" as NivelBuilder {
+  +reset() : void
+  +definirNumero(numero : int) : void
+  +definirNombre(nombre : String) : void
+  +agregarBots(cantidad : int) : void
+  +agregarLags(cantidad : int) : void
+  +agregarCheaters(cantidad : int) : void
+  +agregarSpammers(cantidad : int) : void
+  +agregarSnipers(cantidad : int) : void
+  +agregarJefe(tipo : TipoJefe) : void
+  +definirAviso(aviso : String) : void
+  +definirVelocidad(velocidad : float) : void
+  +definirProbPowerUp(probabilidad : float) : void
+  +definirAgresividad(agresividad : float) : void
+  +getResult() : Nivel
+}
+class "NivelPartidaBuilder" as NivelPartidaBuilder {
+  -{static} VELOCIDAD_MAXIMA : float {readOnly}
+  -dificultad : Dificultad
+  -azar : Random
+  -nivel : Nivel
+  -velocidad : float
+  -bots : int
+  -lags : int
+  -cheaters : int
+  -spammers : int
+  -snipers : int
+  -tipoJefe : TipoJefe
+  --
+  +<<create>> NivelPartidaBuilder(dificultad : Dificultad)
+  +reset() : void
+  +definirNumero(numero : int) : void
+  +definirNombre(nombre : String) : void
+  +agregarBots(cantidad : int) : void
+  +agregarLags(cantidad : int) : void
+  +agregarCheaters(cantidad : int) : void
+  +agregarSpammers(cantidad : int) : void
+  +agregarSnipers(cantidad : int) : void
+  +agregarJefe(tipo : TipoJefe) : void
+  +definirAviso(aviso : String) : void
+  +definirVelocidad(velocidad : float) : void
+  +definirProbPowerUp(probabilidad : float) : void
+  +definirAgresividad(agresividad : float) : void
+  +getResult() : Nivel
+  -velocidadAlAzar(factor : float) : float
+}
+}
+package "puppy.code.vista" {
+class "PantallaJuego" as PantallaJuego {
+  -{static} DURACION_INTRO : int {readOnly}
+  -{static} RETRASO_ENTRADA : int {readOnly}
+  -{static} INTERVALO_ENTRADA : int {readOnly}
+  -{static} PISTA_JUEGO : String {readOnly}
+  -{static} ENFRIAMIENTO_POWERUP : int {readOnly}
+  -{static} ESPERA_MAXIMA_GRUPO : int {readOnly}
+  -{static} QUEDAN_PARA_NUEVO_GRUPO : int {readOnly}
+  -{static} DURACION_COMPLETADA : int {readOnly}
+  -{static} MAX_ENEMIGOS : int {readOnly}
+  -pistaDeseada : String
+  -score : int
+  -nivel : Nivel
+  -nave : Nave4
+  -locutor : Locutor
+  -hud : Hud
+  -pausado : boolean
+  -dificultad : Dificultad
+  -accionPausa : int
+  -fase : Fase
+  -tiempoFase : int
+  -tiempoOleada : int
+  -azar : Random
+  -entrantesDelGrupo : int
+  -esperaGrupo : int
+  -xBaseGrupo : float
+  -indiceEnGrupo : int
+  -enfriamientoPowerUp : int
+  -pendientes : List<Enemigo>
+  -enemigos : List<Enemigo>
+  -balas : List<Bullet>
+  -contexto : ContextoCombate
+  -balasEnemigas : List<BalaEnemiga>
+  -rayos : List<Rayo>
+  -particulas : Particulas
+  -vidasPrevias : int
+  -temblorFrames : int
+  -temblorTotal : int
+  -temblorAmplitud : float
+  -destelloFrames : int
+  -destelloTotal : int
+  -destelloColor : Color
+  -congelarFrames : int
+  -powerUps : List<PowerUp>
+  -generadorPowerUps : GeneradorPowerUps
+  --
+  +{static} nuevaPartida(game : SpaceNavigation, personaje : Personaje) : PantallaJuego
+  +<<create>> PantallaJuego(game : SpaceNavigation, nivel : Nivel, nave : Nave4, score : int, locutor : Locutor)
+  -prepararEnemigos() : void
+  -hacerEntrarSiguiente() : void
+  -contarDelGrupo() : int
+  -actualizarEntradaDeEnemigos() : void
+  #actualizar(delta : float) : void
+  -recogerDelContexto() : void
+  +temblar(frames : int, amplitud : float) : void
+  +destellar(color : Color, frames : int) : void
+  +anunciar(texto : String) : void
+  +reproducirSonido(archivo : String) : void
+  +cambiarMusica(archivo : String) : void
+  +congelar(fotogramas : int) : void
+  +explotar(x : float, y : float, color : Color, cantidad : int, fuerza : float) : void
+  +limpiarAtaquesEnemigos() : void
+  +curarNave(vidas : int) : void
+  #getTemblor() : float
+  -soltarPowerUp(muerto : Enemigo) : void
+  -agregarPowerUp(x : float, y : float, curacion : boolean) : void
+  #dibujar() : void
+  -dibujarIntro() : void
+  -dibujarPausa() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+}
+DirectorNiveles ..> Nivel
+DirectorNiveles --> "1" NivelBuilder : builder
+DirectorNiveles ..> TipoJefe
+Enemigo <|-- EnemigoBot
+EnemigoCheater ..> Enemigo
+Enemigo <|-- EnemigoCheater
+EnemigoCheater ..> EnemigoLag
+EnemigoJefe --> "*" Enemigo : apoyo
+Enemigo <|-- EnemigoJefe
+EnemigoJefe --> "1" TipoJefe : tipo
+Enemigo <|-- EnemigoLag
+Enemigo <|-- EnemigoSniper
+Enemigo <|-- EnemigoSpammer
+Nivel --> "*" Enemigo : enemigos
+Nivel --> "1" Enemigo : jefe
+NivelBuilder ..> Nivel
+NivelBuilder ..> TipoJefe
+NivelPartidaBuilder --> "1" Dificultad : dificultad
+NivelPartidaBuilder ..> EnemigoBot
+NivelPartidaBuilder ..> EnemigoCheater
+NivelPartidaBuilder ..> EnemigoJefe
+NivelPartidaBuilder ..> EnemigoLag
+NivelPartidaBuilder ..> EnemigoSniper
+NivelPartidaBuilder ..> EnemigoSpammer
+NivelPartidaBuilder --> "1" Nivel : nivel
+NivelBuilder <|.. NivelPartidaBuilder
+NivelPartidaBuilder --> "1" TipoJefe : tipoJefe
+PantallaJuego --> "1" Dificultad : dificultad
+PantallaJuego ..> DirectorNiveles
+PantallaJuego --> "*" Enemigo : enemigos
+PantallaJuego --> "*" Enemigo : pendientes
+PantallaJuego --> "1" Nivel : nivel
+PantallaJuego ..> NivelPartidaBuilder
+TipoJefe ..> EnemigoJefe
+@enduml

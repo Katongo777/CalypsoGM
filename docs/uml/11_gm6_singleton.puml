@@ -1,0 +1,261 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title GM-6: patrón Singleton (GestorRecursos)
+package "puppy.code" {
+class "SpaceNavigation" as SpaceNavigation {
+  -nombreJuego : String
+  -modoDios : boolean
+  -guiaVista : boolean
+  -batch : SpriteBatch
+  -font : BitmapFont
+  -fondo : FondoEstrellado
+  -record : GestorRecord
+  --
+  +create() : void
+  +render() : void
+  +dispose() : void
+  +getBatch() : SpriteBatch
+  +getFont() : BitmapFont
+  +getFondo() : FondoEstrellado
+  +isGuiaVista() : boolean
+  +marcarGuiaVista() : void
+  +isModoDios() : boolean
+  +activarModoDios() : void
+  +getHighScore() : int
+  +registrarPuntaje(puntaje : int) : boolean
+}
+}
+package "puppy.code.modelo" {
+abstract class "Entidad" as Entidad {
+  -spr : Sprite
+  -xVel : float
+  -yVel : float
+  -factorHitbox : float
+  --
+  +<<create>> Entidad(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +{abstract} actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+  +getArea() : Rectangle
+  +chocaCon(otro : Colisionable) : boolean
+  +getX() : float
+  +getY() : float
+  +getAncho() : float
+  +getAlto() : float
+  +getXVel() : float
+  +getYVel() : float
+  +setXVel(xVel : float) : void
+  +setYVel(yVel : float) : void
+  #setPosicion(x : float, y : float) : void
+  #setTinte(r : float, g : float, b : float, a : float) : void
+  #setFactorHitbox(factor : float) : void
+  #setTamano(ancho : float, alto : float) : void
+  #rotar(grados : float) : void
+}
+}
+package "puppy.code.util" {
+class "GestorRecord" as GestorRecord {
+  -{static} ARCHIVO_RECORD : String {readOnly}
+  -record : int
+  --
+  +<<create>> GestorRecord()
+  +getRecord() : int
+  +registrar(puntaje : int) : boolean
+  -leer() : int
+  -guardar() : void
+}
+class "GestorRecursos" as GestorRecursos {
+  -{static} instancia : GestorRecursos
+  -texturas : Map<String, Texture>
+  -sonidos : Map<String, Sound>
+  -musicas : Map<String, Music>
+  -pistaActual : String
+  -pixelBlanco : Texture
+  -fuente : BitmapFont
+  -opciones : Opciones
+  --
+  -<<create>> GestorRecursos()
+  +{static} getInstance() : GestorRecursos
+  +getTextura(archivo : String) : Texture
+  +getSonido(archivo : String) : Sound
+  +getPixelBlanco() : Texture
+  +reproducirMusica(archivo : String) : void
+  +detenerMusica() : void
+  +getOpciones() : Opciones
+  +reproducirSonido(archivo : String) : void
+  +reproducirSonido(archivo : String, volumen : float, tono : float) : void
+  +aplicarVolumenMusica() : void
+  +getFuente() : BitmapFont
+  +liberar() : void
+}
+class "Opciones" as Opciones {
+  -{static} ARCHIVO : String {readOnly}
+  -volumenMusica : float
+  -volumenEfectos : float
+  -dificultad : Dificultad
+  --
+  +<<create>> Opciones()
+  -cargar() : void
+  +guardar() : void
+  -limitar(v : float) : float
+  +getVolumenMusica() : float
+  +setVolumenMusica(v : float) : void
+  +getVolumenEfectos() : float
+  +setVolumenEfectos(v : float) : void
+  +getDificultad() : Dificultad
+  +setDificultad(dificultad : Dificultad) : void
+}
+}
+package "puppy.code.vista" {
+abstract class "PantallaBase" as PantallaBase {
+  -game : SpaceNavigation
+  -camera : OrthographicCamera
+  -viewport : Viewport
+  --
+  #<<create>> PantallaBase(game : SpaceNavigation)
+  +render(delta : float) : void
+  #getGame() : SpaceNavigation
+  #getViewport() : Viewport
+  #{abstract} actualizar(delta : float) : void
+  #{abstract} dibujar() : void
+  #revisarTransicion() : void
+  #getTemblor() : float
+  +resize(width : int, height : int) : void
+  +show() : void
+  +pause() : void
+  +resume() : void
+  +hide() : void
+  +dispose() : void
+}
+class "PantallaJuego" as PantallaJuego {
+  -{static} DURACION_INTRO : int {readOnly}
+  -{static} RETRASO_ENTRADA : int {readOnly}
+  -{static} INTERVALO_ENTRADA : int {readOnly}
+  -{static} PISTA_JUEGO : String {readOnly}
+  -{static} ENFRIAMIENTO_POWERUP : int {readOnly}
+  -{static} ESPERA_MAXIMA_GRUPO : int {readOnly}
+  -{static} QUEDAN_PARA_NUEVO_GRUPO : int {readOnly}
+  -{static} DURACION_COMPLETADA : int {readOnly}
+  -{static} MAX_ENEMIGOS : int {readOnly}
+  -pistaDeseada : String
+  -score : int
+  -nivel : Nivel
+  -nave : Nave4
+  -locutor : Locutor
+  -hud : Hud
+  -pausado : boolean
+  -dificultad : Dificultad
+  -accionPausa : int
+  -fase : Fase
+  -tiempoFase : int
+  -tiempoOleada : int
+  -azar : Random
+  -entrantesDelGrupo : int
+  -esperaGrupo : int
+  -xBaseGrupo : float
+  -indiceEnGrupo : int
+  -enfriamientoPowerUp : int
+  -pendientes : List<Enemigo>
+  -enemigos : List<Enemigo>
+  -balas : List<Bullet>
+  -contexto : ContextoCombate
+  -balasEnemigas : List<BalaEnemiga>
+  -rayos : List<Rayo>
+  -particulas : Particulas
+  -vidasPrevias : int
+  -temblorFrames : int
+  -temblorTotal : int
+  -temblorAmplitud : float
+  -destelloFrames : int
+  -destelloTotal : int
+  -destelloColor : Color
+  -congelarFrames : int
+  -powerUps : List<PowerUp>
+  -generadorPowerUps : GeneradorPowerUps
+  --
+  +{static} nuevaPartida(game : SpaceNavigation, personaje : Personaje) : PantallaJuego
+  +<<create>> PantallaJuego(game : SpaceNavigation, nivel : Nivel, nave : Nave4, score : int, locutor : Locutor)
+  -prepararEnemigos() : void
+  -hacerEntrarSiguiente() : void
+  -contarDelGrupo() : int
+  -actualizarEntradaDeEnemigos() : void
+  #actualizar(delta : float) : void
+  -recogerDelContexto() : void
+  +temblar(frames : int, amplitud : float) : void
+  +destellar(color : Color, frames : int) : void
+  +anunciar(texto : String) : void
+  +reproducirSonido(archivo : String) : void
+  +cambiarMusica(archivo : String) : void
+  +congelar(fotogramas : int) : void
+  +explotar(x : float, y : float, color : Color, cantidad : int, fuerza : float) : void
+  +limpiarAtaquesEnemigos() : void
+  +curarNave(vidas : int) : void
+  #getTemblor() : float
+  -soltarPowerUp(muerto : Enemigo) : void
+  -agregarPowerUp(x : float, y : float, curacion : boolean) : void
+  #dibujar() : void
+  -dibujarIntro() : void
+  -dibujarPausa() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "BitmapFont" as BitmapFont <<LibGDX>> {
+  + draw(batch : Batch, text : String, x : float, y : float) : GlyphLayout
+  + getData() : BitmapFontData
+  + setColor(c : Color) : void
+}
+interface "Music" as Music <<LibGDX>> {
+  + play() : void
+  + stop() : void
+  + setVolume(v : float) : void
+  + setLooping(b : boolean) : void
+}
+interface "Sound" as Sound <<LibGDX>> {
+  + play(volumen : float) : long
+  + dispose() : void
+}
+class "Texture" as Texture <<LibGDX>> {
+  + getWidth() : int
+  + getHeight() : int
+  + dispose() : void
+}
+}
+Entidad ..> Texture
+GestorRecursos --> "1" BitmapFont : fuente
+GestorRecursos --> "1" GestorRecursos : instancia
+GestorRecursos --> "*" Music : musicas
+GestorRecursos --> "1" Opciones : opciones
+GestorRecursos --> "*" Sound : sonidos
+GestorRecursos --> "*" Texture : texturas
+GestorRecursos --> "1" Texture : pixelBlanco
+PantallaBase --> "1" SpaceNavigation : game
+PantallaJuego ..> BitmapFont
+PantallaJuego ..> GestorRecursos
+PantallaBase <|-- PantallaJuego
+PantallaJuego ..> SpaceNavigation
+SpaceNavigation --> "1" BitmapFont : font
+SpaceNavigation --> "1" GestorRecord : record
+SpaceNavigation ..> GestorRecursos
+@enduml

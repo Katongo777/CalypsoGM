@@ -1,0 +1,209 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title Paquete puppy.code, puppy.code.util, puppy.code.lwjgl3
+package "puppy.code" {
+class "Constantes" as Constantes {
+  +{static} ANCHO : int {readOnly}
+  +{static} ALTO : int {readOnly}
+  +{static} ZONA_ENEMIGOS_MIN_Y : float {readOnly}
+  --
+  -<<create>> Constantes()
+}
+class "SpaceNavigation" as SpaceNavigation {
+  -nombreJuego : String
+  -modoDios : boolean
+  -guiaVista : boolean
+  -batch : SpriteBatch
+  -font : BitmapFont
+  -fondo : FondoEstrellado
+  -record : GestorRecord
+  --
+  +create() : void
+  +render() : void
+  +dispose() : void
+  +getBatch() : SpriteBatch
+  +getFont() : BitmapFont
+  +getFondo() : FondoEstrellado
+  +isGuiaVista() : boolean
+  +marcarGuiaVista() : void
+  +isModoDios() : boolean
+  +activarModoDios() : void
+  +getHighScore() : int
+  +registrarPuntaje(puntaje : int) : boolean
+}
+}
+package "puppy.code.lwjgl3" {
+class "Lwjgl3Launcher" as Lwjgl3Launcher {
+  +{static} main(args : String[]) : void
+  -{static} createApplication() : Lwjgl3Application
+  -{static} getDefaultConfiguration() : Lwjgl3ApplicationConfiguration
+}
+class "StartupHelper" as StartupHelper {
+  -{static} JVM_RESTARTED_ARG : String {readOnly}
+  --
+  -<<create>> StartupHelper()
+  +{static} startNewJvmIfRequired(redirectOutput : boolean) : boolean
+  +{static} startNewJvmIfRequired() : boolean
+}
+}
+package "puppy.code.util" {
+class "CodigoKonami" as CodigoKonami {
+  -{static} SECUENCIA : int[] {readOnly}
+  -posicion : int
+  --
+  +actualizar() : boolean
+}
+class "GestorRecord" as GestorRecord {
+  -{static} ARCHIVO_RECORD : String {readOnly}
+  -record : int
+  --
+  +<<create>> GestorRecord()
+  +getRecord() : int
+  +registrar(puntaje : int) : boolean
+  -leer() : int
+  -guardar() : void
+}
+class "GestorRecursos" as GestorRecursos {
+  -{static} instancia : GestorRecursos
+  -texturas : Map<String, Texture>
+  -sonidos : Map<String, Sound>
+  -musicas : Map<String, Music>
+  -pistaActual : String
+  -pixelBlanco : Texture
+  -fuente : BitmapFont
+  -opciones : Opciones
+  --
+  -<<create>> GestorRecursos()
+  +{static} getInstance() : GestorRecursos
+  +getTextura(archivo : String) : Texture
+  +getSonido(archivo : String) : Sound
+  +getPixelBlanco() : Texture
+  +reproducirMusica(archivo : String) : void
+  +detenerMusica() : void
+  +getOpciones() : Opciones
+  +reproducirSonido(archivo : String) : void
+  +reproducirSonido(archivo : String, volumen : float, tono : float) : void
+  +aplicarVolumenMusica() : void
+  +getFuente() : BitmapFont
+  +liberar() : void
+}
+class "Opciones" as Opciones {
+  -{static} ARCHIVO : String {readOnly}
+  -volumenMusica : float
+  -volumenEfectos : float
+  -dificultad : Dificultad
+  --
+  +<<create>> Opciones()
+  -cargar() : void
+  +guardar() : void
+  -limitar(v : float) : float
+  +getVolumenMusica() : float
+  +setVolumenMusica(v : float) : void
+  +getVolumenEfectos() : float
+  +setVolumenEfectos(v : float) : void
+  +getDificultad() : Dificultad
+  +setDificultad(dificultad : Dificultad) : void
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "BitmapFont" as BitmapFont <<LibGDX>> {
+  + draw(batch : Batch, text : String, x : float, y : float) : GlyphLayout
+  + getData() : BitmapFontData
+  + setColor(c : Color) : void
+}
+class "FileHandle" as FileHandle <<LibGDX>> {
+  + exists() : boolean
+  + readString() : String
+  + writeString(s : String, append : boolean) : void
+}
+abstract class "Game" as Game <<LibGDX>> {
+  + create() : void
+  + render() : void
+  + dispose() : void
+  + setScreen(screen : Screen) : void
+  + getScreen() : Screen
+}
+class "Lwjgl3Application" as Lwjgl3Application <<LibGDX>> {
+}
+class "Lwjgl3ApplicationConfiguration" as Lwjgl3ApplicationConfiguration <<LibGDX>> {
+  + setTitle(t : String) : void
+  + setWindowedMode(w : int, h : int) : void
+}
+interface "Music" as Music <<LibGDX>> {
+  + play() : void
+  + stop() : void
+  + setVolume(v : float) : void
+  + setLooping(b : boolean) : void
+}
+class "Pixmap" as Pixmap <<LibGDX>> {
+  + fill() : void
+  + dispose() : void
+}
+interface "Screen" as Screen <<LibGDX>> {
+  + show() : void
+  + render(delta : float) : void
+  + resize(width : int, height : int) : void
+  + pause() : void
+  + resume() : void
+  + hide() : void
+  + dispose() : void
+}
+interface "Sound" as Sound <<LibGDX>> {
+  + play(volumen : float) : long
+  + dispose() : void
+}
+class "SpriteBatch" as SpriteBatch <<LibGDX>> {
+  + begin() : void
+  + end() : void
+  + draw(t : Texture, x : float, y : float, w : float, h : float) : void
+  + setColor(r : float, g : float, b : float, a : float) : void
+}
+class "Texture" as Texture <<LibGDX>> {
+  + getWidth() : int
+  + getHeight() : int
+  + dispose() : void
+}
+}
+Game --> "1" Screen : screen
+GestorRecord ..> FileHandle
+GestorRecursos --> "1" BitmapFont : fuente
+GestorRecursos --> "1" GestorRecursos : instancia
+GestorRecursos --> "*" Music : musicas
+GestorRecursos --> "1" Opciones : opciones
+GestorRecursos ..> Pixmap
+GestorRecursos --> "*" Sound : sonidos
+GestorRecursos --> "*" Texture : texturas
+GestorRecursos --> "1" Texture : pixelBlanco
+Lwjgl3Launcher ..> Lwjgl3Application
+Lwjgl3Launcher ..> Lwjgl3ApplicationConfiguration
+Lwjgl3Launcher ..> SpaceNavigation
+Lwjgl3Launcher ..> StartupHelper
+Opciones ..> FileHandle
+SpaceNavigation --> "1" BitmapFont : font
+Game <|-- SpaceNavigation
+SpaceNavigation --> "1" GestorRecord : record
+SpaceNavigation ..> GestorRecursos
+SpaceNavigation ..> Screen
+SpaceNavigation --> "1" SpriteBatch : batch
+@enduml

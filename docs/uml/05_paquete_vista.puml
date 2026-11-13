@@ -1,0 +1,453 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title Paquete puppy.code.vista
+package "puppy.code.vista" {
+class "BarraJefe" as BarraJefe {
+  -{static} ANCHO_BARRA : float {readOnly}
+  -{static} ALTO_BARRA : float {readOnly}
+  --
+  +dibujar(batch : SpriteBatch, font : BitmapFont, jefe : EnemigoJefe) : void
+}
+class "FondoEstrellado" as FondoEstrellado {
+  -estrellas : ArrayList<Estrella>
+  -pixel : Texture
+  --
+  +<<create>> FondoEstrellado()
+  +actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "FondoEstrellado.Estrella" as FondoEstrellado_Estrella {
+  ~x : float
+  ~y : float
+  ~velocidad : float
+  ~tamano : float
+  --
+}
+class "Hud" as Hud {
+  -{static} DURACION_ROTO : int {readOnly}
+  -corazon : Texture
+  -mitadIzquierda : TextureRegion
+  -mitadDerecha : TextureRegion
+  -vidasPrevias : int
+  -rotos : ArrayList<CorazonRoto>
+  --
+  +<<create>> Hud()
+  +dibujar(batch : SpriteBatch, font : BitmapFont, nave : Nave4, nivel : Nivel, score : int, record : int, enemigosRestantes : int) : void
+  -detectarVidasPerdidas(vidas : int) : void
+  -dibujarCorazonesRotos(batch : SpriteBatch) : void
+  -dibujarEnergia(batch : SpriteBatch, font : BitmapFont, nave : Nave4) : void
+}
+class "Hud.CorazonRoto" as Hud_CorazonRoto {
+  ~x : float
+  ~y : float
+  ~velX : float
+  ~velY : float
+  ~edad : int
+  --
+}
+class "Locutor" as Locutor {
+  -{static} DURACION : int {readOnly}
+  -{static} FRASES_DANIO : String[] {readOnly}
+  -racha : int
+  -primeraSangre : boolean
+  -mensaje : String
+  -tiempo : int
+  --
+  +registrarEliminacion() : void
+  +registrarDanio() : void
+  +anunciar(texto : String) : void
+  +actualizar() : void
+  +dibujar(batch : SpriteBatch, font : BitmapFont) : void
+}
+class "MenuBotones" as MenuBotones {
+  -etiquetas : String[]
+  -areas : Rectangle[]
+  -horizontal : boolean
+  -seleccion : int
+  -ultimoMouseX : float
+  -ultimoMouseY : float
+  --
+  +<<create>> MenuBotones(etiquetas : String[], x : float, y : float, ancho : float, alto : float, separacion : float, horizontal : boolean)
+  +actualizar(viewport : Viewport) : int
+  +dibujar(batch : SpriteBatch, font : BitmapFont) : void
+  +setEtiqueta(i : int, texto : String) : void
+  +getSeleccion() : int
+}
+abstract class "PantallaBase" as PantallaBase {
+  -game : SpaceNavigation
+  -camera : OrthographicCamera
+  -viewport : Viewport
+  --
+  #<<create>> PantallaBase(game : SpaceNavigation)
+  +render(delta : float) : void
+  #getGame() : SpaceNavigation
+  #getViewport() : Viewport
+  #{abstract} actualizar(delta : float) : void
+  #{abstract} dibujar() : void
+  #revisarTransicion() : void
+  #getTemblor() : float
+  +resize(width : int, height : int) : void
+  +show() : void
+  +pause() : void
+  +resume() : void
+  +hide() : void
+  +dispose() : void
+}
+class "PantallaGameOver" as PantallaGameOver {
+  -{static} FRASES : String[] {readOnly}
+  -score : int
+  -nuevoRecord : boolean
+  -frase : String
+  --
+  +<<create>> PantallaGameOver(game : SpaceNavigation, score : int, nuevoRecord : boolean)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaGuia" as PantallaGuia {
+  -{static} COLUMNA_IZQUIERDA : float {readOnly}
+  -{static} COLUMNA_DERECHA : float {readOnly}
+  -pagina : int
+  -eleccion : int
+  --
+  +<<create>> PantallaGuia(game : SpaceNavigation)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  -dibujarPaginaEnemigos(batch : SpriteBatch, font : BitmapFont) : void
+  -dibujarPaginaNave(batch : SpriteBatch, font : BitmapFont) : void
+  -titulo(batch : SpriteBatch, font : BitmapFont, texto : String, x : float, y : float) : void
+  -fila(batch : SpriteBatch, font : BitmapFont, imagen : Texture, nombre : String, descripcion : String, x : float, y : float, lado : float, anchoTexto : float) : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaJuego" as PantallaJuego {
+  -{static} DURACION_INTRO : int {readOnly}
+  -{static} RETRASO_ENTRADA : int {readOnly}
+  -{static} INTERVALO_ENTRADA : int {readOnly}
+  -{static} PISTA_JUEGO : String {readOnly}
+  -{static} ENFRIAMIENTO_POWERUP : int {readOnly}
+  -{static} ESPERA_MAXIMA_GRUPO : int {readOnly}
+  -{static} QUEDAN_PARA_NUEVO_GRUPO : int {readOnly}
+  -{static} DURACION_COMPLETADA : int {readOnly}
+  -{static} MAX_ENEMIGOS : int {readOnly}
+  -pistaDeseada : String
+  -score : int
+  -nivel : Nivel
+  -nave : Nave4
+  -locutor : Locutor
+  -hud : Hud
+  -pausado : boolean
+  -dificultad : Dificultad
+  -accionPausa : int
+  -fase : Fase
+  -tiempoFase : int
+  -tiempoOleada : int
+  -azar : Random
+  -entrantesDelGrupo : int
+  -esperaGrupo : int
+  -xBaseGrupo : float
+  -indiceEnGrupo : int
+  -enfriamientoPowerUp : int
+  -pendientes : List<Enemigo>
+  -enemigos : List<Enemigo>
+  -balas : List<Bullet>
+  -contexto : ContextoCombate
+  -balasEnemigas : List<BalaEnemiga>
+  -rayos : List<Rayo>
+  -particulas : Particulas
+  -vidasPrevias : int
+  -temblorFrames : int
+  -temblorTotal : int
+  -temblorAmplitud : float
+  -destelloFrames : int
+  -destelloTotal : int
+  -destelloColor : Color
+  -congelarFrames : int
+  -powerUps : List<PowerUp>
+  -generadorPowerUps : GeneradorPowerUps
+  --
+  +{static} nuevaPartida(game : SpaceNavigation, personaje : Personaje) : PantallaJuego
+  +<<create>> PantallaJuego(game : SpaceNavigation, nivel : Nivel, nave : Nave4, score : int, locutor : Locutor)
+  -prepararEnemigos() : void
+  -hacerEntrarSiguiente() : void
+  -contarDelGrupo() : int
+  -actualizarEntradaDeEnemigos() : void
+  #actualizar(delta : float) : void
+  -recogerDelContexto() : void
+  +temblar(frames : int, amplitud : float) : void
+  +destellar(color : Color, frames : int) : void
+  +anunciar(texto : String) : void
+  +reproducirSonido(archivo : String) : void
+  +cambiarMusica(archivo : String) : void
+  +congelar(fotogramas : int) : void
+  +explotar(x : float, y : float, color : Color, cantidad : int, fuerza : float) : void
+  +limpiarAtaquesEnemigos() : void
+  +curarNave(vidas : int) : void
+  #getTemblor() : float
+  -soltarPowerUp(muerto : Enemigo) : void
+  -agregarPowerUp(x : float, y : float, curacion : boolean) : void
+  #dibujar() : void
+  -dibujarIntro() : void
+  -dibujarPausa() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+enum "PantallaJuego.Fase" as PantallaJuego_Fase {
+  INTRO
+  JUGANDO
+  COMPLETADA
+  --
+}
+class "PantallaMenu" as PantallaMenu {
+  -{static} JUGAR : int {readOnly}
+  -{static} GUIA : int {readOnly}
+  -{static} OPCIONES : int {readOnly}
+  -{static} SALIR : int {readOnly}
+  -konami : CodigoKonami
+  -tiempoMensaje : int
+  -eleccion : int
+  --
+  +<<create>> PantallaMenu(game : SpaceNavigation)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaOpciones" as PantallaOpciones {
+  -{static} MUSICA : int {readOnly}
+  -{static} EFECTOS : int {readOnly}
+  -{static} DIFICULTAD : int {readOnly}
+  -{static} VOLVER : int {readOnly}
+  -volverA : Screen
+  -opciones : Opciones
+  -volver : boolean
+  --
+  +<<create>> PantallaOpciones(game : SpaceNavigation, volverA : Screen)
+  #actualizar(delta : float) : void
+  -cambiar(opcion : int, paso : int) : void
+  -siguienteVolumen(actual : float, paso : int) : float
+  -actualizarEtiquetas() : void
+  #dibujar() : void
+  #revisarTransicion() : void
+}
+class "PantallaSeleccion" as PantallaSeleccion {
+  -personajes : Personaje[]
+  -seleccionado : int
+  -pixel : Texture
+  -iniciar : boolean
+  -ultimoMouseX : float
+  -ultimoMouseY : float
+  --
+  +<<create>> PantallaSeleccion(game : SpaceNavigation)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  -dibujarTarjeta(batch : SpriteBatch, font : BitmapFont, p : Personaje, x : float, y : float, activa : boolean) : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "PantallaVictoria" as PantallaVictoria {
+  -{static} CANTIDAD_CONFETI : int {readOnly}
+  -score : int
+  -nuevoRecord : boolean
+  -confetiX : float[]
+  -confetiY : float[]
+  -confetiVel : float[]
+  -confetiColor : Color[]
+  --
+  +<<create>> PantallaVictoria(game : SpaceNavigation, score : int, nuevoRecord : boolean)
+  #actualizar(delta : float) : void
+  #dibujar() : void
+  #revisarTransicion() : void
+  +show() : void
+}
+class "Particulas" as Particulas {
+  -lista : ArrayList<Particula>
+  --
+  +explosion(x : float, y : float, color : Color, cantidad : int, rapidez : float) : void
+  +actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+}
+class "Particulas.Particula" as Particulas_Particula {
+  ~x : float
+  ~y : float
+  ~velX : float
+  ~velY : float
+  ~tamano : float
+  ~vida : int
+  ~vidaTotal : int
+  ~color : Color
+  --
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "BitmapFont" as BitmapFont <<LibGDX>> {
+  + draw(batch : Batch, text : String, x : float, y : float) : GlyphLayout
+  + getData() : BitmapFontData
+  + setColor(c : Color) : void
+}
+class "Color" as Color <<LibGDX>> {
+  + r : float
+  + g : float
+  + b : float
+  + a : float
+  --
+}
+class "FitViewport" as FitViewport <<LibGDX>> {
+}
+class "MathUtils" as MathUtils <<LibGDX>> {
+  + {static} random(rango : int) : int
+}
+class "OrthographicCamera" as OrthographicCamera <<LibGDX>> {
+  + update() : void
+}
+class "Rectangle" as Rectangle <<LibGDX>> {
+  + x : float
+  + y : float
+  + width : float
+  + height : float
+  --
+  + overlaps(r : Rectangle) : boolean
+}
+interface "Screen" as Screen <<LibGDX>> {
+  + show() : void
+  + render(delta : float) : void
+  + resize(width : int, height : int) : void
+  + pause() : void
+  + resume() : void
+  + hide() : void
+  + dispose() : void
+}
+class "ScreenUtils" as ScreenUtils <<LibGDX>> {
+  + {static} clear(r : float, g : float, b : float, a : float) : void
+}
+class "SpriteBatch" as SpriteBatch <<LibGDX>> {
+  + begin() : void
+  + end() : void
+  + draw(t : Texture, x : float, y : float, w : float, h : float) : void
+  + setColor(r : float, g : float, b : float, a : float) : void
+}
+class "Texture" as Texture <<LibGDX>> {
+  + getWidth() : int
+  + getHeight() : int
+  + dispose() : void
+}
+class "Vector2" as Vector2 <<LibGDX>> {
+  + x : float
+  + y : float
+  --
+}
+abstract class "Viewport" as Viewport <<LibGDX>> {
+  + apply() : void
+  + update(w : int, h : int, centrar : boolean) : void
+  + unproject(v : Vector2) : Vector2
+}
+}
+BarraJefe ..> BitmapFont
+BarraJefe ..> SpriteBatch
+BarraJefe ..> Texture
+Viewport <|-- FitViewport
+FondoEstrellado --> "*" FondoEstrellado_Estrella : estrellas
+FondoEstrellado +-- FondoEstrellado_Estrella
+FondoEstrellado ..> MathUtils
+FondoEstrellado ..> SpriteBatch
+FondoEstrellado --> "1" Texture : pixel
+Hud ..> BitmapFont
+Hud ..> Color
+Hud --> "*" Hud_CorazonRoto : rotos
+Hud +-- Hud_CorazonRoto
+Hud ..> SpriteBatch
+Hud --> "1" Texture : corazon
+Locutor ..> BitmapFont
+Locutor ..> MathUtils
+Locutor ..> SpriteBatch
+MenuBotones ..> BitmapFont
+MenuBotones --> "*" Rectangle : areas
+MenuBotones ..> SpriteBatch
+MenuBotones ..> Texture
+MenuBotones ..> Vector2
+MenuBotones ..> Viewport
+PantallaBase ..> FitViewport
+PantallaBase ..> MathUtils
+PantallaBase --> "1" OrthographicCamera : camera
+Screen <|.. PantallaBase
+PantallaBase ..> ScreenUtils
+PantallaBase --> "1" Viewport : viewport
+PantallaGameOver ..> BitmapFont
+PantallaGameOver ..> MathUtils
+PantallaBase <|-- PantallaGameOver
+PantallaGameOver ..> PantallaSeleccion
+PantallaGameOver ..> SpriteBatch
+PantallaGuia ..> BitmapFont
+PantallaBase <|-- PantallaGuia
+PantallaGuia ..> PantallaMenu
+PantallaGuia ..> PantallaSeleccion
+PantallaGuia ..> SpriteBatch
+PantallaGuia ..> Texture
+PantallaJuego ..> BitmapFont
+PantallaJuego --> "1" Color : destelloColor
+PantallaJuego --> "1" Hud : hud
+PantallaJuego --> "1" Locutor : locutor
+PantallaJuego ..> MathUtils
+PantallaBase <|-- PantallaJuego
+PantallaJuego ..> PantallaGameOver
+PantallaJuego --> "1" PantallaJuego_Fase : fase
+PantallaJuego +-- PantallaJuego_Fase
+PantallaJuego ..> PantallaMenu
+PantallaJuego ..> PantallaOpciones
+PantallaJuego ..> PantallaVictoria
+PantallaJuego --> "1" Particulas : particulas
+PantallaMenu ..> BitmapFont
+PantallaBase <|-- PantallaMenu
+PantallaMenu ..> PantallaGuia
+PantallaMenu ..> PantallaOpciones
+PantallaMenu ..> PantallaSeleccion
+PantallaMenu ..> SpriteBatch
+PantallaOpciones ..> BitmapFont
+PantallaBase <|-- PantallaOpciones
+PantallaOpciones --> "1" Screen : volverA
+PantallaOpciones ..> SpriteBatch
+PantallaSeleccion ..> BitmapFont
+PantallaBase <|-- PantallaSeleccion
+PantallaSeleccion ..> PantallaJuego
+PantallaSeleccion ..> PantallaMenu
+PantallaSeleccion ..> Rectangle
+PantallaSeleccion ..> SpriteBatch
+PantallaSeleccion --> "1" Texture : pixel
+PantallaSeleccion ..> Vector2
+PantallaVictoria ..> BitmapFont
+PantallaVictoria --> "*" Color : confetiColor
+PantallaVictoria ..> MathUtils
+PantallaBase <|-- PantallaVictoria
+PantallaVictoria ..> PantallaSeleccion
+PantallaVictoria ..> SpriteBatch
+PantallaVictoria ..> Texture
+Particulas ..> Color
+Particulas ..> MathUtils
+Particulas --> "*" Particulas_Particula : lista
+Particulas +-- Particulas_Particula
+Particulas ..> SpriteBatch
+Particulas ..> Texture
+Particulas_Particula --> "1" Color : color
+@enduml

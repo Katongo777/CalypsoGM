@@ -1,0 +1,174 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title GM-7: patrón Strategy en las armas (EstrategiaDisparo)
+package "puppy.code.modelo" {
+class "Bullet" as Bullet {
+  -destroyed : boolean
+  -danio : float
+  -atraviesa : boolean
+  -golpeados : ArrayList<Enemigo>
+  --
+  +<<create>> Bullet(x : float, y : float, xVel : float, yVel : float, tx : Texture, ancho : float, alto : float, danio : float)
+  +<<create>> Bullet(x : float, y : float, xVel : float, yVel : float, tx : Texture, ancho : float, alto : float, danio : float, atraviesa : boolean)
+  +actualizar() : void
+  -comprobarLimitesPantalla() : void
+  +revisarColision(enemigo : Enemigo) : boolean
+  -destruir() : void
+  +isDestroyed() : boolean
+  +getDanio() : float
+  +escalarDanio(factor : float) : void
+}
+class "Nave4" as Nave4 {
+  -destruida : boolean
+  -vidas : int
+  -velocidad : float
+  -personaje : Personaje
+  -herido : boolean
+  -apareciendo : boolean
+  -tiempoHeridoMax : int
+  -tiempoHerido : int
+  -estrategia : EstrategiaDisparo
+  -armaOriginal : EstrategiaDisparo
+  -armaTemporalRestante : int
+  -cooldownRestante : int
+  +{static} ENERGIA_MAXIMA : float {readOnly}
+  -{static} VIDAS_MAXIMAS : int {readOnly}
+  -{static} VIDAS_MAXIMAS_ESPECIALES : int {readOnly}
+  -habilidad : Habilidad
+  -energia : float
+  -escudoRestante : int
+  -turboRestante : int
+  --
+  +<<create>> Nave4(personaje : Personaje)
+  +actualizar() : void
+  -manejarInputTeclado() : void
+  +disparar() : List<Bullet>
+  -actualizarPosicion() : void
+  -actualizarEstadoHerido() : void
+  +revisarColision(enemigo : Enemigo) : boolean
+  +revisarGolpe(fuente : Colisionable) : boolean
+  -recibirDano() : void
+  +dibujar(batch : SpriteBatch) : void
+  +sumarEnergia(cantidad : float) : void
+  +perderEnergia(cantidad : float) : void
+  +habilidadLista() : boolean
+  +usarHabilidad(contexto : ContextoCombate) : boolean
+  +getEnergia() : float
+  +getHabilidad() : Habilidad
+  +estaDestruido() : boolean
+  +estaHerido() : boolean
+  +getPersonaje() : Personaje
+  +getVidas() : int
+  +asegurarVidas(minimo : int) : void
+  +curar(cantidad : int) : void
+  +activarEscudo(fotogramas : int) : void
+  +activarTurbo(fotogramas : int) : void
+  +tieneEscudo() : boolean
+  +tieneTurbo() : boolean
+  +aparecer() : void
+  +estaApareciendo() : boolean
+  +getEstrategia() : EstrategiaDisparo
+  +getNombreArma() : String
+  +setEstrategia(estrategia : EstrategiaDisparo) : void
+  +equiparArmaTemporal(arma : EstrategiaDisparo, fotogramas : int) : void
+}
+enum "Personaje" as Personaje {
+  TRYHARD
+  CAMPER
+  SUPPORT
+  ..
+  -nombre : String
+  -archivoNave : String
+  -vidas : int
+  -velocidad : float
+  -frase : String
+  -fabricaArma : Supplier<EstrategiaDisparo>
+  -fabricaHabilidad : Supplier<Habilidad>
+  --
+  ~<<create>> Personaje(nombre : String, archivoNave : String, vidas : int, velocidad : float, frase : String, fabricaArma : Supplier<EstrategiaDisparo>, fabricaHabilidad : Supplier<Habilidad>)
+  +crearArma() : EstrategiaDisparo
+  +crearHabilidad() : Habilidad
+  +getNombre() : String
+  +getArchivoNave() : String
+  +getVidas() : int
+  +getVelocidad() : float
+  +getFrase() : String
+}
+}
+package "puppy.code.modelo.armas" {
+class "BFG" as BFG {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+class "Escopeta" as Escopeta {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+interface "EstrategiaDisparo" as EstrategiaDisparo {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+class "Pistola" as Pistola {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+class "Railgun" as Railgun {
+  +disparar(x : float, y : float) : List<Bullet>
+  +getCooldown() : int
+  +getNombre() : String
+}
+}
+package "puppy.code.modelo.powerups" {
+class "LootBox" as LootBox {
+  -nombreArma : String
+  --
+  +<<create>> LootBox(x : float, y : float)
+  +aplicar(nave : Nave4) : void
+  +getMensaje() : String
+}
+}
+BFG ..> Bullet
+EstrategiaDisparo <|.. BFG
+Escopeta ..> Bullet
+EstrategiaDisparo <|.. Escopeta
+EstrategiaDisparo ..> Bullet
+LootBox ..> BFG
+LootBox ..> Escopeta
+LootBox ..> EstrategiaDisparo
+LootBox ..> Nave4
+LootBox ..> Railgun
+Nave4 ..> Bullet
+Nave4 --> "1" EstrategiaDisparo : armaOriginal
+Nave4 --> "1" EstrategiaDisparo : estrategia
+Nave4 --> "1" Personaje : personaje
+Personaje --> "1" EstrategiaDisparo : fabricaArma
+Pistola ..> Bullet
+EstrategiaDisparo <|.. Pistola
+Railgun ..> Bullet
+EstrategiaDisparo <|.. Railgun
+@enduml

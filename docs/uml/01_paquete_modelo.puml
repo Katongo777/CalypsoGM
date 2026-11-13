@@ -1,0 +1,310 @@
+@startuml
+!pragma layout dot
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+set separator none
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+  ArrowColor #333333
+  StereotypeFontColor #555555
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #888888
+}
+title Paquete puppy.code.modelo
+package "puppy.code.modelo" {
+class "BalaEnemiga" as BalaEnemiga {
+  -destruida : boolean
+  --
+  +<<create>> BalaEnemiga(x : float, y : float, xVel : float, yVel : float)
+  +{static} apuntada(x : float, y : float, objetivoX : float, objetivoY : float, rapidez : float, desvio : float) : BalaEnemiga
+  +conColor(color : Color) : BalaEnemiga
+  +actualizar() : void
+  +salioDePantalla() : boolean
+  +destruir() : void
+  +isDestruida() : boolean
+}
+class "Bullet" as Bullet {
+  -destroyed : boolean
+  -danio : float
+  -atraviesa : boolean
+  -golpeados : ArrayList<Enemigo>
+  --
+  +<<create>> Bullet(x : float, y : float, xVel : float, yVel : float, tx : Texture, ancho : float, alto : float, danio : float)
+  +<<create>> Bullet(x : float, y : float, xVel : float, yVel : float, tx : Texture, ancho : float, alto : float, danio : float, atraviesa : boolean)
+  +actualizar() : void
+  -comprobarLimitesPantalla() : void
+  +revisarColision(enemigo : Enemigo) : boolean
+  -destruir() : void
+  +isDestroyed() : boolean
+  +getDanio() : float
+  +escalarDanio(factor : float) : void
+}
+interface "Colisionable" as Colisionable {
+  +getArea() : Rectangle
+  +chocaCon(otro : Colisionable) : boolean
+}
+class "ContextoCombate" as ContextoCombate {
+  -nave : Nave4
+  -dificultad : Dificultad
+  -numeroOleada : int
+  -agresividad : float
+  -balasEnemigas : List<BalaEnemiga>
+  -balasJugador : List<Bullet>
+  -rayos : List<Rayo>
+  -nuevosEnemigos : List<Enemigo>
+  -mensajes : List<String>
+  -sonidos : List<String>
+  -premios : List<float[]>
+  -limpiarPedido : boolean
+  -{static} FACTOR_BALAS_BASE : float {readOnly}
+  --
+  +<<create>> ContextoCombate(nave : Nave4, dificultad : Dificultad, numeroOleada : int, agresividad : float)
+  +disparar(bala : BalaEnemiga) : void
+  +agregarRayo(rayo : Rayo) : void
+  +agregarBalaJugador(bala : Bullet) : void
+  +limpiarBalasEnemigas() : void
+  +recogerPedidoLimpieza() : boolean
+  +recogerBalasEnemigas() : List<BalaEnemiga>
+  +recogerBalasJugador() : List<Bullet>
+  +recogerRayos() : List<Rayo>
+  +agregarEnemigo(enemigo : Enemigo) : void
+  +anunciar(texto : String) : void
+  +reproducir(sonido : String) : void
+  +recogerNuevos() : List<Enemigo>
+  +recogerMensajes() : List<String>
+  +recogerSonidos() : List<String>
+  +avisoRayo(fotogramas : int) : int
+  +pedirPremio(x : float, y : float) : void
+  +recogerPremios() : List<float[]>
+  +intervalo(fotogramas : int) : int
+  +intervaloRapido(fotogramas : int) : int
+  +getNaveCentroX() : float
+  +getNaveCentroY() : float
+  +getNave() : Nave4
+  +getNumeroOleada() : int
+}
+enum "Dificultad" as Dificultad {
+  FACIL
+  NORMAL
+  DIFICIL
+  ..
+  -nombre : String
+  -multVelocidad : float
+  -multIntervalo : float
+  -vidasExtra : int
+  -multBalas : float
+  -multAviso : float
+  --
+  ~<<create>> Dificultad(nombre : String, multVelocidad : float, multIntervalo : float, vidasExtra : int, multBalas : float, multAviso : float)
+  +siguiente(paso : int) : Dificultad
+  +getNombre() : String
+  +getMultVelocidad() : float
+  +getMultIntervalo() : float
+  +getVidasExtra() : int
+  +getMultBalas() : float
+  +getMultAviso() : float
+}
+interface "EfectosCombate" as EfectosCombate {
+  +anunciar(texto : String) : void
+  +reproducirSonido(archivo : String) : void
+  +cambiarMusica(archivo : String) : void
+  +temblar(fotogramas : int, intensidad : float) : void
+  +destellar(color : Color, fotogramas : int) : void
+  +congelar(fotogramas : int) : void
+  +explotar(x : float, y : float, color : Color, cantidad : int, fuerza : float) : void
+  +limpiarAtaquesEnemigos() : void
+  +curarNave(vidas : int) : void
+}
+abstract class "Entidad" as Entidad {
+  -spr : Sprite
+  -xVel : float
+  -yVel : float
+  -factorHitbox : float
+  --
+  +<<create>> Entidad(x : float, y : float, xVel : float, yVel : float, tx : Texture)
+  +{abstract} actualizar() : void
+  +dibujar(batch : SpriteBatch) : void
+  +getArea() : Rectangle
+  +chocaCon(otro : Colisionable) : boolean
+  +getX() : float
+  +getY() : float
+  +getAncho() : float
+  +getAlto() : float
+  +getXVel() : float
+  +getYVel() : float
+  +setXVel(xVel : float) : void
+  +setYVel(yVel : float) : void
+  #setPosicion(x : float, y : float) : void
+  #setTinte(r : float, g : float, b : float, a : float) : void
+  #setFactorHitbox(factor : float) : void
+  #setTamano(ancho : float, alto : float) : void
+  #rotar(grados : float) : void
+}
+class "Nave4" as Nave4 {
+  -destruida : boolean
+  -vidas : int
+  -velocidad : float
+  -personaje : Personaje
+  -herido : boolean
+  -apareciendo : boolean
+  -tiempoHeridoMax : int
+  -tiempoHerido : int
+  -estrategia : EstrategiaDisparo
+  -armaOriginal : EstrategiaDisparo
+  -armaTemporalRestante : int
+  -cooldownRestante : int
+  +{static} ENERGIA_MAXIMA : float {readOnly}
+  -{static} VIDAS_MAXIMAS : int {readOnly}
+  -{static} VIDAS_MAXIMAS_ESPECIALES : int {readOnly}
+  -habilidad : Habilidad
+  -energia : float
+  -escudoRestante : int
+  -turboRestante : int
+  --
+  +<<create>> Nave4(personaje : Personaje)
+  +actualizar() : void
+  -manejarInputTeclado() : void
+  +disparar() : List<Bullet>
+  -actualizarPosicion() : void
+  -actualizarEstadoHerido() : void
+  +revisarColision(enemigo : Enemigo) : boolean
+  +revisarGolpe(fuente : Colisionable) : boolean
+  -recibirDano() : void
+  +dibujar(batch : SpriteBatch) : void
+  +sumarEnergia(cantidad : float) : void
+  +perderEnergia(cantidad : float) : void
+  +habilidadLista() : boolean
+  +usarHabilidad(contexto : ContextoCombate) : boolean
+  +getEnergia() : float
+  +getHabilidad() : Habilidad
+  +estaDestruido() : boolean
+  +estaHerido() : boolean
+  +getPersonaje() : Personaje
+  +getVidas() : int
+  +asegurarVidas(minimo : int) : void
+  +curar(cantidad : int) : void
+  +activarEscudo(fotogramas : int) : void
+  +activarTurbo(fotogramas : int) : void
+  +tieneEscudo() : boolean
+  +tieneTurbo() : boolean
+  +aparecer() : void
+  +estaApareciendo() : boolean
+  +getEstrategia() : EstrategiaDisparo
+  +getNombreArma() : String
+  +setEstrategia(estrategia : EstrategiaDisparo) : void
+  +equiparArmaTemporal(arma : EstrategiaDisparo, fotogramas : int) : void
+}
+enum "Personaje" as Personaje {
+  TRYHARD
+  CAMPER
+  SUPPORT
+  ..
+  -nombre : String
+  -archivoNave : String
+  -vidas : int
+  -velocidad : float
+  -frase : String
+  -fabricaArma : Supplier<EstrategiaDisparo>
+  -fabricaHabilidad : Supplier<Habilidad>
+  --
+  ~<<create>> Personaje(nombre : String, archivoNave : String, vidas : int, velocidad : float, frase : String, fabricaArma : Supplier<EstrategiaDisparo>, fabricaHabilidad : Supplier<Habilidad>)
+  +crearArma() : EstrategiaDisparo
+  +crearHabilidad() : Habilidad
+  +getNombre() : String
+  +getArchivoNave() : String
+  +getVidas() : int
+  +getVelocidad() : float
+  +getFrase() : String
+}
+class "Rayo" as Rayo {
+  -posicion : float
+  -horizontal : boolean
+  -grosor : float
+  -framesAviso : int
+  -framesActivo : int
+  --
+  +<<create>> Rayo(posicion : float, horizontal : boolean, framesAviso : int, framesActivo : int, grosor : float)
+  +actualizar() : void
+  +estaActivo() : boolean
+  +estaTerminado() : boolean
+  +getArea() : Rectangle
+  +chocaCon(otro : Colisionable) : boolean
+  +dibujar(batch : SpriteBatch) : void
+  -dibujarFranja(batch : SpriteBatch, pixel : Texture, ancho : float) : void
+}
+}
+package "LibGDX (biblioteca)" #EEF3FB {
+class "Color" as Color <<LibGDX>> {
+  + r : float
+  + g : float
+  + b : float
+  + a : float
+  --
+}
+class "Rectangle" as Rectangle <<LibGDX>> {
+  + x : float
+  + y : float
+  + width : float
+  + height : float
+  --
+  + overlaps(r : Rectangle) : boolean
+}
+class "Sprite" as Sprite <<LibGDX>> {
+  + setPosition(x : float, y : float) : void
+  + setSize(w : float, h : float) : void
+  + getBoundingRectangle() : Rectangle
+  + draw(batch : Batch) : void
+}
+class "SpriteBatch" as SpriteBatch <<LibGDX>> {
+  + begin() : void
+  + end() : void
+  + draw(t : Texture, x : float, y : float, w : float, h : float) : void
+  + setColor(r : float, g : float, b : float, a : float) : void
+}
+class "Texture" as Texture <<LibGDX>> {
+  + getWidth() : int
+  + getHeight() : int
+  + dispose() : void
+}
+}
+BalaEnemiga ..> Color
+Entidad <|-- BalaEnemiga
+Entidad <|-- Bullet
+Bullet ..> Texture
+Colisionable ..> Rectangle
+ContextoCombate --> "*" BalaEnemiga : balasEnemigas
+ContextoCombate --> "*" Bullet : balasJugador
+ContextoCombate --> "1" Dificultad : dificultad
+ContextoCombate --> "1" Nave4 : nave
+ContextoCombate --> "*" Rayo : rayos
+EfectosCombate ..> Color
+Entidad ..> Colisionable
+Colisionable <|.. Entidad
+Entidad ..> Rectangle
+Entidad --> "1" Sprite : spr
+Entidad ..> SpriteBatch
+Entidad ..> Texture
+Nave4 ..> Bullet
+Nave4 ..> Colisionable
+Nave4 ..> ContextoCombate
+Entidad <|-- Nave4
+Nave4 --> "1" Personaje : personaje
+Nave4 ..> SpriteBatch
+Nave4 ..> Texture
+Rayo ..> Colisionable
+Colisionable <|.. Rayo
+Rayo ..> Rectangle
+Rayo ..> SpriteBatch
+Rayo ..> Texture
+@enduml
