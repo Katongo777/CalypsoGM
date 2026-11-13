@@ -468,6 +468,227 @@ Las clases dependen de abstracciones, no de clases concretas:
 
 ---
 
+## 6. Patrón Singleton (GM-6)
+
+### Problema
+En el juego base cada ronda y cada asteroide cargaban de nuevo sus imágenes y sonidos con `new Texture(...)` y `Gdx.audio.newSound(...)`, y esos recursos no se liberaban. El consumo de memoria crecía mientras más se jugaba.
+
+### Contexto
+Las texturas, sonidos, música y la fuente se usan desde muchas clases distintas: todas las entidades, las 7 pantallas, el HUD, la barra del jefe y el Builder que crea los enemigos. Cada recurso debe existir **una sola vez** y estar disponible desde cualquier parte, y alguien debe liberarlos todos al cerrar el juego. La reproducción de música y sonidos depende además del volumen elegido en las opciones.
+
+### Solución
+La clase `GestorRecursos` tiene **una única instancia** en todo el programa:
+- **Constructor privado:** nadie puede crear otro gestor.
+- **Instancia estática:** se guarda en un atributo estático privado.
+- **Inicialización perezosa:** el método estático `getInstance()` la crea la primera vez que se pide y después devuelve siempre la misma.
+
+Internamente guarda tres diccionarios (texturas, sonidos y música) declarados como `Map`. La primera vez que se pide un recurso lo carga y lo guarda; las siguientes veces entrega el mismo objeto. También reproduce la música y los sonidos con el volumen de `Opciones` y crea la fuente pixel-art. Al cerrar el juego, `SpaceNavigation.dispose()` llama una sola vez a `liberar()`, que hace `dispose()` de todo.
+
+El gestor tiene **una sola responsabilidad**: administrar los recursos. Por eso el récord de puntaje no está aquí, sino en su propia clase, `GestorRecord`, que no es Singleton: `SpaceNavigation` crea una y la ofrece a las pantallas.
+
+### UML
+El diagrama muestra la asociación de la clase consigo misma (el atributo estático `instancia`), sus atributos y métodos completos, y las clases que la usan.
+
+![Patrón Singleton](uml/11_gm6_singleton.png)
+
+### Consecuencias
+- Cada recurso se carga una sola vez y se libera en un único lugar.
+- Cualquier clase obtiene un recurso sin que se lo pasen por parámetro.
+- Como es un punto de acceso global, lo limitamos a recursos y audio, para no convertirlo en un depósito de estado del juego.
+
 ---
 
-*(Continúa en las secciones GM-6 a GM-10.)*
+## 7. Patrón Strategy (GM-7)
+
+Aplicamos Strategy en tres lugares del juego. En los tres, el contexto guarda una referencia a una interfaz y la puede cambiar durante la partida.
+
+### 7.1 Armas de la nave
+
+**Problema.** El juego base tenía un único disparo fijo dentro de la nave. Queríamos varias armas con comportamientos muy distintos (una bala recta, un abanico, un rayo que atraviesa, una esfera gigante) y que se pudieran cambiar en plena partida.
+
+**Contexto.** La nave dispara siempre de la misma forma: pide balas y la pantalla las agrega. Cambian la forma del disparo y la cadencia. Además, la caja de botín y el modo dios cambian el arma mientras se juega, y el arma temporal debe volver a la original al terminar.
+
+**Solución.**
+- **Interfaz.** `EstrategiaDisparo` declara `disparar(x, y)`, que devuelve las balas creadas, `getCooldown()` y `getNombre()`.
+- **Estrategias concretas.** `Pistola`, `Escopeta`, `Railgun` y `BFG` implementan la interfaz.
+- **Contexto.** `Nave4` guarda una `EstrategiaDisparo` y la cambia en ejecución con `setEstrategia` (que no acepta nulos) o con `equiparArmaTemporal`, que restaura el arma original al terminar.
+- **Quién elige.** `Personaje` elige el arma inicial, y `LootBox` y el modo dios la cambian durante la partida.
+
+![Strategy en las armas](uml/12_gm7_strategy_armas.png)
+
+### 7.2 Habilidades especiales
+
+**Problema y contexto.** Cada personaje tiene una habilidad que se activa con X cuando la barra de energía está llena, y cada una hace algo totalmente distinto: disparar más rápido, lanzar un rayo gigante o curar con escudo y borrar balas.
+
+**Solución.**
+- **Interfaz.** `Habilidad` declara `activar(nave, contexto)`, `getNombre()` y `getDescripcion()`.
+- **Estrategias concretas.** `Overdrive`, `TiroCertero` y `Burbuja`.
+- **Contexto.** `Nave4` guarda la habilidad y la ejecuta sin saber cuál es.
+- **Quién elige.** `Personaje` crea la habilidad de cada personaje.
+
+![Strategy en las habilidades](uml/13_gm7_strategy_habilidades.png)
+
+### 7.3 Ataques de los jefes
+
+**Problema y contexto.** Cada jefe combina varios ataques y los cambia según su fase (normal o con escudo). Escribir cada combinación dentro de la clase del jefe hacía crecer una clase enorme y difícil de modificar.
+
+**Solución.**
+- **Interfaz.** `AtaqueJefe` declara `actualizar(jefe, contexto)`.
+- **Estrategias concretas.** Ocho ataques: apuntado, anillo, espiral, lluvia, láser, salto, embestida e invocar.
+- **Contexto.** `EnemigoJefe` guarda una lista de ataques por fase y cambia de lista en tiempo de ejecución cada vez que su vida cruza un umbral o se pone el escudo.
+- **Quién elige.** Cada valor de `TipoJefe` arma su propia combinación de ataques.
+
+![Strategy en los ataques de los jefes](uml/14_gm7_strategy_ataques_jefe.png)
+
+### Consecuencias
+- Se agregan armas, habilidades y ataques nuevos sin modificar `Nave4` ni `EnemigoJefe`.
+- El comportamiento cambia en ejecución: armas temporales, fases de los jefes.
+- Cada algoritmo queda en su propia clase pequeña y fácil de probar.
+
+---
+
+## 8. Patrón Template Method (GM-8)
+
+### Problema
+Las pantallas del juego base repetían en cada `render` el mismo código: limpiar la pantalla, configurar la cámara y abrir y cerrar el `SpriteBatch`. Además, cada una tenía los cinco métodos vacíos de la interfaz `Screen` de LibGDX.
+
+### Contexto
+El juego tiene 7 pantallas (menú, guía, selección, juego, opciones, game over y victoria). Todas siguen la misma secuencia en cada fotograma:
+1. Actualizar su lógica.
+2. Dibujar el fondo y su contenido con la cámara del mundo fijo.
+3. Decidir si cambian de pantalla.
+
+El orden de estos pasos no debe poder alterarse.
+
+### Solución
+`PantallaBase` es una clase abstracta que implementa `Screen` de LibGDX:
+- **Método plantilla.** Define `render(delta)` como **final**: limpia la pantalla, llama a `actualizar(delta)`, prepara la cámara (con un posible temblor), abre el batch, dibuja el fondo estrellado compartido, llama a `dibujar()`, cierra el batch y llama a `revisarTransicion()`.
+- **Pasos abstractos.** `actualizar(delta)` y `dibujar()`, que cada pantalla está obligada a implementar.
+- **Ganchos.** `revisarTransicion()`, que por defecto no hace nada, y `getTemblor()`, que por defecto devuelve 0.
+- **Métodos de `Screen` sin uso.** `PantallaBase` implementa una sola vez los métodos de `Screen` que casi nunca se usan (`pause`, `resume`, `hide`, `dispose`) y `resize`, que actualiza el viewport.
+
+Cada pantalla implementa los pasos a su manera:
+
+| Pantalla | `actualizar` | `dibujar` | `revisarTransicion` | Otros |
+|---|---|---|---|---|
+| `PantallaMenu` | Botones con mouse y teclado, código Konami | Título, récord y botones | Ir a jugar, guía, opciones o salir | `show` (música) |
+| `PantallaGuia` | Cambio de página | Las dos páginas de la guía | Volver al menú | `show` |
+| `PantallaSeleccion` | Elegir personaje | Las tres tarjetas | Empezar la partida | `show` |
+| `PantallaJuego` | Toda la lógica de la oleada | Entidades, HUD, intro y pausa | Game over, victoria u oleada siguiente | `getTemblor`, `show` |
+| `PantallaOpciones` | Cambiar volumen y dificultad | Las opciones | Volver a la pantalla anterior | — |
+| `PantallaGameOver` | Esperar F o ENTER | Puntaje y frase | Nueva partida o menú | `show` |
+| `PantallaVictoria` | Esperar ENTER o F | Mensaje, puntaje y récord | Volver a jugar (selección de personaje) | `show` |
+
+![Patrón Template Method](uml/15_gm8_template_method.png)
+
+### Consecuencias
+- El esqueleto del render existe una sola vez y nadie puede cambiar su orden.
+- Cada pantalla solo escribe lo que la diferencia, y LibGDX la sigue viendo como una `Screen` normal.
+
+---
+
+## 9. Patrón Builder (GM-9)
+
+### Problema
+En el juego base cada ronda se creaba con un constructor de 7 parámetros posicionales, y la pantalla de juego creaba los asteroides por su cuenta. Necesitábamos oleadas con muchas partes opcionales:
+- Número, nombre y aviso.
+- Cinco tipos de enemigos en distintas cantidades.
+- Un jefe opcional.
+- Velocidad, probabilidad de power-up y agresividad.
+
+También tres variantes (normal, hardcore y de jefe), sin que la pantalla tuviera que conocer las clases concretas de los enemigos.
+
+### Contexto
+La campaña tiene 20 oleadas que se arman con las mismas operaciones en distinto orden y con distintos valores. La velocidad de los enemigos depende de la oleada y de la dificultad elegida por el jugador.
+
+### Solución
+- **Builder (interfaz `NivelBuilder`).** Declara los pasos: `reset`, `definirNumero`, `definirNombre`, `agregarBots`, `agregarLags`, `agregarCheaters`, `agregarSpammers`, `agregarSnipers`, `agregarJefe`, `definirAviso`, `definirVelocidad`, `definirProbPowerUp`, `definirAgresividad` y `getResult`.
+- **Constructor concreto (`NivelPartidaBuilder`).**
+  - Recibe la dificultad, anota lo que pide cada paso y en `getResult()` **crea los enemigos**: bots, lags, cheaters, spammers, snipers y el jefe, con la velocidad de la oleada y la dificultad. Luego los mezcla y entrega el nivel terminado.
+  - Después de entregarlo se reinicia, así el mismo builder sirve para la oleada siguiente.
+  - Es el único lugar del juego que instancia a los enemigos de una oleada.
+- **Director (`DirectorNiveles`).** Tiene las tres recetas (`construirOleadaNormal`, `construirOleadaHardcore` y `construirOleadaJefe`). `construirOleada(numero)` elige la receta según el número de oleada. Trabaja con la interfaz `NivelBuilder`, no con la clase concreta.
+- **Producto (`Nivel`).**
+  - Guarda los datos de la oleada y sus enemigos ya creados.
+  - Su constructor y sus métodos de modificación tienen **visibilidad de paquete**: solo el Builder puede armarlo. Para el resto del juego es de solo lectura, y sus enemigos se entregan como lista no modificable.
+  - `PantallaJuego` solo toma esos enemigos y los hace entrar en grupos.
+
+![Patrón Builder](uml/16_gm9_builder.png)
+
+### Consecuencias
+- Las 20 oleadas se describen como recetas legibles en el Director, sin constructores gigantes.
+- Agregar una variante de oleada es agregar una receta. Agregar un dato nuevo (como la agresividad) es agregar un paso al Builder.
+- La pantalla de juego no conoce ninguna clase concreta de enemigo.
+
+---
+
+## 10. GitHub, commits e instrucciones de ejecución (GM-10)
+
+### Repositorio
+https://github.com/Katongo777/CalypsoGM
+
+El historial parte con la subida del juego base y suma más de 50 commits, repartidos entre los tres integrantes. Cada commit deja el proyecto compilando. Los commits de esta etapa abordan, en este orden:
+1. Compilación con Java 11.
+2. Equilibrio de la dificultad.
+3. Polimorfismo sin consultas de tipo.
+4. Récord fuera del Singleton.
+5. Builder que crea los enemigos.
+6. Encapsulamiento.
+7. Principio Abierto/Cerrado.
+8. Curva de dificultad por oleada.
+9. Diagramas UML generados desde el código.
+10. Este reporte.
+
+### Instalación y ejecución
+
+**Requisitos:** JDK 11 y conexión a internet la primera vez (Gradle descarga LibGDX).
+
+1. Clonar el repositorio con `git clone https://github.com/Katongo777/CalypsoGM.git` y entrar a la carpeta `CalypsoGM`.
+2. Ejecutar el juego: en Windows, `gradlew.bat lwjgl3:run`; en Linux o macOS, `./gradlew lwjgl3:run`.
+3. Para generar un `.jar` ejecutable: `gradlew.bat lwjgl3:jar`. El archivo queda en `lwjgl3/build/libs/`.
+4. Desde Eclipse o IntelliJ: importar como proyecto Gradle y ejecutar la clase `puppy.code.lwjgl3.Lwjgl3Launcher`.
+
+El récord y las opciones se guardan en `record.txt` y `opciones.txt`, que se crean solos al jugar. Para probar un jefe sin jugar todo, se puede iniciar con la opción de la JVM `-Dcalypso.oleada=20`.
+
+---
+
+## Anexo: medición de la dificultad
+
+Para ajustar los números usamos un **jugador automático**, una herramienta de desarrollo que no es parte del juego. Corre la campaña completa sin ventana, mueve la nave, dispara siempre y usa la habilidad cuando la barra está llena, y anota los golpes recibidos en cada oleada. Tiene tres estilos:
+
+- **Bueno:** mira todas las balas y los rayos y esquiva casi perfecto.
+- **Torpe:** decide cada 8 fotogramas, mira solo un poco hacia adelante y un 20 % de las veces se mueve al azar.
+- **Sin esquivar:** solo se pone debajo del enemigo más cercano. Sirve como "peor caso".
+
+Un jugador real debería quedar entre el torpe y el bueno. Las mediciones se hicieron con el Tryhard, en partidas completas de 20 oleadas.
+
+### Antes de los ajustes
+Las oleadas normales casi no hacían daño y todos los golpes llegaban en los jefes. Además, las tres dificultades se comportaban casi igual:
+
+| Bot y dificultad | Ganó | Hasta qué oleada llegó | Golpes promedio en oleadas 1-4 | En el Toxic (5) | En el Hacker (10) | En el Admin (20) |
+|---|---|---|---|---|---|---|
+| Torpe en Fácil | 4 de 4 | 20 | 0,1 | 0,2 | 1,2 | 1,5 |
+| Torpe en Normal | 3 de 4 | 20 | 0,1 | 1,0 | 1,2 | 2,0 |
+| Torpe en Difícil | 1 de 4 | 10 a 20 | 0,0 | 0,5 | 2,2 | 2,3 |
+| Sin esquivar en Fácil | 0 de 4 | 10 a 20 | 0,2 | 1,2 | 4,5 | 5,0 |
+| Sin esquivar en Normal | 0 de 4 | 5 a 13 | 0,2 | 1,5 | 3,7 | — |
+| Sin esquivar en Difícil | 0 de 4 | 5 a 20 | 0,1 | 1,8 | 4,0 | 2,0 |
+
+### Después de los ajustes
+Con la agresividad por oleada y las dificultades más separadas:
+
+| Bot y dificultad | Ganó | Hasta qué oleada llegó |
+|---|---|---|
+| Bueno en Difícil | 3 de 3 | 20 |
+| Torpe en Fácil | 3 de 4 | 20 |
+| Torpe en Normal | 4 de 4 | 20 |
+| Torpe en Difícil | 2 de 4 | 15 a 20 |
+| Sin esquivar en Fácil | 0 de 4 | 12 a 20 |
+| Sin esquivar en Normal | 0 de 4 | 8 a 19 |
+| Sin esquivar en Difícil | 0 de 4 | 5 a 8 |
+
+Ahora la dificultad elegida se nota: quien no esquiva llega lejos en Fácil, a mitad de campaña en Normal y cae en el primer jefe en Difícil. Los jefes siguen siendo los momentos más exigentes, pero cada bloque es un poco más duro que el anterior. Las oleadas hardcore aprietan más que las normales: el torpe recibe en promedio 0,26 golpes por oleada hardcore contra 0,20 en las normales, y el que no esquiva, 0,57 contra 0,25. Con el torpe en Normal, el promedio de golpes subió de 0,1 en las oleadas 1-4 a 0,5 en las 16-19, y llegó a 2 en el Sweaty y a 3 en el Admin.
+
+**Personajes.** El Camper era el más débil: con el torpe en Normal ganó solo 1 de 3 partidas. Con una vida más (5) ganó 2 de 3. El Main Support ganó 4 de 4 y el Tryhard entre 2 de 3 y 4 de 4, según la corrida. Son pocas partidas por combinación, así que estas cifras muestran tendencias, no porcentajes exactos.
+
+Los números de cada jefe, la fórmula de la agresividad y los multiplicadores de cada dificultad están en `docs/informe/C6_diseno_jefes_y_dificultad.md`. Esa hoja indica qué archivo cambiar para ajustar cada cosa.
