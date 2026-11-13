@@ -12,19 +12,25 @@ import puppy.code.modelo.enemigos.Enemigo;
 
     Así los enemigos no necesitan conocer a PantallaJuego: la pantalla les pasa este
     "contexto" y después recoge lo que dejaron (menos dependencias entre clases).
+
+    ENCAPSULAMIENTO: el contexto nunca entrega sus listas. Funciona como un buzón:
+    los enemigos y las habilidades DEJAN cosas (disparar, agregarRayo, limpiarBalasEnemigas)
+    y la pantalla las RECOGE una vez por fotograma (recogerBalasEnemigas...), recibiendo
+    una copia. Así nadie puede modificar el estado interno desde afuera.
 */
 public class ContextoCombate
 {
     private final Nave4 nave;
     private final Dificultad dificultad;
     private final int numeroOleada;
-    private final ArrayList<BalaEnemiga> balasEnemigas = new ArrayList<>();
-    private final ArrayList<Bullet> balasJugador = new ArrayList<>();
-    private final ArrayList<Rayo> rayos = new ArrayList<>();
-    private final ArrayList<Enemigo> nuevosEnemigos = new ArrayList<>();
-    private final ArrayList<String> mensajes = new ArrayList<>();
-    private final ArrayList<String> sonidos = new ArrayList<>();
-    private final ArrayList<float[]> premios = new ArrayList<>();
+    private final List<BalaEnemiga> balasEnemigas = new ArrayList<>();
+    private final List<Bullet> balasJugador = new ArrayList<>();
+    private final List<Rayo> rayos = new ArrayList<>();
+    private final List<Enemigo> nuevosEnemigos = new ArrayList<>();
+    private final List<String> mensajes = new ArrayList<>();
+    private final List<String> sonidos = new ArrayList<>();
+    private final List<float[]> premios = new ArrayList<>();
+    private boolean limpiarPedido = false;
 
     public ContextoCombate(Nave4 nave, Dificultad dificultad, int numeroOleada)
     {
@@ -45,6 +51,48 @@ public class ContextoCombate
     public void agregarRayo(Rayo rayo)
     {
         rayos.add(rayo);
+    }
+
+    // Una habilidad deja una bala del jugador (por ejemplo, el Tiro Certero)
+    public void agregarBalaJugador(Bullet bala)
+    {
+        balasJugador.add(bala);
+    }
+
+    // Pide borrar todas las balas enemigas (la Burbuja, o el jefe para darle un respiro al jugador)
+    public void limpiarBalasEnemigas()
+    {
+        balasEnemigas.clear();
+        limpiarPedido = true;
+    }
+
+    // La pantalla pregunta si alguien pidió limpiar; la respuesta se "consume" al leerla
+    public boolean recogerPedidoLimpieza()
+    {
+        boolean pedido = limpiarPedido;
+        limpiarPedido = false;
+        return pedido;
+    }
+
+    public List<BalaEnemiga> recogerBalasEnemigas()
+    {
+        List<BalaEnemiga> copia = new ArrayList<>(balasEnemigas);
+        balasEnemigas.clear();
+        return copia;
+    }
+
+    public List<Bullet> recogerBalasJugador()
+    {
+        List<Bullet> copia = new ArrayList<>(balasJugador);
+        balasJugador.clear();
+        return copia;
+    }
+
+    public List<Rayo> recogerRayos()
+    {
+        List<Rayo> copia = new ArrayList<>(rayos);
+        rayos.clear();
+        return copia;
     }
 
     // Un enemigo (el jefe) crea enemigos nuevos
@@ -121,7 +169,4 @@ public class ContextoCombate
     public float getNaveCentroY() { return nave.getY() + nave.getAlto() / 2; }
     public Nave4 getNave() { return nave; }
     public int getNumeroOleada() { return numeroOleada; }
-    public ArrayList<BalaEnemiga> getBalasEnemigas() { return balasEnemigas; }
-    public ArrayList<Bullet> getBalasJugador() { return balasJugador; }
-    public ArrayList<Rayo> getRayos() { return rayos; }
 }

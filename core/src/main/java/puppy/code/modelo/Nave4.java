@@ -42,6 +42,8 @@ public class Nave4 extends Entidad
 
     // Habilidad especial: una barra de energía (0 a 100) que se llena eliminando enemigos
     public static final float ENERGIA_MAXIMA = 100f;
+    private static final int VIDAS_MAXIMAS = 8;             // tope al curarse
+    private static final int VIDAS_MAXIMAS_ESPECIALES = 30; // tope absoluto (el modo dios da 30)
     private Habilidad habilidad;
     private float energia = 0;
 
@@ -270,12 +272,20 @@ public class Nave4 extends Entidad
     public boolean estaHerido() { return herido; }
     public Personaje getPersonaje() { return personaje; }
     public int getVidas() { return vidas; }
-    public void setVidas(int vidas) { this.vidas = vidas; }
+
+    // En vez de un setVidas sin reglas: solo se puede SUBIR hasta un mínimo (con tope), nunca bajar
+    public void asegurarVidas(int minimo)
+    {
+        vidas = Math.max(vidas, Math.min(minimo, VIDAS_MAXIMAS_ESPECIALES));
+    }
 
     // ---- Efectos que aplican los power-ups ----
     public void curar(int cantidad)
     {
-        vidas = Math.min(vidas + cantidad, 8);
+        if (cantidad > 0)
+        {
+            vidas = Math.min(vidas + cantidad, VIDAS_MAXIMAS);
+        }
     }
 
     public void activarEscudo(int fotogramas)
@@ -315,6 +325,10 @@ public class Nave4 extends Entidad
     // Cambio permanente de arma
     public void setEstrategia(EstrategiaDisparo estrategia)
     {
+        if (estrategia == null)
+        {
+            return; // la nave nunca se queda sin arma
+        }
         this.estrategia = estrategia;
         this.armaOriginal = estrategia;
         this.armaTemporalRestante = 0;

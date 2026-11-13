@@ -339,7 +339,7 @@ public class EnemigoJefe extends Enemigo
         escudoFrames = DURACION_MAXIMA_ESCUDO;
         estadoEmbestida = 0;
         apoyo.clear();
-        contexto.getBalasEnemigas().clear(); // respiro para el jugador
+        contexto.limpiarBalasEnemigas(); // respiro para el jugador
         contexto.anunciar("¡" + nombre + " SE PONE UN ESCUDO!");
         contexto.pedirPremio(getX() + getAncho() / 2 - 24, getY()); // al empezar el escudo también cae un premio para recuperarte
         contexto.reproducir("jefe_aviso.wav");
@@ -349,7 +349,7 @@ public class EnemigoJefe extends Enemigo
     {
         escudoFrames = 0;
         framesDestello = 20;
-        contexto.getBalasEnemigas().clear();
+        contexto.limpiarBalasEnemigas();
         contexto.anunciar("¡ESCUDO ROTO! FASE " + (fase + 1));
         contexto.pedirPremio(getX() + getAncho() / 2 - 24, getY()); // romper el escudo da un power-up
         contexto.reproducir("explosion.ogg");

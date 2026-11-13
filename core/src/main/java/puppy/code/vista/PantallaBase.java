@@ -28,9 +28,10 @@ import puppy.code.SpaceNavigation;
 */
 public abstract class PantallaBase implements Screen
 {
-    protected final SpaceNavigation game;
-    protected final OrthographicCamera camera;
-    protected final Viewport viewport;
+    // Privados: las pantallas hijas los usan a través de getGame() y getViewport()
+    private final SpaceNavigation game;
+    private final OrthographicCamera camera;
+    private final Viewport viewport;
 
     protected PantallaBase(SpaceNavigation game)
     {
@@ -62,6 +63,17 @@ public abstract class PantallaBase implements Screen
         game.getBatch().end();
 
         revisarTransicion();                                 // paso 3
+    }
+
+    // Acceso para las pantallas hijas (solo lectura: las referencias no se pueden cambiar)
+    protected SpaceNavigation getGame()
+    {
+        return game;
+    }
+
+    protected Viewport getViewport()
+    {
+        return viewport;
     }
 
     // Pasos obligatorios: cada pantalla hija DEBE implementarlos

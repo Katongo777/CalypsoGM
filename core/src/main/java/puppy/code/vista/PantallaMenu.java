@@ -49,12 +49,12 @@ public class PantallaMenu extends PantallaBase
 		// Easter egg: el código Konami activa el modo dios (más vidas)
 		if (konami.actualizar())
 		{
-			game.setModoDios(true);
+			getGame().activarModoDios();
 			tiempoMensaje = 240;
 			GestorRecursos.getInstance().reproducirSonido("explosion.ogg");
 		}
 
-		eleccion = botones.actualizar(viewport);
+		eleccion = botones.actualizar(getViewport());
 		if (Gdx.input.isKeyJustPressed(Input.Keys.H))
 		{
 			eleccion = GUIA; // atajo de teclado
@@ -64,8 +64,8 @@ public class PantallaMenu extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		SpriteBatch batch = game.getBatch();
-		BitmapFont font = game.getFont();
+		SpriteBatch batch = getGame().getBatch();
+		BitmapFont font = getGame().getFont();
 
 		// Título
 		font.getData().setScale(4f);
@@ -78,7 +78,7 @@ public class PantallaMenu extends PantallaBase
 		font.setColor(Color.WHITE);
 
 		font.getData().setScale(1.5f);
-		font.draw(batch, "Récord actual: " + game.getHighScore(), 0, 570, Constantes.ANCHO, Align.center, false);
+		font.draw(batch, "Récord actual: " + getGame().getHighScore(), 0, 570, Constantes.ANCHO, Align.center, false);
 
 		botones.dibujar(batch, font);
 
@@ -104,22 +104,22 @@ public class PantallaMenu extends PantallaBase
 		if (eleccion == JUGAR)
 		{
 			// La primera vez se muestra la guía; después se va directo a elegir personaje
-			if (game.isGuiaVista())
+			if (getGame().isGuiaVista())
 			{
-				game.setScreen(new PantallaSeleccion(game));
+				getGame().setScreen(new PantallaSeleccion(getGame()));
 			}
 			else
 			{
-				game.setScreen(new PantallaGuia(game));
+				getGame().setScreen(new PantallaGuia(getGame()));
 			}
 		}
 		else if (eleccion == GUIA)
 		{
-			game.setScreen(new PantallaGuia(game));
+			getGame().setScreen(new PantallaGuia(getGame()));
 		}
 		else if (eleccion == OPCIONES)
 		{
-			game.setScreen(new PantallaOpciones(game, this));
+			getGame().setScreen(new PantallaOpciones(getGame(), this));
 		}
 		else if (eleccion == SALIR)
 		{

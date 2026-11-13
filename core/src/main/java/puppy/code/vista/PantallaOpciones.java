@@ -44,7 +44,7 @@ public class PantallaOpciones extends PantallaBase
 	@Override
 	protected void actualizar(float delta)
 	{
-		int clic = botones.actualizar(viewport);
+		int clic = botones.actualizar(getViewport());
 		if (clic == VOLVER)
 		{
 			volver = true;
@@ -114,8 +114,8 @@ public class PantallaOpciones extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		SpriteBatch batch = game.getBatch();
-		BitmapFont font = game.getFont();
+		SpriteBatch batch = getGame().getBatch();
+		BitmapFont font = getGame().getFont();
 
 		font.getData().setScale(3f);
 		font.setColor(1f, 0.85f, 0.2f, 1f);
@@ -138,7 +138,7 @@ public class PantallaOpciones extends PantallaBase
 		if (volver)
 		{
 			opciones.guardar();
-			game.setScreen(volverA);
+			getGame().setScreen(volverA);
 		}
 	}
 }

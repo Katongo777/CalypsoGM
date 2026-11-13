@@ -48,8 +48,8 @@ public class PantallaGameOver extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		SpriteBatch batch = game.getBatch();
-		BitmapFont font = game.getFont();
+		SpriteBatch batch = getGame().getBatch();
+		BitmapFont font = getGame().getFont();
 
 		font.getData().setScale(3.5f);
 		font.setColor(1f, 0.3f, 0.3f, 1f);
@@ -69,7 +69,7 @@ public class PantallaGameOver extends PantallaBase
 		}
 		else
 		{
-			font.draw(batch, "Récord: " + game.getHighScore(), 0, 370,
+			font.draw(batch, "Récord: " + getGame().getHighScore(), 0, 370,
 					Constantes.ANCHO, Align.center, false);
 		}
 
@@ -84,7 +84,7 @@ public class PantallaGameOver extends PantallaBase
 		if (Gdx.input.isKeyJustPressed(Input.Keys.F) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)
 				|| Gdx.input.isTouched())
 		{
-			game.setScreen(new PantallaSeleccion(game));
+			getGame().setScreen(new PantallaSeleccion(getGame()));
 		}
 	}
 

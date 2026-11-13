@@ -47,7 +47,8 @@ public abstract class Entidad implements Colisionable
     @Override
     public Rectangle getArea()
     {
-        Rectangle r = spr.getBoundingRectangle();
+        // Siempre un Rectangle NUEVO: si se devolviera el del Sprite, otra clase podría moverlo desde afuera
+        Rectangle r = new Rectangle(spr.getBoundingRectangle());
         if (factorHitbox == 1f)
         {
             return r;

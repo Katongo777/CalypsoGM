@@ -34,13 +34,13 @@ public class PantallaGuia extends PantallaBase
 	public PantallaGuia(SpaceNavigation game)
 	{
 		super(game);
-		game.setGuiaVista(true); // ya la vio: no se vuelve a mostrar sola
+		getGame().marcarGuiaVista(); // ya la vio: no se vuelve a mostrar sola
 	}
 
 	@Override
 	protected void actualizar(float delta)
 	{
-		eleccion = botones.actualizar(viewport);
+		eleccion = botones.actualizar(getViewport());
 		if (eleccion == 0)
 		{
 			pagina = pagina == 1 ? 2 : 1;
@@ -51,8 +51,8 @@ public class PantallaGuia extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		SpriteBatch batch = game.getBatch();
-		BitmapFont font = game.getFont();
+		SpriteBatch batch = getGame().getBatch();
+		BitmapFont font = getGame().getFont();
 
 		font.getData().setScale(3f);
 		font.setColor(1f, 0.85f, 0.2f, 1f);
@@ -156,11 +156,11 @@ public class PantallaGuia extends PantallaBase
 	{
 		if (eleccion == 1)
 		{
-			game.setScreen(new PantallaSeleccion(game));
+			getGame().setScreen(new PantallaSeleccion(getGame()));
 		}
 		else if (eleccion == 2 || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
 		{
-			game.setScreen(new PantallaMenu(game));
+			getGame().setScreen(new PantallaMenu(getGame()));
 		}
 	}
 

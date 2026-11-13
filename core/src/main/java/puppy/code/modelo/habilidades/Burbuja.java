@@ -14,7 +14,7 @@ public class Burbuja implements Habilidad
     {
         nave.curar(1);
         nave.activarEscudo(300);
-        contexto.getBalasEnemigas().clear();
+        contexto.limpiarBalasEnemigas();
     }
 
     @Override

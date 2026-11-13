@@ -1,6 +1,7 @@
 package puppy.code.vista;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
@@ -84,12 +85,12 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 	private float xBaseGrupo = 0;         // por dónde entra el grupo actual
 	private int indiceEnGrupo = 0;
 	private int enfriamientoPowerUp = 0;  // cuando es mayor que 0 no caen power-ups
-	private ArrayList<Enemigo> pendientes = new ArrayList<>(); // enemigos que todavía no han entrado
-	private ArrayList<Enemigo> enemigos = new ArrayList<>();   // enemigos que ya están en pantalla
-	private ArrayList<Bullet> balas;   // las balas del jugador (están en el contexto del combate)
+	private final List<Enemigo> pendientes = new ArrayList<>(); // enemigos que todavía no han entrado
+	private final List<Enemigo> enemigos = new ArrayList<>();   // enemigos que ya están en pantalla
+	private final List<Bullet> balas = new ArrayList<>();       // las balas del jugador
 	private ContextoCombate contexto;
-	private ArrayList<BalaEnemiga> balasEnemigas;
-	private ArrayList<Rayo> rayos;
+	private final List<BalaEnemiga> balasEnemigas = new ArrayList<>();
+	private final List<Rayo> rayos = new ArrayList<>();
 	private Particulas particulas = new Particulas();
 	private int vidasPrevias;            // para notar cuándo se pierde una vida
 	private int temblorFrames = 0;       // efectos de impacto: temblor, destello y congelado
@@ -99,17 +100,17 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 	private int destelloTotal = 1;
 	private Color destelloColor = Color.WHITE;
 	private int congelarFrames = 0;      // "hit-stop": el juego se detiene un instante para dar peso al golpe
-	private ArrayList<PowerUp> powerUps = new ArrayList<>();
+	private final List<PowerUp> powerUps = new ArrayList<>();
 
 	// Arma una partida nueva: oleada 1, la nave del personaje elegido y puntaje 0
 	public static PantallaJuego nuevaPartida(SpaceNavigation game, Personaje personaje)
 	{
 		Nave4 nave = new Nave4(personaje);
 		// la dificultad elegida en las opciones puede dar vidas extra
-		nave.setVidas(nave.getVidas() + GestorRecursos.getInstance().getOpciones().getDificultad().getVidasExtra());
+		nave.curar(GestorRecursos.getInstance().getOpciones().getDificultad().getVidasExtra());
 		if (game.isModoDios())
 		{
-			nave.setVidas(30); // easter egg del código Konami: 30 vidas y el BFG 9000
+			nave.asegurarVidas(30); // easter egg del código Konami: 30 vidas y el BFG 9000
 			nave.setEstrategia(new BFG());
 		}
 
@@ -132,16 +133,13 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		GestorRecursos recursos = GestorRecursos.getInstance();
 		dificultad = recursos.getOpciones().getDificultad();
 		contexto = new ContextoCombate(nave, dificultad, nivel.getNumero());
-		balasEnemigas = contexto.getBalasEnemigas();
-		rayos = contexto.getRayos();
-		balas = contexto.getBalasJugador();
 		recursos.reproducirMusica(pistaDeseada);
 		vidasPrevias = nave.getVidas();
 
 		nave.aparecer();
-		if (nivel.tieneJefe() && nave.getVidas() < 3)
+		if (nivel.tieneJefe())
 		{
-			nave.setVidas(3); // antes de cada jefe te dan hasta 3 vidas
+			nave.asegurarVidas(3); // antes de cada jefe te dan hasta 3 vidas
 		}
 		prepararEnemigos();
 	}
@@ -227,7 +225,7 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		}
 		if (pausado)
 		{
-			accionPausa = menuPausa.actualizar(viewport);
+			accionPausa = menuPausa.actualizar(getViewport());
 			if (accionPausa == 0)
 			{
 				pausado = false; // CONTINUAR
@@ -293,6 +291,7 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 			temblar(12, 6);
 			destellar(new Color(1f, 0.9f, 0.4f, 1f), 14);
 		}
+		recogerDelContexto();
 
 		// Mantener el espacio apretado dispara (la nave controla la cadencia con su cooldown)
 		if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
@@ -362,7 +361,8 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 				}
 			}
 		}
-		java.util.List<Enemigo> nuevos = contexto.recogerNuevos();
+		recogerDelContexto();
+		List<Enemigo> nuevos = contexto.recogerNuevos();
 		if (enemigos.size() < MAX_ENEMIGOS)
 		{
 			enemigos.addAll(nuevos);
@@ -441,7 +441,7 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 			{
 				continue;
 			}
-			// perdió vida o game over
+			// perdió vida o getGame() over
 			if (nave.revisarColision(enemigos.get(i)))
 			{
 				locutor.registrarDanio();
@@ -495,6 +495,18 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 			score += bono;
 			locutor.anunciar("¡OLEADA COMPLETADA! +" + bono);
 		}
+	}
+
+	// Recoge lo que dejaron en el contexto los enemigos y las habilidades (balas, rayos, pedidos de limpieza)
+	private void recogerDelContexto()
+	{
+		if (contexto.recogerPedidoLimpieza())
+		{
+			balasEnemigas.clear();
+		}
+		balasEnemigas.addAll(contexto.recogerBalasEnemigas());
+		rayos.addAll(contexto.recogerRayos());
+		balas.addAll(contexto.recogerBalasJugador());
 	}
 
 	// ---------- Efectos que piden los enemigos (interfaz EfectosCombate) ----------
@@ -610,47 +622,47 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 	@Override
 	protected void dibujar()
 	{
-		hud.dibujar(game.getBatch(), game.getFont(), nave, nivel, score, game.getHighScore(),
+		hud.dibujar(getGame().getBatch(), getGame().getFont(), nave, nivel, score, getGame().getHighScore(),
 				pendientes.size() + enemigos.size());
 
 		for (Bullet b : balas)
 		{
-			b.dibujar(game.getBatch());
+			b.dibujar(getGame().getBatch());
 		}
 
 		for (PowerUp p : powerUps)
 		{
-			p.dibujar(game.getBatch());
+			p.dibujar(getGame().getBatch());
 		}
 
-		nave.dibujar(game.getBatch());
+		nave.dibujar(getGame().getBatch());
 
 		for (Rayo r : rayos)
 		{
-			r.dibujar(game.getBatch());
+			r.dibujar(getGame().getBatch());
 		}
 
 		for (BalaEnemiga be : balasEnemigas)
 		{
-			be.dibujar(game.getBatch());
+			be.dibujar(getGame().getBatch());
 		}
 
 		for (Enemigo enemigo : enemigos)
 		{
-			enemigo.dibujar(game.getBatch());
-			enemigo.dibujarInterfaz(game.getBatch(), game.getFont()); // por ejemplo, la barra del jefe
+			enemigo.dibujar(getGame().getBatch());
+			enemigo.dibujarInterfaz(getGame().getBatch(), getGame().getFont()); // por ejemplo, la barra del jefe
 		}
 
-		particulas.dibujar(game.getBatch());
+		particulas.dibujar(getGame().getBatch());
 
 		if (destelloFrames > 0)
 		{
-			game.getBatch().setColor(destelloColor.r, destelloColor.g, destelloColor.b, 0.4f * destelloFrames / destelloTotal);
-			game.getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
-			game.getBatch().setColor(Color.WHITE);
+			getGame().getBatch().setColor(destelloColor.r, destelloColor.g, destelloColor.b, 0.4f * destelloFrames / destelloTotal);
+			getGame().getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
+			getGame().getBatch().setColor(Color.WHITE);
 		}
 
-		locutor.dibujar(game.getBatch(), game.getFont());
+		locutor.dibujar(getGame().getBatch(), getGame().getFont());
 
 		if (fase == Fase.INTRO)
 		{
@@ -666,32 +678,32 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 	// Cartel del comienzo de la oleada (se desvanece al final de la intro)
 	private void dibujarIntro()
 	{
-		BitmapFont font = game.getFont();
+		BitmapFont font = getGame().getFont();
 		float transparencia = Math.min(1f, (DURACION_INTRO - tiempoFase) / 30f);
 
 		font.getData().setScale(3.5f);
 		font.setColor(1f, 0.85f, 0.2f, transparencia);
-		font.draw(game.getBatch(), "OLEADA " + nivel.getNumero() + "/" + DirectorNiveles.TOTAL_OLEADAS, 0, Constantes.ALTO / 2 + 140,
+		font.draw(getGame().getBatch(), "OLEADA " + nivel.getNumero() + "/" + DirectorNiveles.TOTAL_OLEADAS, 0, Constantes.ALTO / 2 + 140,
 				Constantes.ANCHO, Align.center, false);
 
 		font.getData().setScale(2f);
 		font.setColor(0.4f, 0.9f, 1f, transparencia);
-		font.draw(game.getBatch(), nivel.getNombre(), 0, Constantes.ALTO / 2 + 50, Constantes.ANCHO, Align.center, false);
+		font.draw(getGame().getBatch(), nivel.getNombre(), 0, Constantes.ALTO / 2 + 50, Constantes.ANCHO, Align.center, false);
 
 		// Aviso de la oleada (enemigo nuevo, jefe, etc.)
 		font.getData().setScale(1.5f);
 		font.setColor(1f, 0.6f, 0.2f, transparencia);
-		font.draw(game.getBatch(), nivel.getAviso(), 0, Constantes.ALTO / 2 - 10, Constantes.ANCHO, Align.center, false);
+		font.draw(getGame().getBatch(), nivel.getAviso(), 0, Constantes.ALTO / 2 - 10, Constantes.ANCHO, Align.center, false);
 
 		// Antes de que entre el primer enemigo: "preparate"; después: "¡a pelear!"
 		font.getData().setScale(2f);
 		font.setColor(1f, 1f, 1f, transparencia);
 		String mensaje = tiempoOleada < RETRASO_ENTRADA ? "¡PREPÁRATE!" : "¡ELIMINA A TODOS!";
-		font.draw(game.getBatch(), mensaje, 0, Constantes.ALTO / 2 - 90, Constantes.ANCHO, Align.center, false);
+		font.draw(getGame().getBatch(), mensaje, 0, Constantes.ALTO / 2 - 90, Constantes.ANCHO, Align.center, false);
 
 		font.getData().setScale(1f);
 		font.setColor(0.7f, 0.7f, 0.8f, transparencia);
-		font.draw(game.getBatch(), "ENTER: saltar", 0, Constantes.ALTO / 2 - 160, Constantes.ANCHO, Align.center, false);
+		font.draw(getGame().getBatch(), "ENTER: saltar", 0, Constantes.ALTO / 2 - 160, Constantes.ANCHO, Align.center, false);
 
 		font.setColor(Color.WHITE);
 		font.getData().setScale(1.5f);
@@ -700,15 +712,15 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 	// Oscurece la pantalla y muestra el cartel de pausa
 	private void dibujarPausa()
 	{
-		game.getBatch().setColor(0, 0, 0, 0.7f);
-		game.getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
-		game.getBatch().setColor(Color.WHITE);
-		game.getFont().getData().setScale(3f);
-		game.getFont().draw(game.getBatch(), "PAUSA - AFK", 0, Constantes.ALTO - 160, Constantes.ANCHO, Align.center, false);
-		menuPausa.dibujar(game.getBatch(), game.getFont());
-		game.getFont().getData().setScale(1f);
-		game.getFont().draw(game.getBatch(), "P o ESC: continuar", 0, 130, Constantes.ANCHO, Align.center, false);
-		game.getFont().getData().setScale(1.5f);
+		getGame().getBatch().setColor(0, 0, 0, 0.7f);
+		getGame().getBatch().draw(GestorRecursos.getInstance().getPixelBlanco(), 0, 0, Constantes.ANCHO, Constantes.ALTO);
+		getGame().getBatch().setColor(Color.WHITE);
+		getGame().getFont().getData().setScale(3f);
+		getGame().getFont().draw(getGame().getBatch(), "PAUSA - AFK", 0, Constantes.ALTO - 160, Constantes.ANCHO, Align.center, false);
+		menuPausa.dibujar(getGame().getBatch(), getGame().getFont());
+		getGame().getFont().getData().setScale(1f);
+		getGame().getFont().draw(getGame().getBatch(), "P o ESC: continuar", 0, 130, Constantes.ANCHO, Align.center, false);
+		getGame().getFont().getData().setScale(1.5f);
 	}
 
 	// ---------- PASO 3 del template (gancho): ¿hay que cambiar de pantalla? ----------
@@ -718,34 +730,34 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		if (accionPausa == 1)
 		{
 			accionPausa = -1;
-			game.setScreen(new PantallaOpciones(game, this));
+			getGame().setScreen(new PantallaOpciones(getGame(), this));
 			return;
 		}
 		if (accionPausa == 2)
 		{
 			accionPausa = -1;
-			game.setScreen(new PantallaMenu(game));
+			getGame().setScreen(new PantallaMenu(getGame()));
 			return;
 		}
 
 		if (nave.estaDestruido())
 		{
 			// Se guarda el récord (si corresponde) y se muestra la pantalla de fin
-			boolean nuevoRecord = game.registrarPuntaje(score);
-			game.setScreen(new PantallaGameOver(game, score, nuevoRecord));
+			boolean nuevoRecord = getGame().registrarPuntaje(score);
+			getGame().setScreen(new PantallaGameOver(getGame(), score, nuevoRecord));
 		}
 		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA
 				&& nivel.getNumero() >= DirectorNiveles.TOTAL_OLEADAS)
 		{
 			// Se completó la última oleada: se guarda el récord y se muestra la victoria
-			boolean nuevoRecord = game.registrarPuntaje(score);
-			game.setScreen(new PantallaVictoria(game, score, nuevoRecord));
+			boolean nuevoRecord = getGame().registrarPuntaje(score);
+			getGame().setScreen(new PantallaVictoria(getGame(), score, nuevoRecord));
 		}
 		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA)
 		{
 			// Oleada completada: el Director arma la siguiente y se sigue con la misma nave
 			DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder(dificultad));
-			game.setScreen(new PantallaJuego(game, director.construirOleada(nivel.getNumero() + 1), nave, score, locutor));
+			getGame().setScreen(new PantallaJuego(getGame(), director.construirOleada(nivel.getNumero() + 1), nave, score, locutor));
 		}
 	}
 

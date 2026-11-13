@@ -17,7 +17,7 @@ public class TiroCertero implements Habilidad
         float x = nave.getX() + nave.getAncho() / 2;
         float y = nave.getY() + nave.getAlto() - 8;
         // 100 de ancho, 320 de alto, 12 de daño y atraviesa: golpea a todos los enemigos de la columna
-        contexto.getBalasJugador().add(new Bullet(x - 50, y, 0, 26,
+        contexto.agregarBalaJugador(new Bullet(x - 50, y, 0, 26,
                 GestorRecursos.getInstance().getTextura("bala_railgun.png"), 100, 320, 12, true));
     }
 

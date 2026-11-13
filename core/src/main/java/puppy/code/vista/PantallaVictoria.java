@@ -64,8 +64,8 @@ public class PantallaVictoria extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		SpriteBatch batch = game.getBatch();
-		BitmapFont font = game.getFont();
+		SpriteBatch batch = getGame().getBatch();
+		BitmapFont font = getGame().getFont();
 
 		Texture pixel = GestorRecursos.getInstance().getPixelBlanco();
 		for (int i = 0; i < CANTIDAD_CONFETI; i++)
@@ -93,7 +93,7 @@ public class PantallaVictoria extends PantallaBase
 		}
 		else
 		{
-			font.draw(batch, "Récord: " + game.getHighScore(), 0, 380,
+			font.draw(batch, "Récord: " + getGame().getHighScore(), 0, 380,
 					Constantes.ANCHO, Align.center, false);
 		}
 
@@ -107,7 +107,7 @@ public class PantallaVictoria extends PantallaBase
 	{
 		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.F))
 		{
-			game.setScreen(new PantallaSeleccion(game));
+			getGame().setScreen(new PantallaSeleccion(getGame()));
 		}
 	}
 

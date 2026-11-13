@@ -76,5 +76,11 @@ public class Opciones
     public void setVolumenEfectos(float v) { volumenEfectos = limitar(v); }
 
     public Dificultad getDificultad() { return dificultad; }
-    public void setDificultad(Dificultad dificultad) { this.dificultad = dificultad; }
+    public void setDificultad(Dificultad dificultad)
+    {
+        if (dificultad != null)
+        {
+            this.dificultad = dificultad;
+        }
+    }
 }

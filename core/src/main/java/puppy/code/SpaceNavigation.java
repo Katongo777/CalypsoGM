@@ -58,16 +58,18 @@ public class SpaceNavigation extends Game {
 		return guiaVista;
 	}
 
-	public void setGuiaVista(boolean guiaVista) {
-		this.guiaVista = guiaVista;
+	// Una vez vista, la guía no vuelve a aparecer sola en esta sesión (no hay forma de "desverla")
+	public void marcarGuiaVista() {
+		guiaVista = true;
 	}
 
 	public boolean isModoDios() {
 		return modoDios;
 	}
 
-	public void setModoDios(boolean modoDios) {
-		this.modoDios = modoDios;
+	// Lo activa el código Konami del menú
+	public void activarModoDios() {
+		modoDios = true;
 	}
 
 	// El récord lo guarda GestorRecord (en un archivo): las pantallas se lo piden al juego

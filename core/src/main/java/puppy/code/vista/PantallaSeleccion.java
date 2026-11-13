@@ -46,7 +46,7 @@ public class PantallaSeleccion extends PantallaBase
 		}
 
 		// Con el mouse: al pasar por encima se elige la tarjeta y un clic en la elegida inicia la partida
-		Vector2 mouse = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+		Vector2 mouse = getViewport().unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
 		boolean mouseSeMovio = mouse.x != ultimoMouseX || mouse.y != ultimoMouseY;
 		ultimoMouseX = mouse.x;
 		ultimoMouseY = mouse.y;
@@ -70,8 +70,8 @@ public class PantallaSeleccion extends PantallaBase
 	@Override
 	protected void dibujar()
 	{
-		SpriteBatch batch = game.getBatch();
-		BitmapFont font = game.getFont();
+		SpriteBatch batch = getGame().getBatch();
+		BitmapFont font = getGame().getFont();
 
 		font.getData().setScale(2f);
 		font.draw(batch, "ELIGE TU PERSONAJE", 0, Constantes.ALTO - 60, Constantes.ANCHO, Align.center, false);
@@ -137,11 +137,11 @@ public class PantallaSeleccion extends PantallaBase
 	{
 		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || iniciar)
 		{
-			game.setScreen(PantallaJuego.nuevaPartida(game, personajes[seleccionado]));
+			getGame().setScreen(PantallaJuego.nuevaPartida(getGame(), personajes[seleccionado]));
 		}
 		else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
 		{
-			game.setScreen(new PantallaMenu(game));
+			getGame().setScreen(new PantallaMenu(getGame()));
 		}
 	}
 
