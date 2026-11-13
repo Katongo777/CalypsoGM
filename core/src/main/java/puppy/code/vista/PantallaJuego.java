@@ -130,7 +130,7 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		// Los recursos vienen del Singleton: se cargan una sola vez y se reutilizan
 		GestorRecursos recursos = GestorRecursos.getInstance();
 		dificultad = recursos.getOpciones().getDificultad();
-		contexto = new ContextoCombate(nave, dificultad, nivel.getNumero());
+		contexto = new ContextoCombate(nave, dificultad, nivel.getNumero(), nivel.getAgresividad());
 		recursos.reproducirMusica(pistaDeseada);
 		vidasPrevias = nave.getVidas();
 

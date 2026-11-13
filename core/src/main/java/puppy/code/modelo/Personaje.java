@@ -21,7 +21,7 @@ import puppy.code.modelo.habilidades.TiroCertero;
 public enum Personaje
 {
     TRYHARD("Tryhard", "nave_tryhard.png", 4, 7f, "Suda hasta en el tutorial.", Pistola::new, Overdrive::new),
-    CAMPER("Camper", "nave_camper.png", 4, 6f, "Una bala, una baja.", Railgun::new, TiroCertero::new),
+    CAMPER("Camper", "nave_camper.png", 5, 6f, "Una bala, una baja.", Railgun::new, TiroCertero::new),
     SUPPORT("Main Support", "nave_support.png", 5, 6f, "Cura con amor... y con perdigones.", Escopeta::new, Burbuja::new);
 
     private final String nombre;

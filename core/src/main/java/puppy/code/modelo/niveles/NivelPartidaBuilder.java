@@ -118,6 +118,12 @@ public class NivelPartidaBuilder implements NivelBuilder
         nivel.definirProbPowerUp(probabilidad);
     }
 
+    @Override
+    public void definirAgresividad(float agresividad)
+    {
+        nivel.definirAgresividad(agresividad);
+    }
+
     /*
         Último paso: crea los enemigos anotados y entrega el Nivel terminado.
         Después de entregarlo empieza uno nuevo, para que el mismo Builder se pueda

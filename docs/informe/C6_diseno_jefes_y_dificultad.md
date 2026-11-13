@@ -4,7 +4,7 @@ Este documento no responde a un requerimiento GM: es la "hoja de datos" del jueg
 
 ## 1. Los jefes
 
-Cada jefe es un `EnemigoJefe` con un `TipoJefe` (nombre, imagen, vida, puntos, velocidad) y una lista de ataques por fase. Cuando su vida baja de un umbral pasa de fase y se pone un **escudo**: es invulnerable, lanza un ataque especial e invoca apoyo. El escudo se rompe al derrotar a todo el apoyo (o a los 15 segundos) y el jefe sigue con ataques más fuertes y más rápido.
+Cada jefe es un `EnemigoJefe` con un `TipoJefe` (nombre, imagen, vida, puntos, velocidad) y una lista de ataques por fase. Cuando su vida baja de un umbral pasa de fase y se pone un **escudo**: es invulnerable, lanza un ataque especial e invoca apoyo. El escudo se rompe al derrotar a todo el apoyo (o a los 10 segundos) y el jefe sigue con ataques más fuertes y más rápido.
 
 | Jefe | Oleada | Vida | Umbrales de fase | Idea |
 |---|---|---|---|---|
@@ -13,7 +13,7 @@ Cada jefe es un `EnemigoJefe` con un `TipoJefe` (nombre, imagen, vida, puntos, v
 | **El Sweaty** | 15 | 48 | 66 % y 33 % | Espirales de balas y embestidas en picada. Dos escudos con Cheaters de apoyo |
 | **El Admin** | 20 | 55 | 66 % y 33 % | Rayos de "ban" (verticales y horizontales), anillos, balas apuntadas y apoyo variado. Tres fases |
 
-Los ataques de cada fase están en `EnemigoJefe.armarAtaques()` (`modelo/enemigos/EnemigoJefe.java`). Cada ataque recibe sus números en el constructor:
+Los ataques de cada fase los arma cada jefe en `TipoJefe.armarAtaques()` (`modelo/enemigos/TipoJefe.java`): cada valor del enum define los suyos. Cada ataque recibe sus números en el constructor:
 
 | Ataque | Parámetros | Qué hace |
 |---|---|---|
@@ -53,16 +53,19 @@ Los enemigos normales se mueven solo en la parte de arriba (`Constantes.ZONA_ENE
 | Spammers (normal, desde la 6) | `1 + (oleada - 6) / 4` | 3 |
 | Snipers (normal, desde la 11) | `1 + (oleada - 11) / 4` | 3 |
 | Probabilidad de power-up | 0.12 normal, 0.18 hardcore, 0.10 jefe | |
+| Agresividad (qué tan seguido y rápido disparan) | `0.85 + 0.05 × (oleada - 1)` (hardcore: +0.3; jefes: 0.85 fija) | 1.8 |
 
-Oleadas hardcore: 4, 8, 12, 17 y 19. Jefes: 5, 10, 15 y 20. Además, cada dificultad de las opciones cambia la velocidad de los enemigos, cuánto disparan y cuántas vidas tienes (`modelo/Dificultad.java`):
+Oleadas hardcore: 4, 8, 12, 17 y 19. Jefes: 5, 10, 15 y 20.
 
-| Dificultad | Velocidad enemigos | Tiempo entre disparos | Vidas |
-|---|---|---|---|
-| Fácil | ×0.75 | ×2.0 (disparan la mitad) | +3 |
-| Normal | ×0.9 | ×1.4 | +1 |
-| Difícil | ×1.0 | ×1.0 | +0 |
+La **agresividad** es parte de cada `Nivel` (la define el Director con el Builder) y la aplica `ContextoCombate`: divide el tiempo entre disparos de los enemigos y acelera un poco sus balas (un 20 % de la rapidez depende de ella). Así las primeras oleadas enseñan, las últimas exigen y las hardcore se notan.
 
-Además, en Fácil las balas enemigas van al 70 % de su velocidad (85 % en Normal, 100 % en Difícil) y los rayos avisan más tiempo.
+Además, cada dificultad de las opciones cambia la partida (`modelo/Dificultad.java`):
+
+| Dificultad | Velocidad enemigos | Tiempo entre disparos | Velocidad de balas | Aviso de rayos | Vidas |
+|---|---|---|---|---|---|
+| Fácil | ×0.75 | ×2.0 (disparan la mitad) | ×0.70 | ×1.5 | +3 |
+| Normal | ×0.9 | ×1.3 | ×0.9 | ×1.2 | +1 |
+| Difícil | ×1.1 | ×0.8 (disparan más) | ×1.15 | ×0.9 | +0 |
 
 ## 4. Otros números que se pueden ajustar
 
@@ -71,7 +74,7 @@ Además, en Fácil las balas enemigas van al 70 % de su velocidad (85 % en Norma
 | Invulnerabilidad después de un golpe | `Nave4.tiempoHeridoMax` | 180 fotogramas (3 s) |
 | Daño mientras es invulnerable | `Nave4.disparar()` | la mitad |
 | Hitbox de la nave | `Nave4` (`setFactorHitbox`) | 45 % |
-| Vidas iniciales | `Personaje` | Tryhard 4, Camper 4, Main Support 5 (más las de la dificultad) |
+| Vidas iniciales | `Personaje` | Tryhard 4, Camper 5, Main Support 5 (más las de la dificultad) |
 | Cadencia de la Railgun | `Railgun.getCooldown()` | 32 fotogramas |
 | Escudo del jefe | `EnemigoJefe.DURACION_MAXIMA_ESCUDO` | 600 fotogramas (10 s) |
 | Ayuda con 1 vida | `PantallaJuego.soltarPowerUp()` | probabilidad de power-up ×3 y siempre es una pizza |

@@ -26,6 +26,7 @@ public class Nivel
     private String nombre = "Oleada";
     private String aviso = "";           // texto que se muestra en la intro (por ejemplo, un enemigo nuevo)
     private float probPowerUp = 0f;
+    private float agresividad = 1f;      // 1 = normal; más = los enemigos disparan más seguido y más rápido
     private Enemigo jefe;                // null si la oleada no tiene jefe
     private final List<Enemigo> enemigos = new ArrayList<>();
 
@@ -55,6 +56,11 @@ public class Nivel
         this.probPowerUp = Math.max(0f, Math.min(probabilidad, 1f));
     }
 
+    void definirAgresividad(float agresividad)
+    {
+        this.agresividad = Math.max(0.5f, Math.min(agresividad, 2f));
+    }
+
     void definirJefe(Enemigo jefe)
     {
         this.jefe = jefe;
@@ -76,6 +82,7 @@ public class Nivel
     public String getNombre() { return nombre; }
     public String getAviso() { return aviso; }
     public float getProbPowerUp() { return probPowerUp; }
+    public float getAgresividad() { return agresividad; }
 
     public boolean tieneJefe()
     {

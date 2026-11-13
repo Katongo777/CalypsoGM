@@ -24,6 +24,13 @@ public class DirectorNiveles
 {
     public static final int TOTAL_OLEADAS = 20;
 
+    // Cómo sube la agresividad de los enemigos a lo largo de la campaña
+    private static final float AGRESIVIDAD_INICIAL = 0.85f;
+    private static final float AGRESIVIDAD_POR_OLEADA = 0.05f;
+    private static final float AGRESIVIDAD_MAXIMA = 1.8f;
+    private static final float EXTRA_HARDCORE = 0.3f;  // las oleadas hardcore aprietan un poco más
+    private static final float AGRESIVIDAD_JEFE = 0.85f; // los jefes ya traen sus propios ataques
+
     // Nombre de cada oleada (el índice 0 es la oleada 1)
     private static final String[] NOMBRES = {
         "Bots en el lobby",
@@ -71,6 +78,16 @@ public class DirectorNiveles
         return Math.min(0.9f + 0.025f * numero, 1.35f);
     }
 
+    /*
+        La agresividad (qué tan seguido y qué tan rápido disparan) también crece de a poco:
+        las primeras oleadas enseñan y las últimas exigen. Así la dificultad sube parejo en
+        toda la campaña y no se concentra solo en los jefes.
+    */
+    private float agresividadDe(int numero)
+    {
+        return Math.min(AGRESIVIDAD_INICIAL + AGRESIVIDAD_POR_OLEADA * (numero - 1), AGRESIVIDAD_MAXIMA);
+    }
+
     // Receta 1: oleada normal. Va creciendo de a poco con el número de oleada
     public Nivel construirOleadaNormal(int numero)
     {
@@ -96,6 +113,7 @@ public class DirectorNiveles
         }
         builder.definirVelocidad(velocidadDe(numero));
         builder.definirProbPowerUp(0.12f);
+        builder.definirAgresividad(agresividadDe(numero));
 
         // Las oleadas donde aparece algo nuevo avisan qué es
         if (numero == 1)
@@ -140,6 +158,7 @@ public class DirectorNiveles
         }
         builder.definirVelocidad(velocidadDe(numero) + 0.1f);
         builder.definirProbPowerUp(0.18f);
+        builder.definirAgresividad(agresividadDe(numero) + EXTRA_HARDCORE);
         builder.definirAviso("HARDCORE: más enemigos y más rápidos, pero caen más power-ups");
         return builder.getResult();
     }
@@ -170,6 +189,7 @@ public class DirectorNiveles
         }
         builder.definirVelocidad(1.2f);
         builder.definirProbPowerUp(0.1f);
+        builder.definirAgresividad(AGRESIVIDAD_JEFE);
         if (numero == TOTAL_OLEADAS)
         {
             builder.definirAviso("¡ÚLTIMO JEFE! Si lo derrotas, ganas el juego");

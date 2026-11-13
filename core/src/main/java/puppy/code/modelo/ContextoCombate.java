@@ -23,6 +23,7 @@ public class ContextoCombate
     private final Nave4 nave;
     private final Dificultad dificultad;
     private final int numeroOleada;
+    private final float agresividad;   // la de la oleada: 1 = normal
     private final List<BalaEnemiga> balasEnemigas = new ArrayList<>();
     private final List<Bullet> balasJugador = new ArrayList<>();
     private final List<Rayo> rayos = new ArrayList<>();
@@ -31,20 +32,24 @@ public class ContextoCombate
     private final List<String> sonidos = new ArrayList<>();
     private final List<float[]> premios = new ArrayList<>();
     private boolean limpiarPedido = false;
+    private static final float FACTOR_BALAS_BASE = 0.8f; // parte de la rapidez de bala que no depende de la agresividad
 
-    public ContextoCombate(Nave4 nave, Dificultad dificultad, int numeroOleada)
+    public ContextoCombate(Nave4 nave, Dificultad dificultad, int numeroOleada, float agresividad)
     {
         this.nave = nave;
         this.dificultad = dificultad;
         this.numeroOleada = numeroOleada;
+        this.agresividad = agresividad;
     }
 
     // Un enemigo deja una bala disparada
     // La dificultad también cambia la velocidad de todas las balas enemigas (en Fácil son más lentas)
     public void disparar(BalaEnemiga bala)
     {
-        bala.setXVel(bala.getXVel() * dificultad.getMultBalas());
-        bala.setYVel(bala.getYVel() * dificultad.getMultBalas());
+        // la dificultad elegida y la agresividad de la oleada cambian qué tan rápido van las balas
+        float factor = dificultad.getMultBalas() * (FACTOR_BALAS_BASE + (1 - FACTOR_BALAS_BASE) * agresividad);
+        bala.setXVel(bala.getXVel() * factor);
+        bala.setYVel(bala.getYVel() * factor);
         balasEnemigas.add(bala);
     }
 
@@ -154,15 +159,16 @@ public class ContextoCombate
         return copia;
     }
 
+    // Más agresividad = menos tiempo entre disparos
     public int intervalo(int fotogramas)
     {
-        return Math.max(30, Math.round(fotogramas * dificultad.getMultIntervalo()));
+        return Math.max(30, Math.round(fotogramas * dificultad.getMultIntervalo() / agresividad));
     }
 
     // Igual, pero para ataques muy rápidos (como la espiral), que pueden ser de pocos fotogramas
     public int intervaloRapido(int fotogramas)
     {
-        return Math.max(3, Math.round(fotogramas * dificultad.getMultIntervalo()));
+        return Math.max(3, Math.round(fotogramas * dificultad.getMultIntervalo() / agresividad));
     }
 
     public float getNaveCentroX() { return nave.getX() + nave.getAncho() / 2; }

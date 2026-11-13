@@ -42,6 +42,9 @@ public interface NivelBuilder
 
     void definirProbPowerUp(float probabilidad);
 
+    // Qué tan seguido y qué tan rápido disparan los enemigos de esta oleada (1 = normal)
+    void definirAgresividad(float agresividad);
+
     // Entrega el nivel terminado
     Nivel getResult();
 }

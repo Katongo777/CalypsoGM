@@ -7,9 +7,10 @@ package puppy.code.modelo;
 */
 public enum Dificultad
 {
+    // Cada dificultad cambia de verdad la partida: velocidad, ritmo de disparo, balas, aviso de rayos y vidas
     FACIL("Fácil", 0.75f, 2.0f, 3, 0.70f, 1.5f),
-    NORMAL("Normal", 0.9f, 1.4f, 1, 0.85f, 1.25f),
-    DIFICIL("Difícil", 1.0f, 1.0f, 0, 1.0f, 1.0f);
+    NORMAL("Normal", 0.9f, 1.3f, 1, 0.9f, 1.2f),
+    DIFICIL("Difícil", 1.1f, 0.8f, 0, 1.15f, 0.9f);
 
     private final String nombre;
     private final float multVelocidad;   // multiplica la velocidad de los enemigos
