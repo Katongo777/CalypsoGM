@@ -7,10 +7,10 @@ package puppy.code.modelo.enemigos;
 */
 public enum TipoJefe
 {
-    TOXIC("EL TOXIC", "jefe_toxic.png", 45, 500, 2f),
-    HACKER("EL HACKER", "jefe_hacker.png", 70, 1000, 2.2f),
-    SWEATY("EL SWEATY", "jefe_sweaty.png", 100, 1500, 2.6f),
-    ADMIN("EL ADMIN", "jefe_admin.png", 150, 3000, 2.4f);
+    TOXIC("EL TOXIC", "jefe_toxic.png", 28, 500, 2f),
+    HACKER("EL HACKER", "jefe_hacker.png", 36, 1000, 2.2f),
+    SWEATY("EL SWEATY", "jefe_sweaty.png", 48, 1500, 2.6f),
+    ADMIN("EL ADMIN", "jefe_admin.png", 55, 3000, 2.4f);
 
     private final String nombre;
     private final String archivoImagen;

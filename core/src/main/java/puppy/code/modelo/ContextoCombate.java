@@ -24,6 +24,7 @@ public class ContextoCombate
     private final ArrayList<Enemigo> nuevosEnemigos = new ArrayList<>();
     private final ArrayList<String> mensajes = new ArrayList<>();
     private final ArrayList<String> sonidos = new ArrayList<>();
+    private final ArrayList<float[]> premios = new ArrayList<>();
 
     public ContextoCombate(Nave4 nave, Dificultad dificultad, int numeroOleada)
     {
@@ -33,8 +34,11 @@ public class ContextoCombate
     }
 
     // Un enemigo deja una bala disparada
+    // La dificultad también cambia la velocidad de todas las balas enemigas (en Fácil son más lentas)
     public void disparar(BalaEnemiga bala)
     {
+        bala.setXVel(bala.getXVel() * dificultad.getMultBalas());
+        bala.setYVel(bala.getYVel() * dificultad.getMultBalas());
         balasEnemigas.add(bala);
     }
 
@@ -83,6 +87,25 @@ public class ContextoCombate
     }
 
     // Tiempo entre disparos ajustado por la dificultad (los valores ya vienen en fotogramas)
+    // Tiempo de aviso de un rayo ajustado por la dificultad (en Fácil hay más tiempo para esquivar)
+    public int avisoRayo(int fotogramas)
+    {
+        return Math.round(fotogramas * dificultad.getMultAviso());
+    }
+
+    // El jefe pide un premio (un power-up) en una posición, por ejemplo al romperse su escudo
+    public void pedirPremio(float x, float y)
+    {
+        premios.add(new float[] { x, y });
+    }
+
+    public List<float[]> recogerPremios()
+    {
+        List<float[]> copia = new ArrayList<>(premios);
+        premios.clear();
+        return copia;
+    }
+
     public int intervalo(int fotogramas)
     {
         return Math.max(30, Math.round(fotogramas * dificultad.getMultIntervalo()));

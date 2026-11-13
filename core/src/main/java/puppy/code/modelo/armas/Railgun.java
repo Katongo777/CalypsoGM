@@ -28,7 +28,7 @@ public class Railgun implements EstrategiaDisparo
     @Override
     public int getCooldown()
     {
-        return 45;
+        return 32;
     }
 
     @Override

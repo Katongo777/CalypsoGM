@@ -18,9 +18,9 @@ import puppy.code.modelo.habilidades.TiroCertero;
 */
 public enum Personaje
 {
-    TRYHARD("Tryhard", "nave_tryhard.png", 3, 7f, "Suda hasta en el tutorial."),
-    CAMPER("Camper", "nave_camper.png", 2, 5f, "Una bala, una baja."),
-    SUPPORT("Main Support", "nave_support.png", 4, 6f, "Cura con amor... y con perdigones.");
+    TRYHARD("Tryhard", "nave_tryhard.png", 4, 7f, "Suda hasta en el tutorial."),
+    CAMPER("Camper", "nave_camper.png", 4, 6f, "Una bala, una baja."),
+    SUPPORT("Main Support", "nave_support.png", 5, 6f, "Cura con amor... y con perdigones.");
 
     private final String nombre;
     private final String archivoNave;

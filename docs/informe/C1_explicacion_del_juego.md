@@ -41,9 +41,9 @@ Pasar las **20 oleadas** de la campaña eliminando a todos los enemigos de cada 
 ### Personajes
 | Personaje | Arma inicial | Vidas | Velocidad | Frase |
 |---|---|---|---|---|
-| **Tryhard** | Pistola | 3 | 7 | "Suda hasta en el tutorial." |
-| **Camper** | Railgun | 2 | 5 | "Una bala, una baja." |
-| **Main Support** | Escopeta | 4 | 6 | "Cura con amor... y con perdigones." |
+| **Tryhard** | Pistola | 4 | 7 | "Suda hasta en el tutorial." |
+| **Camper** | Railgun | 4 | 6 | "Una bala, una baja." |
+| **Main Support** | Escopeta | 5 | 6 | "Cura con amor... y con perdigones." |
 
 ### Armas
 | Arma | Cómo dispara |
@@ -68,7 +68,7 @@ Pasar las **20 oleadas** de la campaña eliminando a todos los enemigos de cada 
 | **Cheater** | Grande y resistente, con lentes oscuros; al morir se parte en 2 Lags | 3 | 50 |
 | **Spammer** (desde la 6) | Globo de chat que flota de lado a lado y dispara ráfagas de 3 balas | 1 | 20 |
 | **Sniper** (desde la 11) | Se detiene, apunta con una línea roja y dispara una bala rápida | 2 | 30 |
-| **Jefes** (5, 10, 15 y 20) | El Toxic, El Hacker, El Sweaty y El Admin. Barra de vida arriba, ataques propios y un escudo en cada cambio de fase | 45 / 70 / 100 / 150 | 500 / 1000 / 1500 / 3000 |
+| **Jefes** (5, 10, 15 y 20) | El Toxic, El Hacker, El Sweaty y El Admin. Barra de vida arriba, ataques propios y un escudo en cada cambio de fase | 28 / 36 / 48 / 55 | 500 / 1000 / 1500 / 3000 |
 
 Los enemigos normales se mueven solo en la parte de arriba de la pantalla; abajo queda espacio para maniobrar. Los jefes no desaparecen al chocar con tu nave y siempre dejan un power-up al morir. El detalle de cada jefe está en `C6_diseno_jefes_y_dificultad.md`.
 

@@ -64,7 +64,7 @@ public class Nave4 extends Entidad
         this.armaOriginal = estrategia;
         this.habilidad = personaje.crearHabilidad();
         setTamano(64, 64);
-        setFactorHitbox(0.55f); // solo el cuerpo de la nave cuenta para los choques
+        setFactorHitbox(0.45f); // solo el cuerpo de la nave cuenta para los choques
     }
 
     @Override

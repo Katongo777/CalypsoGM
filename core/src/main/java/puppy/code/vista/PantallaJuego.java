@@ -144,6 +144,10 @@ public class PantallaJuego extends PantallaBase
 		vidasPrevias = nave.getVidas();
 
 		nave.aparecer();
+		if (nivel.tieneJefe() && nave.getVidas() < 3)
+		{
+			nave.setVidas(3); // antes de cada jefe te dan hasta 3 vidas
+		}
 		crearEnemigos(recursos);
 	}
 
@@ -384,7 +388,8 @@ public class PantallaJuego extends PantallaBase
 								enemigo.getColorExplosion(), 14, 5f);
 						if (enemigo instanceof EnemigoJefe)
 						{
-							locutor.anunciar("¡JEFE ELIMINADO! GG");
+							locutor.anunciar("¡JEFE ELIMINADO! +2 VIDAS");
+							nave.curar(2); // premio por derrotar a un jefe
 							particulas.explosion(enemigo.getX() + enemigo.getAncho() / 2, enemigo.getY() + enemigo.getAlto() / 2,
 									enemigo.getColorExplosion(), 90, 11f);
 							temblar(40, 12);
@@ -454,6 +459,12 @@ public class PantallaJuego extends PantallaBase
 				balasEnemigas.remove(i);
 				i--;
 			}
+		}
+
+		// el jefe puede pedir premios (por ejemplo, al romperse su escudo)
+		for (float[] premio : contexto.recogerPremios())
+		{
+			agregarPowerUp(premio[0], premio[1], nave.getVidas() <= 2);
 		}
 
 		// los jefes pueden dejar mensajes y sonidos ("¡SE PONE UN ESCUDO!")
@@ -581,30 +592,39 @@ public class PantallaJuego extends PantallaBase
 		return temblorFrames > 0 ? temblorAmplitud * temblorFrames / temblorTotal : 0;
 	}
 
-	// Con cierta probabilidad (la define el Nivel) el enemigo muerto suelta un power-up al azar
+	/*
+		Con cierta probabilidad (la define el Nivel) el enemigo muerto suelta un power-up al azar.
+		Si al jugador le queda 1 sola vida la probabilidad sube al triple y el power-up es una pizza (+1 vida).
+	*/
 	private void soltarPowerUp(Enemigo muerto)
 	{
 		boolean seguro = muerto.sueltaPowerUpSeguro();
-		if (seguro || (enfriamientoPowerUp == 0 && MathUtils.random() < nivel.getProbPowerUp()))
+		boolean apuros = nave.getVidas() <= 1;
+		float probabilidad = nivel.getProbPowerUp() * (apuros ? 3 : 1);
+		if (seguro || (enfriamientoPowerUp == 0 && MathUtils.random() < probabilidad))
 		{
 			enfriamientoPowerUp = ENFRIAMIENTO_POWERUP;
-			float x = muerto.getX() + muerto.getAncho() / 2 - 24;
-			float y = muerto.getY();
-			switch (MathUtils.random(3))
-			{
-				case 0:
-					powerUps.add(new Pizza(x, y));
-					break;
-				case 1:
-					powerUps.add(new SillaGamer(x, y));
-					break;
-				case 2:
-					powerUps.add(new LootBox(x, y));
-					break;
-				default:
-					powerUps.add(new RGB(x, y));
-					break;
-			}
+			agregarPowerUp(muerto.getX() + muerto.getAncho() / 2 - 24, muerto.getY(), apuros);
+		}
+	}
+
+	// Crea un power-up al azar en esa posición (si "pizza" es true, siempre es una pizza)
+	private void agregarPowerUp(float x, float y, boolean pizza)
+	{
+		switch (pizza ? 0 : MathUtils.random(3))
+		{
+			case 0:
+				powerUps.add(new Pizza(x, y));
+				break;
+			case 1:
+				powerUps.add(new SillaGamer(x, y));
+				break;
+			case 2:
+				powerUps.add(new LootBox(x, y));
+				break;
+			default:
+				powerUps.add(new RGB(x, y));
+				break;
 		}
 	}
 

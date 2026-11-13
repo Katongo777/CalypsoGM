@@ -8,10 +8,10 @@ Cada jefe es un `EnemigoJefe` con un `TipoJefe` (nombre, imagen, vida, puntos, v
 
 | Jefe | Oleada | Vida | Umbrales de fase | Idea |
 |---|---|---|---|---|
-| **El Toxic** | 5 | 45 | 50 % | Escupe veneno apuntado e invoca Lags. Escudo "MUTE": llueve veneno y llegan 3 bots |
-| **El Hacker** | 10 | 70 | 50 % | Se teletransporta soltando anillos de balas. Escudo "firewall": 3 rayos verticales y 2 Spammers |
-| **El Sweaty** | 15 | 100 | 66 % y 33 % | Espirales de balas y embestidas en picada. Dos escudos con Cheaters de apoyo |
-| **El Admin** | 20 | 150 | 66 % y 33 % | Rayos de "ban" (verticales y horizontales), anillos, balas apuntadas y apoyo variado. Tres fases |
+| **El Toxic** | 5 | 28 | 50 % | Escupe veneno apuntado e invoca un Lag de vez en cuando. Escudo "MUTE": llueve veneno (poco) y llegan 2 bots |
+| **El Hacker** | 10 | 36 | 50 % | Se teletransporta soltando anillos de balas. Escudo "firewall": 2 rayos verticales y 1 Spammer |
+| **El Sweaty** | 15 | 48 | 66 % y 33 % | Espirales de balas y embestidas en picada. Dos escudos con Cheaters de apoyo |
+| **El Admin** | 20 | 55 | 66 % y 33 % | Rayos de "ban" (verticales y horizontales), anillos, balas apuntadas y apoyo variado. Tres fases |
 
 Los ataques de cada fase están en `EnemigoJefe.armarAtaques()` (`modelo/enemigos/EnemigoJefe.java`). Cada ataque recibe sus números en el constructor:
 
@@ -21,12 +21,14 @@ Los ataques de cada fase están en `EnemigoJefe.armarAtaques()` (`modelo/enemigo
 | `AtaqueAnillo(intervalo, cantidad, rapidez, color)` | | Anillo de balas desde el centro del jefe |
 | `AtaqueEspiral(cadaFrames, brazos, rapidez, color)` | | Remolino continuo de balas |
 | `AtaqueLluvia(intervalo, rapidez, color)` | | Balas que caen desde arriba |
-| `AtaqueLaser(intervalo, cantidad, horizontal)` | | Rayos con aviso de 75 fotogramas; el primero cae sobre la nave |
+| `AtaqueLaser(intervalo, cantidad, horizontal)` | | Rayos con aviso de 75 fotogramas (×1.25 en Normal y ×1.5 en Fácil); el primero cae sobre la nave |
 | `AtaqueInvocar(primeraEn, intervalo, tipo, cantidad)` | intervalo 0 = una sola vez | Invoca Bots, Lags, Cheaters, Spammers o Snipers |
 | `AtaqueSalto(intervalo, balas, color)` | | Teletransporte + anillo |
 | `AtaqueEmbestida(intervalo)` | | Aviso (tiembla en rojo) y picada hacia abajo |
 
-*Nota:* los intervalos se miden en fotogramas (60 = 1 segundo) y se ajustan con la dificultad (`ContextoCombate.intervalo()`).
+*Nota:* los intervalos se miden en fotogramas (60 = 1 segundo) y se ajustan con la dificultad (`ContextoCombate.intervalo()`). La dificultad también cambia la **velocidad de las balas** (`ContextoCombate.disparar()`) y el **tiempo de aviso de los rayos** (`ContextoCombate.avisoRayo()`).
+
+**Ayudas durante un jefe:** el escudo dura como máximo 10 segundos; al empezar y al romperse el escudo cae un power-up (una pizza si te quedan 2 vidas o menos); antes de cada jefe te dan hasta 3 vidas; y al derrotarlo ganas +2 vidas.
 
 ## 2. Los enemigos normales
 
@@ -52,13 +54,15 @@ Los enemigos normales se mueven solo en la parte de arriba (`Constantes.ZONA_ENE
 | Snipers (normal, desde la 11) | `1 + (oleada - 11) / 4` | 3 |
 | Probabilidad de power-up | 0.12 normal, 0.18 hardcore, 0.10 jefe | |
 
-Oleadas hardcore: 4, 8, 12, 17 y 19. Jefes: 5, 10, 15 y 20. Además, cada dificultad de las opciones multiplica la velocidad y el intervalo de disparo (`modelo/Dificultad.java`):
+Oleadas hardcore: 4, 8, 12, 17 y 19. Jefes: 5, 10, 15 y 20. Además, cada dificultad de las opciones cambia la velocidad de los enemigos, cuánto disparan y cuántas vidas tienes (`modelo/Dificultad.java`):
 
 | Dificultad | Velocidad enemigos | Tiempo entre disparos | Vidas |
 |---|---|---|---|
-| Fácil | ×0.85 | ×1.4 (disparan menos) | +1 |
-| Normal | ×1 | ×1 | +0 |
-| Difícil | ×1.15 | ×0.75 (disparan más) | +0 |
+| Fácil | ×0.75 | ×2.0 (disparan la mitad) | +3 |
+| Normal | ×0.9 | ×1.4 | +1 |
+| Difícil | ×1.0 | ×1.0 | +0 |
+
+Además, en Fácil las balas enemigas van al 70 % de su velocidad (85 % en Normal, 100 % en Difícil) y los rayos avisan más tiempo.
 
 ## 4. Otros números que se pueden ajustar
 
@@ -66,7 +70,11 @@ Oleadas hardcore: 4, 8, 12, 17 y 19. Jefes: 5, 10, 15 y 20. Además, cada dificu
 |---|---|---|
 | Invulnerabilidad después de un golpe | `Nave4.tiempoHeridoMax` | 180 fotogramas (3 s) |
 | Daño mientras es invulnerable | `Nave4.disparar()` | la mitad |
-| Hitbox de la nave | `Nave4` (`setFactorHitbox`) | 55 % |
+| Hitbox de la nave | `Nave4` (`setFactorHitbox`) | 45 % |
+| Vidas iniciales | `Personaje` | Tryhard 4, Camper 4, Main Support 5 (más las de la dificultad) |
+| Cadencia de la Railgun | `Railgun.getCooldown()` | 32 fotogramas |
+| Escudo del jefe | `EnemigoJefe.DURACION_MAXIMA_ESCUDO` | 600 fotogramas (10 s) |
+| Ayuda con 1 vida | `PantallaJuego.soltarPowerUp()` | probabilidad de power-up ×3 y siempre es una pizza |
 | Energía por baja | `PantallaJuego` (`getPuntos() * 0.8`) | un Bot da 8 %, un Cheater 40 % |
 | Energía perdida al ser golpeado | `Nave4.recibirDano()` | 25 % |
 | Enfriamiento entre power-ups | `PantallaJuego.ENFRIAMIENTO_POWERUP` | 600 fotogramas (10 s) |

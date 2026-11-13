@@ -47,7 +47,7 @@ public class AtaqueLaser implements AtaqueJefe
             {
                 posicion = horizontal ? MathUtils.random(120, Constantes.ALTO - 120) : MathUtils.random(80, Constantes.ANCHO - 80);
             }
-            contexto.agregarRayo(new Rayo(posicion, horizontal, 75, 40, 70));
+            contexto.agregarRayo(new Rayo(posicion, horizontal, contexto.avisoRayo(75), 40, 70));
         }
         contexto.reproducir("laser.wav");
     }

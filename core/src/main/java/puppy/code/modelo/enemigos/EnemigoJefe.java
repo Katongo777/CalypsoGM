@@ -35,7 +35,7 @@ import puppy.code.util.GestorRecursos;
 */
 public class EnemigoJefe extends Enemigo
 {
-    private static final int DURACION_MAXIMA_ESCUDO = 900; // 15 segundos
+    private static final int DURACION_MAXIMA_ESCUDO = 600; // 10 segundos
 
     private final TipoJefe tipo;
     private final String nombre;
@@ -82,45 +82,45 @@ public class EnemigoJefe extends Enemigo
         switch (tipo)
         {
             case TOXIC:
-                // Escupe veneno apuntado, invoca Lags y, a la mitad de vida, se pone un escudo "MUTE"
+                // Escupe veneno apuntado, invoca un Lag de vez en cuando y, a la mitad de vida, se pone un escudo "MUTE"
                 umbrales = new float[] { 0.5f };
-                fase(new AtaqueApuntado(100, 1, 4.5f, verde), new AtaqueInvocar(300, 420, Apoyo.LAG, 2));
-                escudo(new AtaqueLluvia(18, 4.5f, verde), new AtaqueInvocar(60, 0, Apoyo.BOT, 3));
-                fase(new AtaqueApuntado(70, 3, 4.8f, verde), new AtaqueLluvia(45, 4f, verde),
-                        new AtaqueInvocar(240, 360, Apoyo.LAG, 2));
+                fase(new AtaqueApuntado(130, 1, 4f, verde), new AtaqueInvocar(420, 600, Apoyo.LAG, 1));
+                escudo(new AtaqueLluvia(40, 3.6f, verde), new AtaqueInvocar(60, 0, Apoyo.BOT, 2));
+                fase(new AtaqueApuntado(110, 2, 4.2f, verde), new AtaqueLluvia(75, 3.4f, verde),
+                        new AtaqueInvocar(420, 500, Apoyo.LAG, 1));
                 break;
 
             case HACKER:
                 // Se teletransporta soltando anillos de balas; en el escudo crea un "firewall" de rayos
                 umbrales = new float[] { 0.5f };
-                fase(new AtaqueApuntado(80, 3, 5f, verdeHacker), new AtaqueSalto(240, 10, verdeHacker));
-                escudo(new AtaqueLaser(100, 3, false), new AtaqueInvocar(60, 0, Apoyo.SPAMMER, 2));
-                fase(new AtaqueApuntado(60, 3, 5.5f, verdeHacker), new AtaqueSalto(180, 14, verdeHacker),
-                        new AtaqueLaser(180, 2, false));
+                fase(new AtaqueApuntado(120, 2, 4.2f, verdeHacker), new AtaqueSalto(300, 8, verdeHacker));
+                escudo(new AtaqueLaser(170, 2, false), new AtaqueInvocar(60, 0, Apoyo.SPAMMER, 1));
+                fase(new AtaqueApuntado(100, 2, 4.6f, verdeHacker), new AtaqueSalto(260, 10, verdeHacker),
+                        new AtaqueLaser(260, 1, false));
                 break;
 
             case SWEATY:
                 // Espirales de balas y embestidas; dos escudos (a 2/3 y a 1/3 de vida)
                 umbrales = new float[] { 0.66f, 0.33f };
-                fase(new AtaqueEspiral(7, 2, 3.2f, naranja), new AtaqueEmbestida(420));
-                escudo(new AtaqueEspiral(6, 3, 3.5f, naranja), new AtaqueInvocar(60, 0, Apoyo.CHEATER, 2));
-                fase(new AtaqueEspiral(6, 2, 3.8f, naranja), new AtaqueEmbestida(300), new AtaqueApuntado(110, 3, 5f, naranja));
-                escudo(new AtaqueAnillo(80, 16, 3.8f, naranja), new AtaqueInvocar(60, 0, Apoyo.CHEATER, 2));
-                fase(new AtaqueEspiral(5, 3, 4f, naranja), new AtaqueEmbestida(240), new AtaqueApuntado(80, 5, 5.2f, naranja));
+                fase(new AtaqueEspiral(15, 2, 2.8f, naranja), new AtaqueEmbestida(720));
+                escudo(new AtaqueEspiral(14, 2, 3f, naranja), new AtaqueInvocar(60, 0, Apoyo.CHEATER, 1));
+                fase(new AtaqueEspiral(14, 2, 3f, naranja), new AtaqueEmbestida(600), new AtaqueApuntado(170, 2, 4.2f, naranja));
+                escudo(new AtaqueAnillo(160, 10, 3f, naranja), new AtaqueInvocar(60, 0, Apoyo.CHEATER, 1));
+                fase(new AtaqueEspiral(13, 2, 3.2f, naranja), new AtaqueEmbestida(520), new AtaqueApuntado(140, 2, 4.4f, naranja));
                 break;
 
             default: // ADMIN
                 // El jefe final: rayos de "ban", anillos y apoyo; tres fases y dos escudos
                 umbrales = new float[] { 0.66f, 0.33f };
-                fase(new AtaqueLaser(150, 2, false), new AtaqueApuntado(90, 3, 5f, rojo));
-                escudo(new AtaqueLaser(100, 2, false), new AtaqueLaser(140, 1, true),
-                        new AtaqueInvocar(60, 0, Apoyo.SPAMMER, 2), new AtaqueInvocar(150, 0, Apoyo.LAG, 2));
-                fase(new AtaqueLaser(120, 2, false), new AtaqueLaser(200, 1, true), new AtaqueAnillo(150, 14, 3.5f, rojo),
-                        new AtaqueApuntado(90, 3, 5.2f, rojo));
-                escudo(new AtaqueAnillo(80, 16, 3.8f, rojo), new AtaqueLaser(90, 2, false),
-                        new AtaqueInvocar(60, 0, Apoyo.CHEATER, 2), new AtaqueInvocar(200, 0, Apoyo.SNIPER, 1));
-                fase(new AtaqueLaser(90, 3, false), new AtaqueLaser(150, 2, true), new AtaqueEspiral(8, 2, 3.5f, rojo),
-                        new AtaqueApuntado(70, 5, 5.5f, rojo), new AtaqueAnillo(140, 18, 3.6f, rojo));
+                fase(new AtaqueLaser(200, 1, false), new AtaqueApuntado(130, 2, 4.4f, rojo));
+                escudo(new AtaqueLaser(170, 1, false), new AtaqueLaser(240, 1, true),
+                        new AtaqueInvocar(60, 0, Apoyo.SPAMMER, 1), new AtaqueInvocar(150, 0, Apoyo.LAG, 1));
+                fase(new AtaqueLaser(190, 2, false), new AtaqueLaser(300, 1, true), new AtaqueAnillo(220, 10, 3f, rojo),
+                        new AtaqueApuntado(130, 2, 4.5f, rojo));
+                escudo(new AtaqueAnillo(180, 10, 3.2f, rojo), new AtaqueLaser(220, 1, false),
+                        new AtaqueInvocar(60, 0, Apoyo.CHEATER, 1), new AtaqueInvocar(200, 0, Apoyo.SNIPER, 1));
+                fase(new AtaqueLaser(200, 2, false), new AtaqueLaser(320, 1, true), new AtaqueEspiral(16, 2, 3f, rojo),
+                        new AtaqueApuntado(130, 2, 4.6f, rojo), new AtaqueAnillo(260, 10, 3.1f, rojo));
                 break;
         }
     }
@@ -277,7 +277,7 @@ public class EnemigoJefe extends Enemigo
         if (estadoEmbestida == 0 && !tieneEscudo())
         {
             estadoEmbestida = 1;
-            framesAvisoEmbestida = 50;
+            framesAvisoEmbestida = 70;
             xEmbestida = xObjetivo;
         }
     }
@@ -333,6 +333,7 @@ public class EnemigoJefe extends Enemigo
         apoyo.clear();
         contexto.getBalasEnemigas().clear(); // respiro para el jugador
         contexto.anunciar("¡" + nombre + " SE PONE UN ESCUDO!");
+        contexto.pedirPremio(getX() + getAncho() / 2 - 24, getY()); // al empezar el escudo también cae un premio para recuperarte
         contexto.reproducir("jefe_aviso.wav");
     }
 
@@ -342,6 +343,7 @@ public class EnemigoJefe extends Enemigo
         framesDestello = 20;
         contexto.getBalasEnemigas().clear();
         contexto.anunciar("¡ESCUDO ROTO! FASE " + (fase + 1));
+        contexto.pedirPremio(getX() + getAncho() / 2 - 24, getY()); // romper el escudo da un power-up
         contexto.reproducir("explosion.ogg");
     }
 
