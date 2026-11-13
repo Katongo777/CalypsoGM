@@ -53,27 +53,28 @@ Desde Eclipse o IntelliJ: *Importar proyecto Gradle* y ejecutar la clase `puppy.
 core/src/main/java/puppy/code/
 ├── SpaceNavigation.java        Clase principal del juego (hereda de Game de LibGDX)
 ├── Constantes.java             Tamaño fijo del mundo del juego
-├── modelo/                     Entidad, Nave4, Bullet, Personaje, Colisionable
+├── modelo/                     Entidad, Nave4, Bullet, BalaEnemiga, Rayo, Personaje, Dificultad,
+│   │                           Colisionable, ContextoCombate y EfectosCombate (interfaces con la vista)
 │   ├── enemigos/               Enemigo (abstracta), EnemigoBot, EnemigoLag, EnemigoCheater, EnemigoSpammer, EnemigoSniper, EnemigoJefe, TipoJefe
-│   ├── powerups/               PowerUp (abstracta), Pizza, SillaGamer, RGB, LootBox
-│   ├── habilidades/            Habilidad (interfaz), Overdrive, TiroCertero, Burbuja
 │   ├── jefes/                  AtaqueJefe (interfaz) y los 8 ataques de los jefes
 │   ├── armas/                  EstrategiaDisparo (interfaz), Pistola, Escopeta, Railgun, BFG
+│   ├── habilidades/            Habilidad (interfaz), Overdrive, TiroCertero, Burbuja
+│   ├── powerups/               PowerUp (abstracta), Pizza, SillaGamer, RGB, LootBox, FabricaPowerUp, GeneradorPowerUps
 │   └── niveles/                Nivel, NivelBuilder, NivelPartidaBuilder, DirectorNiveles
-├── vista/                      PantallaBase y las pantallas, MenuBotones, Hud, BarraJefe, Particulas, Locutor, FondoEstrellado
-└── util/                       GestorRecursos (Singleton: recursos, música, fuente, opciones), Opciones, CodigoKonami
+├── vista/                      PantallaBase y las 7 pantallas, MenuBotones, Hud, BarraJefe, Particulas, Locutor, FondoEstrellado
+└── util/                       GestorRecursos (Singleton de recursos y audio), GestorRecord, Opciones, CodigoKonami
 ```
 
 ## Patrones de diseño aplicados
 
-| Patrón | Clases principales | Documento |
-|---|---|---|
-| **Singleton** | `GestorRecursos` | [C3_patron_singleton.md](docs/informe/C3_patron_singleton.md) |
-| **Strategy** | Armas (`EstrategiaDisparo`), habilidades (`Habilidad`) y ataques de jefes (`AtaqueJefe`) | [A2_patron_strategy.md](docs/informe/A2_patron_strategy.md) |
-| **Template Method** | `PantallaBase` y sus 7 pantallas hijas | [C4_patron_template_method.md](docs/informe/C4_patron_template_method.md) |
-| **Builder** | `Nivel`, `NivelBuilder`, `NivelPartidaBuilder`, `DirectorNiveles` | [B2_patron_builder.md](docs/informe/B2_patron_builder.md) |
+| Patrón | Clases principales |
+|---|---|
+| **Singleton** | `GestorRecursos` |
+| **Strategy** | Armas (`EstrategiaDisparo`), habilidades (`Habilidad`) y ataques de jefes (`AtaqueJefe`) |
+| **Template Method** | `PantallaBase` y sus 7 pantallas hijas |
+| **Builder** | `DirectorNiveles`, `NivelBuilder`, `NivelPartidaBuilder` y `Nivel` |
 
-La documentación completa (explicación del juego, análisis, UML y evidencia de cada requerimiento) está en la carpeta [`docs/`](docs/informe/INDICE.md).
+El reporte completo está en [`docs/INFORME.md`](docs/INFORME.md). Los diagramas UML, generados desde el código, están en [`docs/uml/`](docs/uml/): el diagrama completo, uno por paquete y uno por patrón, en `.png`, `.svg` y `.puml`. La hoja de datos para ajustar jefes y dificultad es [`docs/informe/C6_diseno_jefes_y_dificultad.md`](docs/informe/C6_diseno_jefes_y_dificultad.md).
 
 ## Integrantes
 
