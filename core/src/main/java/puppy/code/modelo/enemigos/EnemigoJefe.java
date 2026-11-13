@@ -11,16 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import puppy.code.Constantes;
 import puppy.code.modelo.ContextoCombate;
 import puppy.code.modelo.EfectosCombate;
-import puppy.code.modelo.jefes.AtaqueAnillo;
-import puppy.code.modelo.jefes.AtaqueApuntado;
-import puppy.code.modelo.jefes.AtaqueEmbestida;
-import puppy.code.modelo.jefes.AtaqueEspiral;
-import puppy.code.modelo.jefes.AtaqueInvocar.Apoyo;
-import puppy.code.modelo.jefes.AtaqueInvocar;
 import puppy.code.modelo.jefes.AtaqueJefe;
-import puppy.code.modelo.jefes.AtaqueLaser;
-import puppy.code.modelo.jefes.AtaqueLluvia;
-import puppy.code.modelo.jefes.AtaqueSalto;
 import puppy.code.util.GestorRecursos;
 import puppy.code.vista.BarraJefe;
 
@@ -79,60 +70,20 @@ public class EnemigoJefe extends Enemigo
     }
 
     // ---------------- Cada jefe es una combinación de ataques ----------------
+    // Qué ataques usa lo decide su TipoJefe: un jefe nuevo no obliga a modificar esta clase
     private void armarAtaques()
     {
-        Color verde = new Color(0.45f, 1f, 0.35f, 1f);
-        Color verdeHacker = new Color(0.2f, 1f, 0.6f, 1f);
-        Color naranja = new Color(1f, 0.7f, 0.2f, 1f);
-        Color rojo = new Color(1f, 0.35f, 0.35f, 1f);
-
-        switch (tipo)
-        {
-            case TOXIC:
-                // Escupe veneno apuntado, invoca un Lag de vez en cuando y, a la mitad de vida, se pone un escudo "MUTE"
-                umbrales = new float[] { 0.5f };
-                fase(new AtaqueApuntado(130, 1, 4f, verde), new AtaqueInvocar(420, 600, Apoyo.LAG, 1));
-                escudo(new AtaqueLluvia(40, 3.6f, verde), new AtaqueInvocar(60, 0, Apoyo.BOT, 2));
-                fase(new AtaqueApuntado(110, 2, 4.2f, verde), new AtaqueLluvia(75, 3.4f, verde),
-                        new AtaqueInvocar(420, 500, Apoyo.LAG, 1));
-                break;
-
-            case HACKER:
-                // Se teletransporta soltando anillos de balas; en el escudo crea un "firewall" de rayos
-                umbrales = new float[] { 0.5f };
-                fase(new AtaqueApuntado(120, 2, 4.2f, verdeHacker), new AtaqueSalto(300, 8, verdeHacker));
-                escudo(new AtaqueLaser(170, 2, false), new AtaqueInvocar(60, 0, Apoyo.SPAMMER, 1));
-                fase(new AtaqueApuntado(100, 2, 4.6f, verdeHacker), new AtaqueSalto(260, 10, verdeHacker),
-                        new AtaqueLaser(260, 1, false));
-                break;
-
-            case SWEATY:
-                // Espirales de balas y embestidas; dos escudos (a 2/3 y a 1/3 de vida)
-                umbrales = new float[] { 0.66f, 0.33f };
-                fase(new AtaqueEspiral(15, 2, 2.8f, naranja), new AtaqueEmbestida(720));
-                escudo(new AtaqueEspiral(14, 2, 3f, naranja), new AtaqueInvocar(60, 0, Apoyo.CHEATER, 1));
-                fase(new AtaqueEspiral(14, 2, 3f, naranja), new AtaqueEmbestida(600), new AtaqueApuntado(170, 2, 4.2f, naranja));
-                escudo(new AtaqueAnillo(160, 10, 3f, naranja), new AtaqueInvocar(60, 0, Apoyo.CHEATER, 1));
-                fase(new AtaqueEspiral(13, 2, 3.2f, naranja), new AtaqueEmbestida(520), new AtaqueApuntado(140, 2, 4.4f, naranja));
-                break;
-
-            default: // ADMIN
-                // El jefe final: rayos de "ban", anillos y apoyo; tres fases y dos escudos
-                umbrales = new float[] { 0.66f, 0.33f };
-                fase(new AtaqueLaser(200, 1, false), new AtaqueApuntado(130, 2, 4.4f, rojo));
-                escudo(new AtaqueLaser(170, 1, false), new AtaqueLaser(240, 1, true),
-                        new AtaqueInvocar(60, 0, Apoyo.SPAMMER, 1), new AtaqueInvocar(150, 0, Apoyo.LAG, 1));
-                fase(new AtaqueLaser(190, 2, false), new AtaqueLaser(300, 1, true), new AtaqueAnillo(220, 10, 3f, rojo),
-                        new AtaqueApuntado(130, 2, 4.5f, rojo));
-                escudo(new AtaqueAnillo(180, 10, 3.2f, rojo), new AtaqueLaser(220, 1, false),
-                        new AtaqueInvocar(60, 0, Apoyo.CHEATER, 1), new AtaqueInvocar(200, 0, Apoyo.SNIPER, 1));
-                fase(new AtaqueLaser(200, 2, false), new AtaqueLaser(320, 1, true), new AtaqueEspiral(16, 2, 3f, rojo),
-                        new AtaqueApuntado(130, 2, 4.6f, rojo), new AtaqueAnillo(260, 10, 3.1f, rojo));
-                break;
-        }
+        tipo.armarAtaques(this);
     }
 
-    private void fase(AtaqueJefe... ataques)
+    // Lo usa TipoJefe (mismo paquete) para definir dónde cambia de fase el jefe
+    void definirUmbrales(float... fracciones)
+    {
+        umbrales = fracciones.clone();
+    }
+
+    // Agrega una fase normal (la usa TipoJefe al armar al jefe)
+    void fase(AtaqueJefe... ataques)
     {
         List<AtaqueJefe> lista = new ArrayList<>();
         for (AtaqueJefe a : ataques)
@@ -142,7 +93,8 @@ public class EnemigoJefe extends Enemigo
         ataquesFase.add(lista);
     }
 
-    private void escudo(AtaqueJefe... ataques)
+    // Agrega los ataques que usa mientras tiene escudo (la usa TipoJefe)
+    void escudo(AtaqueJefe... ataques)
     {
         List<AtaqueJefe> lista = new ArrayList<>();
         for (AtaqueJefe a : ataques)

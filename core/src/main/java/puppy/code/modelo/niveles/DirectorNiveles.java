@@ -176,25 +176,9 @@ public class DirectorNiveles
         }
         else
         {
-            builder.definirAviso(avisoDeJefe(jefe));
+            builder.definirAviso(jefe.getAviso()); // cada jefe trae su propia pista
         }
         return builder.getResult();
-    }
-
-    // Una pista sobre cómo pelear contra cada jefe
-    private String avisoDeJefe(TipoJefe jefe)
-    {
-        switch (jefe)
-        {
-            case TOXIC:
-                return "¡JEFE! Escupe veneno. A la mitad de su vida se pone un escudo";
-            case HACKER:
-                return "¡JEFE! Se teletransporta y lanza rayos. Mira las líneas rojas";
-            case SWEATY:
-                return "¡JEFE! Espirales de balas y embestidas. Tiene 2 escudos";
-            default:
-                return "¡JEFE! Rayos de ban en 3 fases. Rompe sus escudos";
-        }
     }
 
     // ¿Esta oleada es hardcore?

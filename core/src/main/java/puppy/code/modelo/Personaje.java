@@ -1,5 +1,7 @@
 package puppy.code.modelo;
 
+import java.util.function.Supplier;
+
 import puppy.code.modelo.armas.Escopeta;
 import puppy.code.modelo.armas.EstrategiaDisparo;
 import puppy.code.modelo.armas.Pistola;
@@ -18,18 +20,24 @@ import puppy.code.modelo.habilidades.TiroCertero;
 */
 public enum Personaje
 {
-    TRYHARD("Tryhard", "nave_tryhard.png", 4, 7f, "Suda hasta en el tutorial."),
-    CAMPER("Camper", "nave_camper.png", 4, 6f, "Una bala, una baja."),
-    SUPPORT("Main Support", "nave_support.png", 5, 6f, "Cura con amor... y con perdigones.");
+    TRYHARD("Tryhard", "nave_tryhard.png", 4, 7f, "Suda hasta en el tutorial.", Pistola::new, Overdrive::new),
+    CAMPER("Camper", "nave_camper.png", 4, 6f, "Una bala, una baja.", Railgun::new, TiroCertero::new),
+    SUPPORT("Main Support", "nave_support.png", 5, 6f, "Cura con amor... y con perdigones.", Escopeta::new, Burbuja::new);
 
     private final String nombre;
     private final String archivoNave;
     private final int vidas;
     private final float velocidad;
     private final String frase;
+    // Cómo se crea su arma y su habilidad: un personaje nuevo solo agrega una línea arriba (Abierto/Cerrado)
+    private final Supplier<EstrategiaDisparo> fabricaArma;
+    private final Supplier<Habilidad> fabricaHabilidad;
 
-    Personaje(String nombre, String archivoNave, int vidas, float velocidad, String frase)
+    Personaje(String nombre, String archivoNave, int vidas, float velocidad, String frase,
+              Supplier<EstrategiaDisparo> fabricaArma, Supplier<Habilidad> fabricaHabilidad)
     {
+        this.fabricaArma = fabricaArma;
+        this.fabricaHabilidad = fabricaHabilidad;
         this.nombre = nombre;
         this.archivoNave = archivoNave;
         this.vidas = vidas;
@@ -43,15 +51,7 @@ public enum Personaje
     */
     public EstrategiaDisparo crearArma()
     {
-        switch (this)
-        {
-            case CAMPER:
-                return new Railgun();
-            case SUPPORT:
-                return new Escopeta();
-            default:
-                return new Pistola();
-        }
+        return fabricaArma.get();
     }
 
     /*
@@ -60,15 +60,7 @@ public enum Personaje
     */
     public Habilidad crearHabilidad()
     {
-        switch (this)
-        {
-            case CAMPER:
-                return new TiroCertero();
-            case SUPPORT:
-                return new Burbuja();
-            default:
-                return new Overdrive();
-        }
+        return fabricaHabilidad.get();
     }
 
     public String getNombre() { return nombre; }

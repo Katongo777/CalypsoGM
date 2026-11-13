@@ -1,6 +1,5 @@
 package puppy.code.modelo.jefes;
 
-import com.badlogic.gdx.graphics.Texture;
 
 import puppy.code.modelo.ContextoCombate;
 import puppy.code.modelo.enemigos.Enemigo;
@@ -22,7 +21,55 @@ import puppy.code.util.GestorRecursos;
 public class AtaqueInvocar implements AtaqueJefe
 {
     // Qué tipo de enemigo se invoca
-    public enum Apoyo { BOT, LAG, CHEATER, SPAMMER, SNIPER }
+    /*
+        Qué tipo de enemigo se invoca. Cada valor sabe crear a su enemigo (método distinto en
+        cada uno), así este ataque no necesita un switch: un apoyo nuevo es solo un valor más.
+    */
+    public enum Apoyo
+    {
+        BOT
+        {
+            @Override
+            Enemigo crear(float x, float y, float xVel)
+            {
+                return new EnemigoBot((int) x, (int) y, xVel, -2.5f, GestorRecursos.getInstance().getTextura("bot.png"));
+            }
+        },
+        LAG
+        {
+            @Override
+            Enemigo crear(float x, float y, float xVel)
+            {
+                return new EnemigoLag(x, y, xVel, -3, GestorRecursos.getInstance().getTextura("lag.png"));
+            }
+        },
+        CHEATER
+        {
+            @Override
+            Enemigo crear(float x, float y, float xVel)
+            {
+                return new EnemigoCheater(x, y, xVel * 0.5f, -1.5f, GestorRecursos.getInstance().getTextura("cheater.png"));
+            }
+        },
+        SPAMMER
+        {
+            @Override
+            Enemigo crear(float x, float y, float xVel)
+            {
+                return new EnemigoSpammer(x, y, xVel, 0, GestorRecursos.getInstance().getTextura("spammer.png"));
+            }
+        },
+        SNIPER
+        {
+            @Override
+            Enemigo crear(float x, float y, float xVel)
+            {
+                return new EnemigoSniper(x, y, xVel * 0.4f, -1f, GestorRecursos.getInstance().getTextura("sniper.png"));
+            }
+        };
+
+        abstract Enemigo crear(float x, float y, float xVel);
+    }
 
     private final int primeraEn;
     private final int intervalo;       // 0 = una sola vez
@@ -59,28 +106,9 @@ public class AtaqueInvocar implements AtaqueJefe
         for (int i = 0; i < cantidad; i++)
         {
             float lado = (i % 2 == 0 ? 1 : -1) * (40 + 50 * (i / 2));
-            Enemigo e = crear(centro + lado - 30, jefe.getY(), i % 2 == 0 ? 3 : -3);
+            Enemigo e = tipo.crear(centro + lado - 30, jefe.getY(), i % 2 == 0 ? 3 : -3);
             contexto.agregarEnemigo(e);
             jefe.registrarApoyo(e);
-        }
-    }
-
-    private Enemigo crear(float x, float y, float xVel)
-    {
-        GestorRecursos recursos = GestorRecursos.getInstance();
-        switch (tipo)
-        {
-            case BOT:
-                return new EnemigoBot((int) x, (int) y, xVel, -2.5f, recursos.getTextura("bot.png"));
-            case CHEATER:
-                return new EnemigoCheater(x, y, xVel * 0.5f, -1.5f, recursos.getTextura("cheater.png"));
-            case SPAMMER:
-                return new EnemigoSpammer(x, y, xVel, 0, recursos.getTextura("spammer.png"));
-            case SNIPER:
-                return new EnemigoSniper(x, y, xVel * 0.4f, -1f, recursos.getTextura("sniper.png"));
-            default:
-                Texture lag = recursos.getTextura("lag.png");
-                return new EnemigoLag(x, y, xVel, -3, lag);
         }
     }
 }

@@ -26,11 +26,8 @@ import puppy.code.modelo.enemigos.Enemigo;
 import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
 import puppy.code.modelo.niveles.NivelPartidaBuilder;
-import puppy.code.modelo.powerups.LootBox;
-import puppy.code.modelo.powerups.Pizza;
+import puppy.code.modelo.powerups.GeneradorPowerUps;
 import puppy.code.modelo.powerups.PowerUp;
-import puppy.code.modelo.powerups.RGB;
-import puppy.code.modelo.powerups.SillaGamer;
 import puppy.code.util.GestorRecursos;
 
 /*
@@ -101,6 +98,7 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 	private Color destelloColor = Color.WHITE;
 	private int congelarFrames = 0;      // "hit-stop": el juego se detiene un instante para dar peso al golpe
 	private final List<PowerUp> powerUps = new ArrayList<>();
+	private final GeneradorPowerUps generadorPowerUps = new GeneradorPowerUps();
 
 	// Arma una partida nueva: oleada 1, la nave del personaje elegido y puntaje 0
 	public static PantallaJuego nuevaPartida(SpaceNavigation game, Personaje personaje)
@@ -598,24 +596,10 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		}
 	}
 
-	// Crea un power-up al azar en esa posición (si "pizza" es true, siempre es una pizza)
-	private void agregarPowerUp(float x, float y, boolean pizza)
+	// Crea un power-up al azar en esa posición (si "curacion" es true, siempre es uno que cura)
+	private void agregarPowerUp(float x, float y, boolean curacion)
 	{
-		switch (pizza ? 0 : MathUtils.random(3))
-		{
-			case 0:
-				powerUps.add(new Pizza(x, y));
-				break;
-			case 1:
-				powerUps.add(new SillaGamer(x, y));
-				break;
-			case 2:
-				powerUps.add(new LootBox(x, y));
-				break;
-			default:
-				powerUps.add(new RGB(x, y));
-				break;
-		}
+		powerUps.add(curacion ? generadorPowerUps.crearCuracion(x, y) : generadorPowerUps.crearAlAzar(x, y));
 	}
 
 	// ---------- PASO 2 del template: dibujar ----------
