@@ -48,7 +48,8 @@ public class DirectorNiveles
         "JEFE FINAL: EL ADMIN"
     };
 
-    private NivelBuilder builder;
+    // El Director trabaja con la interfaz NivelBuilder, no con un constructor concreto (inversión de dependencias)
+    private final NivelBuilder builder;
 
     public DirectorNiveles(NivelBuilder builder)
     {

@@ -22,13 +22,6 @@ import puppy.code.modelo.Personaje;
 import puppy.code.modelo.Rayo;
 import puppy.code.modelo.armas.BFG;
 import puppy.code.modelo.enemigos.Enemigo;
-import puppy.code.modelo.enemigos.EnemigoBot;
-import puppy.code.modelo.enemigos.EnemigoCheater;
-import puppy.code.modelo.enemigos.EnemigoJefe;
-import puppy.code.modelo.enemigos.EnemigoLag;
-import puppy.code.modelo.enemigos.EnemigoSniper;
-import puppy.code.modelo.enemigos.EnemigoSpammer;
-import puppy.code.modelo.enemigos.TipoJefe;
 import puppy.code.modelo.niveles.DirectorNiveles;
 import puppy.code.modelo.niveles.Nivel;
 import puppy.code.modelo.niveles.NivelPartidaBuilder;
@@ -120,8 +113,8 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 			nave.setEstrategia(new BFG());
 		}
 
-		// El Director usa el Builder para construir la primera oleada
-		DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
+		// El Director usa el Builder para construir la primera oleada (con la dificultad elegida)
+		DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder(GestorRecursos.getInstance().getOpciones().getDificultad()));
 		// Para probar los jefes sin jugar todas las oleadas: java -Dcalypso.oleada=10 (se ignora si no se pone)
 		int oleadaInicial = Math.max(1, Math.min(Integer.getInteger("calypso.oleada", 1), DirectorNiveles.TOTAL_OLEADAS));
 		return new PantallaJuego(game, director.construirOleada(oleadaInicial), nave, 0, new Locutor());
@@ -150,51 +143,20 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		{
 			nave.setVidas(3); // antes de cada jefe te dan hasta 3 vidas
 		}
-		crearEnemigos(recursos);
+		prepararEnemigos();
 	}
 
-	// Prepara los enemigos que pide el Nivel. No aparecen todos juntos: esperan en la cola "pendientes"
-	private void crearEnemigos(GestorRecursos recursos)
+	/*
+		Los enemigos ya vienen creados en el Nivel (los crea el Builder). No aparecen todos
+		juntos: esperan en la cola "pendientes". Si la oleada trae jefe, es el primero en entrar.
+	*/
+	private void prepararEnemigos()
 	{
-		for (int i = 0; i < nivel.getCantBots(); i++)
-		{
-			pendientes.add(new EnemigoBot(0, 0, velocidad(), velocidad(), recursos.getTextura("bot.png")));
-		}
-		for (int i = 0; i < nivel.getCantLags(); i++)
-		{
-			pendientes.add(new EnemigoLag(0, 0, velocidad() * 1.3f, velocidad() * 1.3f,
-					recursos.getTextura("lag.png")));
-		}
-		for (int i = 0; i < nivel.getCantCheaters(); i++)
-		{
-			pendientes.add(new EnemigoCheater(0, 0, velocidad() * 0.5f, velocidad() * 0.5f,
-					recursos.getTextura("cheater.png")));
-		}
-		for (int i = 0; i < nivel.getCantSpammers(); i++)
-		{
-			pendientes.add(new EnemigoSpammer(0, 0, Math.abs(velocidad()) * 1.1f * (azar.nextBoolean() ? 1 : -1), 0,
-					recursos.getTextura("spammer.png")));
-		}
-		for (int i = 0; i < nivel.getCantSnipers(); i++)
-		{
-			pendientes.add(new EnemigoSniper(0, 0, velocidad() * 0.5f, velocidad() * 0.5f, recursos.getTextura("sniper.png")));
-		}
-		// Se mezclan para que no salgan todos los bots primero y después los demás
-		java.util.Collections.shuffle(pendientes, azar);
-
-		// Si la oleada trae un jefe, es el primero en entrar
 		if (nivel.tieneJefe())
 		{
-			TipoJefe tipo = nivel.getTipoJefe();
-			pendientes.add(0, new EnemigoJefe(tipo, recursos.getTextura(tipo.getArchivoImagen())));
+			pendientes.add(nivel.getJefe());
 		}
-	}
-
-	// Velocidad al azar (entre 1,5 y 3, escalada por la dificultad del nivel) y con dirección al azar
-	private float velocidad()
-	{
-		float v = Math.min((1.2f + azar.nextFloat() * 1.2f) * nivel.getVelocidad() * dificultad.getMultVelocidad(), 4.5f);
-		return azar.nextBoolean() ? v : -v;
+		pendientes.addAll(nivel.getEnemigos());
 	}
 
 	// Saca al siguiente enemigo de la cola y lo hace entrar por arriba, en su lugar dentro del grupo
@@ -782,7 +744,7 @@ public class PantallaJuego extends PantallaBase implements EfectosCombate
 		else if (fase == Fase.COMPLETADA && tiempoFase >= DURACION_COMPLETADA)
 		{
 			// Oleada completada: el Director arma la siguiente y se sigue con la misma nave
-			DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder());
+			DirectorNiveles director = new DirectorNiveles(new NivelPartidaBuilder(dificultad));
 			game.setScreen(new PantallaJuego(game, director.construirOleada(nivel.getNumero() + 1), nave, score, locutor));
 		}
 	}
