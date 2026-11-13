@@ -27,7 +27,7 @@ El servidor *Calypso* está infestado de **bots**, **lags** y **cheaters**. Elig
 
 ## Cómo ejecutarlo
 
-**Requisitos:** JDK 17 para Gradle (el plugin del módulo `lwjgl3` de la plantilla del profe lo exige). El código se compila con compatibilidad Java 11.
+**Requisitos:** JDK 11. El proyecto compila y se ejecuta con Java 11.
 
 Desde una consola, en la carpeta del proyecto:
 
